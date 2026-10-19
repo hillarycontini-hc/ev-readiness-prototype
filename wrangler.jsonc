@@ -1,5 +1,5 @@
 // Cloudflare Workers deploy. Static files come from site/ (site/_headers sets their
-// security headers). The Worker script runs only for /api/* (place search proxy).
+// security headers). The Worker script runs only for /api/* (place search and routing proxy).
 // The GEOAPIFY_KEY secret is set in the Cloudflare dashboard, never in this file.
 {
   "name": "ev-readiness-prototype",
@@ -10,11 +10,13 @@
     "binding": "ASSETS",
     "run_worker_first": ["/api/*"]
   },
-  // Per-visitor limit on place searches: 30 per minute per Cloudflare location.
+  // Per-visitor limits (hashed IP, per Cloudflare location): 30 place searches a minute,
+  // and 6 routes a minute, since a route costs more and a visitor plans a trip at a time.
   "ratelimits": [
-    { "name": "SEARCH_LIMITER", "namespace_id": "4317", "simple": { "limit": 30, "period": 60 } }
+    { "name": "SEARCH_LIMITER", "namespace_id": "4317", "simple": { "limit": 30, "period": 60 } },
+    { "name": "ROUTE_LIMITER", "namespace_id": "4318", "simple": { "limit": 6, "period": 60 } }
   ],
-  // No request logs: searched addresses are never recorded.
+  // No request logs: searched addresses and routes are never recorded.
   "observability": { "enabled": false },
   // Pull-request branches deploy with `wrangler preview`, which needs this block (it can be empty).
   "previews": {}
