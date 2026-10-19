@@ -4,7 +4,7 @@
 
 import { ASSUMPTIONS, FLEET_KEY, QUESTIONS, TIERS, normalizeZip, planFor, questionsFor, recommend } from './logic.js';
 import {
-  ASSUMED_COPY, CHARGING_AT_PARK, FOCUS_COPY, HOME_STOP, LEARN_MORE, PLAN_COPY, PLAN_CTA,
+  ASSUMED_COPY, CHARGING_AT_PARK, FOCUS_COPY, HOME_STOP, LEARN_MORE, PLAN_CATEGORY, PLAN_CTA, PLAN_STEPS,
   QUESTION_COPY, REASON_COPY, TIER_COPY, TONE_COPY, VARIANTS,
 } from './copy.js';
 import * as analytics from './analytics.js';
@@ -578,10 +578,33 @@ function resetPlan() {
   $('plan-steps').replaceChildren();
 }
 
+// The plan is the route's last leg: one station per step, colored by what the step is about,
+// a short action to scan, the detail under it, and a "Done" box (nothing is saved).
+function renderPlan(rec) {
+  const steps = planFor(rec);
+  $('plan-thanks').textContent = PLAN_CTA.thanksBody(steps.length);
+  $('plan-steps').replaceChildren(...steps.map((step, i) => {
+    const def = PLAN_STEPS[step.id];
+    const title = def.title(step.value);
+    const next = steps[i + 1] ? PLAN_STEPS[steps[i + 1].id].stop : null;
+    const id = `plan-done-${i}`;
+    const li = el('li', { class: `plan-step p-${def.stop}` },
+      el('span', { class: 'plan-station', 'aria-hidden': 'true', text: String(i + 1) }),
+      el('div', { class: 'plan-main' },
+        el('h3', { class: 'plan-title', text: title }),
+        el('p', { class: 'plan-detail' }, el('span', { class: 'chip', text: PLAN_CATEGORY[def.stop] }), def.detail(step.value))),
+      el('label', { class: 'plan-done', for: id },
+        el('input', { type: 'checkbox', id }),
+        PLAN_CTA.done, srOnly(`: ${title}`)));
+    if (next) li.style.setProperty('--seg', next === 'finish' ? 'var(--poppy)' : `var(--stop-${next})`);
+    return li;
+  }));
+}
+
 function onPlanCta() {
   analytics.track('plan_cta_clicked', { tier: state.lastRec.tier });
   markNextStep('plan');
-  $('plan-steps').replaceChildren(...planFor(state.lastRec).map((step) => el('li', { text: PLAN_COPY[step.id](step.value) })));
+  renderPlan(state.lastRec);
   $('plan-result').hidden = false;
   $('plan-result').scrollIntoView({ block: 'start' });
   $('plan-result').focus({ preventScroll: true });
@@ -626,7 +649,6 @@ function boot() {
   $('error-retry').addEventListener('click', () => show('view-landing', 'zip'));
   $('plan-cta').textContent = PLAN_CTA.button;
   $('plan-result-title').textContent = PLAN_CTA.thanksTitle;
-  $('plan-thanks').textContent = PLAN_CTA.thanksBody;
   $('plan-print').textContent = PLAN_CTA.print;
   $('plan-cta').addEventListener('click', onPlanCta);
   $('plan-print').addEventListener('click', () => { analytics.track('plan_printed'); window.print(); });

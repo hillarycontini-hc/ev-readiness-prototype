@@ -122,28 +122,41 @@ export const LEARN_MORE = [
 // "Get my EV plan": a fake-door test. It measures interest in a plan follow-up and
 // collects nothing, then gives the visitor a real checklist built from their answers.
 export const PLAN_CTA = {
-  title: 'Get your EV plan',
-  body: 'A checklist built from your answers: where you would charge, what range to shop for, and what to sort out before you buy.',
   button: 'Get my EV plan',
-  thanksTitle: 'Here is your EV plan',
-  thanksBody: 'Thanks for asking. This is a prototype, so there is no sign-up and we did not collect anything about you. Your click tells us a plan like this is worth building properly. Here is a starter version you can print or save:',
+  thanksTitle: 'Your EV plan',
+  thanksBody: (n) => `${n} steps, built from your answers. Tick them off as you go. This is a prototype: there is no sign-up and nothing about you was collected; your click tells us a plan like this is worth building.`,
   print: 'Print or save as PDF',
+  done: 'Done',
 };
 
-export const PLAN_COPY = {
-  'plan-install': () => 'Get an electrician’s quote for a Level 2 charger where you park. Ask whether your electrical panel has room.',
-  'plan-landlord': () => 'Ask your landlord or building manager about charging: a dedicated outlet, a shared charger, or permission to install one. Check whether your state has a “right to charge” rule for renters.',
-  'plan-find-home': () => 'Find out whether you can charge where you park overnight. It is the biggest factor in whether an EV is easy to live with.',
-  'plan-work': () => 'Confirm daytime charging: how many chargers there are, whether you need to move the car, and what it costs.',
-  'plan-public': (v) => v == null
-    ? 'Find the closest public chargers to home and to places you already spend time, like a grocery store or gym.'
-    : `Visit your nearest fast charger (about ${v} miles away) and a Level 2 station near somewhere you already spend time, like a grocery store or gym.`,
-  'plan-home-l2': () => 'If you only have a regular outlet, it adds a few miles of range per hour. A Level 2 charger adds about 20 to 30.',
-  'plan-range': (v) => `Shop for at least ${v} miles of rated range in an SUV, minivan, or pickup with the space you need.`,
-  'plan-range-any': () => 'Range will not limit your daily driving: every electric SUV, minivan, and pickup on sale covers it with room to spare. Shop on space, comfort, and charging speed instead.',
-  'plan-park': (v) => `Before a trip to ${v}, plan a fast-charging stop on the way: charging near the park is limited.`,
-  'plan-route': () => 'Try your most common long drive in a charging route planner before you buy.',
-  'plan-test-drive': () => 'Bring your car seats, the dog’s crate, or your gear to a test drive and check that everything fits with the cargo area full.',
+// Each plan step: a short action to scan, the detail underneath, and the route stop it belongs to
+// (which sets its color on the line). The last step is always the loaded test drive.
+export const PLAN_CATEGORY = {
+  home: 'Where you charge',
+  charger: 'Charging nearby',
+  range: 'What to shop for',
+  parks: 'Park trips',
+  finish: 'Before you buy',
+};
+
+export const PLAN_STEPS = {
+  'plan-install': { stop: 'home', title: () => 'Get an electrician’s quote', detail: () => 'For a Level 2 charger where you park. Ask whether your electrical panel has room.' },
+  'plan-landlord': { stop: 'home', title: () => 'Ask your landlord about charging', detail: () => 'A dedicated outlet, a shared charger, or permission to install one. Check whether your state has a “right to charge” rule for renters.' },
+  'plan-find-home': { stop: 'home', title: () => 'Find out if you can charge overnight', detail: () => 'Where you park overnight is the biggest factor in whether an EV is easy to live with.' },
+  'plan-work': { stop: 'home', title: () => 'Confirm charging at work', detail: () => 'How many chargers there are, whether you need to move the car, and what it costs.' },
+  'plan-public': {
+    stop: 'charger',
+    title: () => 'Scout your nearest chargers',
+    detail: (v) => (v == null
+      ? 'Find the closest public chargers to home, and a Level 2 station somewhere you already spend time, like a grocery store or gym.'
+      : `Your nearest fast charger is about ${v} miles away. Find a Level 2 station somewhere you already spend time, like a grocery store or gym.`),
+  },
+  'plan-home-l2': { stop: 'home', title: () => 'Consider a Level 2 charger', detail: () => 'A regular outlet adds a few miles of range per hour. A Level 2 charger adds about 20 to 30.' },
+  'plan-range': { stop: 'range', title: (v) => `Shop for ${v}+ miles of range`, detail: () => 'In an SUV, minivan, or pickup with the space you need.' },
+  'plan-range-any': { stop: 'range', title: () => 'Shop on space, not range', detail: () => 'Every electric SUV, minivan, and pickup on sale covers your daily driving with room to spare. Compare space, comfort, and charging speed instead.' },
+  'plan-park': { stop: 'parks', title: (v) => `Plan a charging stop for ${v}`, detail: () => 'Charging near the park is limited, so plan a fast-charging stop on the way.' },
+  'plan-route': { stop: 'charger', title: () => 'Rehearse your longest drive', detail: () => 'Try your most common long drive in a charging route planner before you buy.' },
+  'plan-test-drive': { stop: 'finish', title: () => 'Test-drive it fully loaded', detail: () => 'Bring the car seats, the dog’s crate, or your gear, and check that everything fits with the cargo area full.' },
 };
 
 // ---------- results route ----------

@@ -354,12 +354,53 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 
 /* ---------- plan, links, method ---------- */
 
-.plan { background: var(--surface); border: 2px solid var(--ink); border-radius: 6px; padding: 1.25rem 1.5rem 1.5rem; margin-top: 1.5rem; }
-.plan h2 { margin-top: 0; font: 900 clamp(1.75rem, 3.5vw, 2.25rem) / 1 var(--display); text-transform: uppercase; }
-.plan:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
-.plan-steps { padding-left: 1.4rem; }
-.plan-steps li { margin: 0.55rem 0; padding-left: 0.25rem; }
-.plan-steps li::marker { font: 900 1.25rem var(--display); color: var(--ink); }
+/* The EV plan: the route's last leg. Each step is a numbered station on the same line,
+   colored by what it is about; the loaded test drive is the terminus. */
+.plan { --focus: var(--citron); background: var(--navy); color: #fff; border-radius: 6px; padding: 1.5rem 1.5rem 1.25rem; margin-top: 1.5rem; }
+.plan h2 { margin-top: 0; font: 900 clamp(2rem, 4vw, 2.75rem) / 1 var(--display); text-transform: uppercase; color: #fff; }
+.plan:focus-visible { outline: 3px solid var(--citron); outline-offset: 4px; }
+#plan-thanks { color: var(--row-sub); max-width: 52rem; margin: 0.6rem 0 1.5rem; }
+.plan-steps { list-style: none; padding: 0; margin: 0 0 1rem; }
+.plan-step { --c: var(--stop-home); position: relative; display: grid; grid-template-columns: 3.5rem 1fr auto; gap: 0 1rem; align-items: start; padding-bottom: 1.5rem; }
+.plan-step.p-charger { --c: var(--stop-charger); }
+.plan-step.p-range { --c: var(--stop-range); }
+.plan-step.p-parks, .plan-step.p-finish { --c: var(--stop-parks); }
+.plan-step::before {
+  content: ""; position: absolute; z-index: 0;
+  left: calc(1.75rem - 7px); top: 1.75rem; bottom: -1.75rem; width: 14px;
+  background: var(--seg, var(--c));
+}
+.plan-step:last-child { padding-bottom: 0; }
+.plan-step:last-child::before { display: none; }
+.plan-station {
+  position: relative; z-index: 1; display: grid; place-items: center;
+  width: 3.5rem; height: 3.5rem; border-radius: 50%;
+  background: #fff; border: 7px solid var(--c); box-shadow: 0 0 0 4px var(--navy);
+  font: 900 1.5rem/1 var(--display); color: var(--navy);
+}
+.plan-step.p-finish .plan-station { border-width: 10px; }
+.plan-main { padding-top: 0.2rem; min-width: 0; }
+.plan-title { font: 700 1.25rem/1.3 var(--text); margin: 0 0 0.3rem; color: #fff; }
+.plan-detail { margin: 0; color: var(--row-sub); font-size: var(--t-small); max-width: 46rem; }
+.plan-done {
+  display: flex; align-items: center; gap: 0.5rem; min-height: 2.75rem; padding: 0 0.8rem;
+  border: 1.5px solid #4a5d80; border-radius: var(--radius); cursor: pointer;
+  font-weight: 700; font-size: var(--t-small); color: #fff; white-space: nowrap;
+}
+.plan-done:hover { border-color: #fff; }
+.plan-done:has(input:focus-visible) { outline: 3px solid var(--citron); outline-offset: 3px; }
+.plan-done input { width: 1.15rem; height: 1.15rem; margin: 0; accent-color: var(--citron); }
+.plan-step:has(input:checked) .plan-title { color: var(--row-sub); text-decoration: line-through; text-decoration-color: var(--c); text-decoration-thickness: 3px; }
+.plan-step:has(input:checked) .plan-station { background: var(--c); }
+.plan .btn-quiet { color: #fff; border-color: #fff; }
+.plan .btn-quiet:hover { background: var(--navy-2); }
+@media (max-width: 40rem) {
+  .plan { padding: 1.25rem 1rem; }
+  .plan-step { grid-template-columns: 3rem 1fr; }
+  .plan-station { width: 3rem; height: 3rem; font-size: 1.25rem; }
+  .plan-step::before { left: calc(1.5rem - 7px); top: 1.5rem; bottom: -1.5rem; }
+  .plan-done { grid-column: 2; justify-self: start; margin-top: 0.6rem; }
+}
 
 .link-list { list-style: none; padding: 0; }
 .link-list li { margin: 0.5rem 0; padding-left: 1.6rem; position: relative; }
@@ -395,5 +436,11 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   .verdict h1 { font-size: 2.5rem; }
   .band-summary strong { color: #000; }
   .tier-mark { display: none; }
-  .plan { border: 0; padding: 0; }
+  .plan { background: #fff !important; color: #000 !important; border: 0; padding: 0; }
+  .plan h2, .plan-title { color: #000 !important; }
+  .plan-detail, #plan-thanks { color: #222 !important; }
+  .plan-step::before { background: #000 !important; width: 4px; left: calc(1.75rem - 2px); }
+  .plan-station { background: #fff !important; border-color: #000 !important; box-shadow: none; color: #000; }
+  .plan-detail .chip { background: none; border: 1px solid #000; color: #000; }
+  .plan-done { border-color: #000; color: #000; }
 }
