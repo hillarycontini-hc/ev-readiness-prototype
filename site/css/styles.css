@@ -400,8 +400,8 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   .plan-station { width: 3rem; height: 3rem; font-size: 1.25rem; }
   .plan-step::before { left: calc(1.5rem - 7px); top: 1.5rem; bottom: -1.5rem; }
   .plan-done { grid-column: 2; justify-self: start; margin-top: 0.6rem; }
-  /* On phones an open tool takes the full width, covering the line beside it. */
-  .plan-main .tool-panel { position: relative; z-index: 1; margin-left: -4rem; padding: 0.9rem 0.8rem 1rem; }
+  /* On phones an open tool widens toward the line, stopping just short of it. */
+  .plan-main .tool-panel { margin-left: -1.75rem; padding: 0.9rem 0.8rem 1rem; }
 }
 
 /* ---------- plan tools (inside the navy plan) ---------- */
@@ -421,7 +421,7 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .tool-panel label, .tool-panel legend { color: #fff; font-weight: 600; }
 .tool-panel input[type="search"], .tool-panel input[type="text"], .tool-panel input[type="number"], .tool-panel select {
   font: 600 var(--t-body) var(--text); color: #fff; background: var(--navy);
-  border: 2px solid #4a5d80; border-radius: var(--radius); padding: 0.45rem 0.6rem; min-height: 2.75rem; min-width: 0;
+  border: 2px solid #8593a8; border-radius: var(--radius); padding: 0.45rem 0.6rem; min-height: 2.75rem; min-width: 0;
 }
 .tool-panel input[type="search"] { flex: 1 1 14rem; }
 .tool-panel input:focus-visible, .tool-panel select:focus-visible { outline: 3px solid var(--citron); outline-offset: 2px; border-color: var(--citron); }
@@ -479,7 +479,7 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .car-controls { display: grid; gap: 0.9rem; }
 .seg { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .seg legend { width: 100%; margin-bottom: 0.35rem; }
-.seg-option { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.75rem; padding: 0.35rem 0.8rem; border-radius: var(--radius); box-shadow: inset 0 0 0 1.5px #4a5d80; cursor: pointer; }
+.seg-option { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.75rem; padding: 0.35rem 0.8rem; border-radius: var(--radius); box-shadow: inset 0 0 0 1.5px #8593a8; cursor: pointer; }
 .seg-option:has(input:checked) { background: var(--c); box-shadow: none; }
 .seg-option:has(input:checked) span { color: var(--navy); }
 .seg-option:has(input:focus-visible) { outline: 3px solid var(--citron); outline-offset: 2px; }
@@ -505,8 +505,14 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .trip-dest input { margin-top: 0.25rem; }
 .trip-dest > span { display: grid; }
 .trip-dest-detail { font-size: var(--t-small); font-weight: 400; color: var(--row-sub); }
+/* A chosen destination gets a ring in the stop color, not a fill: the fill is for actions. */
+.trip-dest:has(input:checked) { background: var(--navy); box-shadow: inset 0 0 0 3px var(--c); }
+.trip-dest:has(input:checked) span { color: #fff; }
+.trip-dest:has(input:checked) .trip-dest-detail { color: var(--row-sub); }
+.trip-dest input { accent-color: var(--c); }
 .trip-fields { margin-top: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(13rem, 100%), 1fr)); }
 .trip-fields select { width: 100%; }
+.trip-fields .field-basis { grid-column: 1 / -1; }
 .trip-result:not(:empty) { margin-top: 1.1rem; padding-top: 1.1rem; border-top: 1px solid #2c3a55; }
 .trip-title { margin: 0 0 0.75rem; font: 900 clamp(1.5rem, 3vw, 1.875rem)/1 var(--display); text-transform: uppercase; color: #fff; overflow-wrap: anywhere; }
 .trip-title:focus-visible, .trip-saved-title:focus-visible { outline: 3px solid var(--citron); outline-offset: 3px; }
@@ -516,28 +522,28 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .trip-totals dd { margin: 0; font: 900 2.25rem/1 var(--display); color: var(--fig); font-variant-numeric: tabular-nums; }
 .trip-legs { list-style: none; padding: 0; margin: 0; }
 .trip-leg {
-  position: relative; display: grid; grid-template-columns: 1.75rem minmax(0, 1fr) auto; gap: 0 0.9rem; align-items: start;
+  position: relative; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; gap: 0 0.9rem; align-items: start;
   padding: 0.75rem 0.75rem 0.75rem 0.5rem; border-radius: 6px;
 }
-/* ::before is the leg into this station; ::after starts the next leg. */
+/* The route's own anatomy: a 14px line through white-ringed stations. ::before is the leg into
+   this station; ::after starts the next leg. */
 .trip-leg::before, .trip-leg:not(:last-child)::after {
-  content: ""; position: absolute; z-index: 0; left: calc(1.375rem - 3px); width: 6px; background: #4a5d80;
+  content: ""; position: absolute; z-index: 0; left: calc(1.75rem - 7px); width: 14px; background: #4a5d80;
 }
-.trip-leg::before { top: 0; height: 1.725rem; }
-.trip-leg:not(:last-child)::after { top: 1.725rem; bottom: 0; }
+.trip-leg::before { top: 0; height: 2rem; }
+.trip-leg:not(:last-child)::after { top: 2rem; bottom: 0; }
 .trip-leg.is-passed::before, .trip-leg[aria-current="step"]::before,
 .trip-leg:has(+ .is-passed)::after, .trip-leg:has(+ [aria-current="step"])::after { background: var(--c); }
-.trip-leg:not(:last-child) { box-shadow: 0 1px 0 #2c3a55; }
+.trip-leg:not(:last-child) { border-bottom: 1px solid #2c3a55; }
 .trip-leg[aria-current="step"] { background: var(--navy); box-shadow: inset 0 0 0 1px #4a5d80; }
 .trip-mark {
-  position: relative; z-index: 1; width: 1.75rem; height: 1.75rem; margin-top: 0.1rem; border-radius: 50%;
-  background: var(--navy-2); box-shadow: inset 0 0 0 3px #fff, 0 0 0 3px var(--navy-2);
+  position: relative; z-index: 1; box-sizing: border-box; width: 2.5rem; height: 2.5rem; border-radius: 50%;
+  background: #fff; border: 7px solid var(--c); box-shadow: 0 0 0 4px var(--navy-2);
 }
-.trip-leg[aria-current="step"] .trip-mark { box-shadow: inset 0 0 0 3px #fff, 0 0 0 3px var(--navy); }
+.trip-leg:last-child .trip-mark { border-width: 10px; }
+.trip-leg[aria-current="step"] .trip-mark { box-shadow: 0 0 0 4px var(--navy); }
 .trip-leg.is-passed .trip-mark, .trip-leg[aria-current="step"] .trip-mark { background: var(--c); }
-.trip-leg:last-child .trip-mark { box-shadow: inset 0 0 0 5px #fff, 0 0 0 3px var(--navy-2); }
-.trip-leg:last-child[aria-current="step"] .trip-mark { box-shadow: inset 0 0 0 5px #fff, 0 0 0 3px var(--navy); }
-.trip-leg-main { min-width: 0; padding-top: 0.2rem; }
+.trip-leg-main { min-width: 0; padding-top: 0.45rem; }
 .trip-leg-main p { margin: 0; }
 .trip-leg .station-name { display: block; overflow-wrap: anywhere; }
 .trip-leg-detail { margin-top: 0.4rem; display: grid; gap: 0.15rem; }
@@ -557,7 +563,7 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 
 @media (max-width: 40rem) {
   .station-item, .car-item { grid-template-columns: minmax(0, 1fr) auto; }
-  .trip-leg { grid-template-columns: 1.75rem minmax(0, 1fr); }
+  .trip-leg { grid-template-columns: 2.5rem minmax(0, 1fr); }
   .trip-leg .row-figure { grid-column: 2; text-align: left; padding: 0.35rem 0 0; }
   .trip-position { min-width: 0; }
   .trip-totals { gap: 0.4rem 1.25rem; }

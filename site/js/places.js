@@ -121,5 +121,5 @@ export async function fastStationsAlong(points) {
   return found;
 }
 
-const CONNECTOR_NAMES = { J: 'J1772', C: 'CCS', N: 'NACS (Tesla)', D: 'CHAdeMO' };
+const CONNECTOR_NAMES = { J: 'J1772', C: 'CCS', N: 'NACS', D: 'CHAdeMO' };
 export const connectorNames = (codes) => [...(codes || '')].map((c) => CONNECTOR_NAMES[c]).filter(Boolean);

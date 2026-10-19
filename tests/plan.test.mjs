@@ -61,7 +61,7 @@ test('a tampered share link is sanitized, never trusted', async () => {
 
 test('distance and connector helpers', () => {
   assert.ok(Math.abs(milesBetween(40.015, -105.2705, 39.7392, -104.9903) - 24.5) < 1, 'Boulder to Denver is about 24.5 miles');
-  assert.deepEqual(connectorNames('JCN'), ['J1772', 'CCS', 'NACS (Tesla)']);
+  assert.deepEqual(connectorNames('JCN'), ['J1772', 'CCS', 'NACS']);
 });
 
 const tripStop = (id, atMile) => ({ id, name: `Fast ${id}`, street: '1 Main St', city: 'Loveland', lat: 40.4, lon: -105.0, level2: 0, fast: 4, network: 'Electrify America', connectors: 'C', hours: '24 hours daily', price: '', atMile, legMiles: 60, detourMiles: 0.5 });

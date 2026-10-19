@@ -55,8 +55,10 @@ it flagged both.
   Previous and Next are real buttons, disabled at the ends; "Skip to arrival" jumps ahead.
   Leg figures carry "on leg N" in screen-reader text. The current leg is shown by a ring, the
   open details, and the counter as well as the filled station, so color isn't the only signal.
-  On phones an open tool takes the full width of the plan (fixed: at 320 px the trip form was
+  On phones an open tool widens toward the plan's line (fixed: at 320 px the trip form was
   about 150 px wide and overflowed by 6 px, which the reflow check caught).
+- **Field edges in the plan tools (1.4.11):** inputs, selects, and choice rings on the navy
+  panel are #8593a8, about 4.8:1 (fixed in the trip planner's design review: they were 2.25:1).
 - **Errors (3.3.1, 3.3.3):** ZIP and missing-answer errors are text, announced with
   `role="alert"`, tied to the field with `aria-describedby`, and focus returns to the field.
 - **Focus management:** each new view moves focus to its heading so screen-reader and

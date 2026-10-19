@@ -61,7 +61,7 @@ export function corridorCells(points, corridor = CORRIDOR_MILES, cell = 0.5) {
 export const PLUGS = {
   any: { label: 'Either (CCS or NACS)', ok: (c) => /[CN]/.test(c) },
   ccs: { label: 'CCS only', ok: (c) => c.includes('C') },
-  nacs: { label: 'NACS (Tesla plug)', ok: (c) => c.includes('N') },
+  nacs: { label: 'NACS only', ok: (c) => c.includes('N') },
 };
 
 /**

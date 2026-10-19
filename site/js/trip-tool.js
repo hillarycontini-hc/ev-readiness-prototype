@@ -18,7 +18,7 @@ export function stopFacts(s) {
   return [fastPlugs(s.connectors).join(', '), plural(s.fast, 'fast port'), s.network].filter(Boolean).join(' · ');
 }
 
-// A NACS-only station is a Tesla-plug site; not every one is open to other brands.
+// A NACS-only station may not be open to every car, even with an adapter.
 const nacsOnly = (s) => /N/.test(s.connectors || '') && !/C/.test(s.connectors || '');
 
 /** "1 fast-charging stop" / "No charging stop needed". */
@@ -70,7 +70,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       const s = leg.s;
       const detail = el('div', { class: 'trip-leg-detail', hidden: true },
         s ? el('p', { class: 'station-meta', text: [[s.street, s.city].filter(Boolean).join(', '), s.hours, s.price].filter(Boolean).join(' · ') || 'No address or hours on file.' }) : null,
-        s && nacsOnly(s) ? el('p', { class: 'station-meta', text: 'Tesla plug only: other brands need an adapter, and not every Tesla station is open to them. Check the Tesla app.' }) : null,
+        s && nacsOnly(s) ? el('p', { class: 'station-meta', text: 'NACS-only site: other plugs need an adapter, and not every one is open to them. Check the network’s app.' }) : null,
         s ? el('p', { class: 'station-meta', text: `At road mile ${num.format(s.atMile)}${s.detourMiles >= 0.5 ? `, about ${s.detourMiles} mi off the route` : ''}. You’d arrive with about ${num.format(Math.max(0, trip.legMiles - s.legMiles))} of your ${num.format(trip.legMiles)} planned miles left.` }) : null,
         !s ? el('p', { class: 'station-meta', text: `Arrive with about ${num.format(trip.arriveWithMiles)} of your ${num.format(trip.legMiles)} planned miles to spare.` }) : null);
       return el('li', { class: 'trip-leg' },
@@ -177,8 +177,8 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
     const cars = (data?.vehicles || []).filter((v) => ctx.plan().shortlist.includes(v.id));
     const typical = ctx.meta?.fleet?.[FLEET_KEY]?.rangeMedian;
     const bases = [
-      ...cars.map((v) => ({ id: v.id, label: `${v.make} ${v.model} (EPA ${v.rangeMin === v.rangeMax ? v.rangeMin : `${v.rangeMin}–${v.rangeMax}`} mi)`, range: v.rangeMin })),
-      typical ? { id: 'typical', label: `A typical electric SUV (EPA ${typical} mi)`, range: typical } : null,
+      ...cars.map((v) => ({ id: v.id, label: `${v.make} ${v.model} · ${v.rangeMin} mi EPA`, range: v.rangeMin })),
+      typical ? { id: 'typical', label: `Typical SUV · ${typical} mi EPA`, range: typical } : null,
     ].filter(Boolean);
     ui.basis = bases[0] || null;
     ui.legMiles = legMilesFromRange(ui.basis?.range) || 200;
@@ -190,7 +190,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
     const basisId = `${prefix}-basis`;
     const plugId = `${prefix}-plug`;
     const rangeFields = el('div', { class: 'finance-fields trip-fields' },
-      bases.length ? el('div', { class: 'field' }, el('label', { for: basisId, text: 'Plan for' }),
+      bases.length ? el('div', { class: 'field field-basis' }, el('label', { for: basisId, text: 'Plan for' }),
         el('select', { id: basisId, onchange: (e) => {
           ui.basis = bases.find((b) => b.id === e.target.value) || ui.basis;
           ui.legMiles = legMilesFromRange(ui.basis.range) || ui.legMiles;
