@@ -1,0 +1,526 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-19T00:00:00Z",
+  "title": "Design System: EV Readiness Check",
+  "extensions": {
+    "colorMeta": {
+      "navy": {
+        "role": "primary",
+        "displayName": "Transit Navy",
+        "canonical": "oklch(21.8% 0.037 260)",
+        "tonalRamp": [
+          "#040b1a",
+          "#1a2436",
+          "#374356",
+          "#576479",
+          "#7a879d",
+          "#9eacc3",
+          "#c0cfe6",
+          "#e6effe"
+        ]
+      },
+      "navy-2": {
+        "role": "primary",
+        "displayName": "Field Navy",
+        "canonical": "oklch(27.4% 0.050 262)",
+        "tonalRamp": [
+          "#020920",
+          "#17233c",
+          "#34425d",
+          "#546380",
+          "#7687a5",
+          "#9aabcb",
+          "#bdceef",
+          "#e6efff"
+        ]
+      },
+      "teal": {
+        "role": "primary",
+        "displayName": "Verdict Teal",
+        "canonical": "oklch(54.5% 0.091 205)",
+        "tonalRamp": [
+          "#000f12",
+          "#002a2f",
+          "#004c53",
+          "#07717a",
+          "#3196a1",
+          "#5cbbc7",
+          "#81dfeb",
+          "#cbf8fe"
+        ]
+      },
+      "poppy": {
+        "role": "secondary",
+        "displayName": "Poppy Signal",
+        "canonical": "oklch(68.4% 0.207 33)",
+        "tonalRamp": [
+          "#230000",
+          "#480700",
+          "#7b1801",
+          "#b12b08",
+          "#e8431d",
+          "#f9856a",
+          "#ffbbaa",
+          "#fee9e4"
+        ]
+      },
+      "poppy-hover": {
+        "role": "secondary",
+        "displayName": "Poppy Hover"
+      },
+      "citron": {
+        "role": "tertiary",
+        "displayName": "Citron Spark",
+        "canonical": "oklch(92.4% 0.182 119)",
+        "tonalRamp": [
+          "#090e00",
+          "#202800",
+          "#3d4907",
+          "#5b6c00",
+          "#7c9214",
+          "#9eb920",
+          "#bfde3d",
+          "#e0ff74"
+        ]
+      },
+      "aqua": {
+        "role": "tertiary",
+        "displayName": "Charger Aqua",
+        "canonical": "oklch(78.5% 0.125 202)",
+        "tonalRamp": [
+          "#000f11",
+          "#002a2e",
+          "#014c51",
+          "#0c7178",
+          "#0098a2",
+          "#08c1cd",
+          "#4fe6f2",
+          "#c5faff"
+        ]
+      },
+      "uv": {
+        "role": "tertiary",
+        "displayName": "Ultraviolet (illustration only)",
+        "canonical": "oklch(52.2% 0.255 280)",
+        "tonalRamp": [
+          "#0a0034",
+          "#1f026b",
+          "#3a12af",
+          "#5634ed",
+          "#7470f9",
+          "#9ca0fb",
+          "#c4c9fd",
+          "#ebedfe"
+        ]
+      },
+      "uv-light": {
+        "role": "tertiary",
+        "displayName": "Ultraviolet Light",
+        "canonical": "oklch(74.2% 0.142 288)",
+        "tonalRamp": [
+          "#0e002f",
+          "#270462",
+          "#432e87",
+          "#6351ae",
+          "#8575d6",
+          "#a89afe",
+          "#cbc7fb",
+          "#edecff"
+        ]
+      },
+      "rail": {
+        "role": "neutral",
+        "displayName": "Rail",
+        "canonical": "oklch(34.9% 0.051 262)",
+        "tonalRamp": [
+          "#020920",
+          "#17233d",
+          "#34425e",
+          "#546381",
+          "#7687a6",
+          "#9aabcc",
+          "#bccef0",
+          "#e7effe"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Fog",
+        "canonical": "oklch(95.9% 0.006 239)",
+        "tonalRamp": [
+          "#090c0d",
+          "#222427",
+          "#404345",
+          "#606466",
+          "#838789",
+          "#a8abae",
+          "#caced1",
+          "#ebeff2"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Paper White / Home White"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink (Transit Navy)"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Slate Muted",
+        "canonical": "oklch(44.7% 0.034 261)",
+        "tonalRamp": [
+          "#040b19",
+          "#1b2435",
+          "#384355",
+          "#586477",
+          "#7b879b",
+          "#9fabc1",
+          "#c1cee5",
+          "#e6effe"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Steel Border",
+        "canonical": "oklch(60.1% 0.020 245)",
+        "tonalRamp": [
+          "#050c13",
+          "#1c252d",
+          "#3a444d",
+          "#5a656e",
+          "#7d8892",
+          "#a1acb7",
+          "#c3cfda",
+          "#e4f0fb"
+        ]
+      },
+      "chip": {
+        "role": "neutral",
+        "displayName": "Mist Chip",
+        "canonical": "oklch(91.3% 0.012 252)",
+        "tonalRamp": [
+          "#080c10",
+          "#20242a",
+          "#3e4348",
+          "#5f646a",
+          "#81878d",
+          "#a6abb2",
+          "#c8ced5",
+          "#e9eff6"
+        ]
+      },
+      "chip-ink": {
+        "role": "neutral",
+        "displayName": "Chip Ink"
+      },
+      "row-sub": {
+        "role": "neutral",
+        "displayName": "Row Sub"
+      },
+      "panel-ink": {
+        "role": "neutral",
+        "displayName": "Panel Ink"
+      },
+      "ground-dark": {
+        "role": "neutral",
+        "displayName": "Night Ground"
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Night Surface"
+      },
+      "ink-dark": {
+        "role": "neutral",
+        "displayName": "Night Ink"
+      },
+      "muted-dark": {
+        "role": "neutral",
+        "displayName": "Night Muted"
+      },
+      "border-dark": {
+        "role": "neutral",
+        "displayName": "Night Border"
+      },
+      "chip-dark": {
+        "role": "neutral",
+        "displayName": "Night Chip"
+      },
+      "chip-ink-dark": {
+        "role": "neutral",
+        "displayName": "Night Chip Ink"
+      },
+      "row-edge-dark": {
+        "role": "neutral",
+        "displayName": "Row Edge"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Landing headline and results verdict, uppercase, one per view."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Each question, uppercase. Plan title uses a smaller step (clamp 1.75 to 2.25rem)."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "The one figure on each stop row, in the stop color, tabular numerals."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section headings in the text face."
+      },
+      "row-label": {
+        "displayName": "Row Label",
+        "purpose": "The name of each stop."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "Landing subhead and verdict summary sentence."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text; buttons at 700, options at 600."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Hints, row details, stop panels, sources, footer."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Tier-scale and tone chips only; uppercase, 0.75 to 0.8125rem."
+      },
+      "wordmark": {
+        "displayName": "Wordmark",
+        "purpose": "Top-bar product name, uppercase, citron."
+      }
+    },
+    "shadows": [
+      {
+        "name": "station-halo",
+        "value": "0 0 0 4px #101a2b",
+        "purpose": "Zero-blur navy halo separating a station from the route line (3px on question stations)."
+      },
+      {
+        "name": "check-outline",
+        "value": "inset 0 0 0 1.5px #ffffff",
+        "purpose": "Outlined Check tone chip."
+      },
+      {
+        "name": "dark-row-edge",
+        "value": "0 0 0 1px #33456a",
+        "purpose": "Dark mode only: edge on every stop row so it reads as a bar on #0a111d."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-route",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "All motion: line draw, station pop, chevron and disclosure rotation."
+      },
+      {
+        "name": "line-draw",
+        "value": "0.42s, delay i * 0.14s + 0.1s, scaleY 0 to 1 from top",
+        "purpose": "Route line draws down stop by stop once when results load."
+      },
+      {
+        "name": "station-pop",
+        "value": "0.36s, delay i * 0.14s, scale 0.4 to 1",
+        "purpose": "Each station pops as the line reaches it."
+      },
+      {
+        "name": "chevron-turn",
+        "value": "0.25s",
+        "purpose": "Row chevron rotates 90deg when open; disclosure chevron 45 to 135deg."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "none",
+        "purpose": "prefers-reduced-motion: static route, no transitions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "row-stack",
+        "value": "40rem",
+        "purpose": "Below: stop figure moves under the label; plan button full width."
+      },
+      {
+        "name": "gutter",
+        "value": "48rem",
+        "purpose": "Side gutter widens from 1.25rem to 3rem."
+      },
+      {
+        "name": "two-column",
+        "value": "60rem",
+        "purpose": "Landing hero splits copy and art; verdict band puts the plan button at right."
+      }
+    ],
+    "focus": {
+      "light": "3px solid #101a2b, offset 3px",
+      "onNavyOrTeal": "3px solid #d7f75b, offset 3px",
+      "darkMode": "3px solid #d7f75b everywhere"
+    },
+    "contrast": {
+      "white-on-teal": "4.75:1",
+      "citron-on-teal": "3.93:1 (bold 19px+ only)",
+      "navy-on-poppy": "5.62:1",
+      "poppy-on-fog": "2.76:1 (never text)",
+      "stop-colors-on-navy": "5.6 to 14.4:1",
+      "border-on-fog": "3.48:1"
+    }
+  },
+  "components": [
+    {
+      "name": "Go Button",
+      "kind": "button",
+      "refersTo": "button-go",
+      "description": "The one primary action: poppy fill, navy text.",
+      "html": "<button class=\"ds-btn-go\">Get my EV plan</button>",
+      "css": ".ds-btn-go { font: 700 1.0625rem/1.2 'Schibsted Grotesk', system-ui, sans-serif; background: #ff5a36; color: #101a2b; border: 2px solid transparent; border-radius: 4px; padding: 0.9rem 1.4rem; min-height: 3rem; cursor: pointer; } .ds-btn-go::after { content: ''; display: inline-block; width: 0.55em; height: 0.55em; margin-left: 0.6em; border: solid currentColor; border-width: 3px 3px 0 0; transform: rotate(45deg); vertical-align: 0.05em; } .ds-btn-go:hover { background: #ff7a5c; } .ds-btn-go:active { transform: translateY(1px); } .ds-btn-go:focus-visible { outline: 3px solid #101a2b; outline-offset: 3px; }"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Secondary action: 2px ink outline, transparent.",
+      "html": "<button class=\"ds-btn-quiet\">Start over with a new ZIP</button>",
+      "css": ".ds-btn-quiet { font: 700 1.0625rem/1.2 'Schibsted Grotesk', system-ui, sans-serif; background: transparent; color: #101a2b; border: 2px solid #101a2b; border-radius: 4px; padding: 0.9rem 1.4rem; min-height: 3rem; cursor: pointer; } .ds-btn-quiet:hover { background: #dde3ea; } .ds-btn-quiet:focus-visible { outline: 3px solid #101a2b; outline-offset: 3px; }"
+    },
+    {
+      "name": "Link Button",
+      "kind": "button",
+      "refersTo": "button-link",
+      "description": "Tertiary text action with a 2px poppy underline.",
+      "html": "<button class=\"ds-btn-link\">Skip this question</button>",
+      "css": ".ds-btn-link { background: none; border: 0; padding: 0.4rem 0; min-height: 2.75rem; cursor: pointer; font: 600 1.0625rem 'Schibsted Grotesk', system-ui, sans-serif; color: #101a2b; text-decoration: underline; text-decoration-color: #ff5a36; text-decoration-thickness: 2px; text-underline-offset: 0.2em; } .ds-btn-link:hover { text-decoration-color: currentColor; } .ds-btn-link:focus-visible { outline: 3px solid #101a2b; outline-offset: 3px; }"
+    },
+    {
+      "name": "Answer Option",
+      "kind": "input",
+      "refersTo": "option",
+      "description": "Full-width radio card; selected fills navy.",
+      "html": "<div class=\"ds-options\"><label class=\"ds-option\"><input type=\"radio\" name=\"q\" checked> Maybe: I rent and could ask my landlord</label><label class=\"ds-option\"><input type=\"radio\" name=\"q\"> No, I park on the street</label></div>",
+      "css": ".ds-options { display: grid; gap: 0.6rem; max-width: 36rem; } .ds-option { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 1.1rem; min-height: 3.5rem; border: 2px solid #77828c; border-radius: 4px; background: #ffffff; color: #101a2b; cursor: pointer; font: 600 1.0625rem 'Schibsted Grotesk', system-ui, sans-serif; } .ds-option:hover { border-color: #101a2b; } .ds-option:has(input:checked) { background: #101a2b; border-color: #101a2b; color: #fff; } .ds-option:has(input:focus-visible) { outline: 3px solid #101a2b; outline-offset: 3px; } .ds-option input { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: #ff5a36; }"
+    },
+    {
+      "name": "ZIP Field",
+      "kind": "input",
+      "refersTo": "zip-input",
+      "description": "Navy-only field with citron border and condensed tabular figures.",
+      "html": "<div class=\"ds-zip-wrap\"><input class=\"ds-zip\" inputmode=\"numeric\" value=\"80302\" aria-label=\"Your ZIP code\"></div>",
+      "css": ".ds-zip-wrap { background: #101a2b; padding: 1.5rem; } .ds-zip { font: 800 1.75rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; letter-spacing: 0.12em; font-variant-numeric: tabular-nums; width: 9.5rem; padding: 0.55rem 0.8rem; min-height: 3rem; border-radius: 4px; border: 2px solid #d7f75b; background: #1a2740; color: #fff; } .ds-zip:focus-visible { outline: 3px solid #d7f75b; outline-offset: 3px; } .ds-zip[aria-invalid='true'] { border-color: #ff5a36; }"
+    },
+    {
+      "name": "Tone Chips",
+      "kind": "chip",
+      "refersTo": "tone-chip-helps",
+      "description": "Valence by form: Helps filled in stop color, Check outlined white, Hurts dashed poppy, Assumed rail fill.",
+      "html": "<div class=\"ds-chip-row\"><span class=\"ds-chip\">Helps</span><span class=\"ds-chip ds-chip-check\">Check</span><span class=\"ds-chip ds-chip-hurts\">Hurts</span><span class=\"ds-chip ds-chip-assumed\">Assumed</span></div>",
+      "css": ".ds-chip-row { background: #101a2b; padding: 1rem; display: flex; gap: 0.45rem; } .ds-chip { display: inline-block; padding: 0.05rem 0.45rem; border-radius: 3px; font: 700 0.75rem 'Schibsted Grotesk', system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; background: #2fd0dc; color: #101a2b; } .ds-chip-check { background: transparent; color: #fff; box-shadow: inset 0 0 0 1.5px #fff; } .ds-chip-hurts { background: transparent; color: #fff; border: 1.5px dashed #ff5a36; padding: 0 0.4rem; } .ds-chip-assumed { background: #2c3a55; color: #fff; }"
+    },
+    {
+      "name": "Tier Scale",
+      "kind": "chip",
+      "refersTo": "tier-chip",
+      "description": "Verdict scale chips with shape plus word; current tier inverts to navy and citron.",
+      "html": "<ol class=\"ds-tiers\"><li><span class=\"ds-shape ds-dia\"></span>Not yet</li><li><span class=\"ds-shape ds-dia\"></span>Possible, with tradeoffs</li><li><span class=\"ds-shape\"></span>Good fit with a plan</li><li aria-current=\"true\"><span class=\"ds-shape ds-circ\"></span>Strong fit</li></ol>",
+      "css": ".ds-tiers { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; padding: 0; } .ds-tiers li { display: flex; align-items: center; gap: 0.45rem; background: #dde3ea; color: #3a4558; font: 700 0.8125rem 'Schibsted Grotesk', system-ui, sans-serif; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.35rem 0.6rem; border-radius: 3px; } .ds-tiers li[aria-current] { background: #101a2b; color: #d7f75b; } .ds-shape { width: 0.6rem; height: 0.6rem; background: currentColor; flex: none; } .ds-circ { border-radius: 50%; } .ds-dia { transform: rotate(45deg) scale(0.85); }"
+    },
+    {
+      "name": "Stop Row",
+      "kind": "custom",
+      "refersTo": "stop-row",
+      "description": "Signature: navy bar with a white-ringed station on the 14px route line, label, tone chip, detail, figure in the stop color, chevron.",
+      "html": "<ol class=\"ds-route\"><li class=\"ds-stop\" style=\"--c:#ffffff;--seg:#a99bff\"><button class=\"ds-stop-btn\" aria-expanded=\"false\"><span class=\"ds-station\"></span><span class=\"ds-main\"><span class=\"ds-label\">Home, 80302</span><span class=\"ds-detail\"><span class=\"ds-chip ds-check\">Check</span>You rent. Home charging is possible if your landlord agrees.</span></span><span class=\"ds-fig\">Ask</span><span class=\"ds-chev\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M6 3l5 5-5 5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\"/></svg></span></button></li><li class=\"ds-stop\" style=\"--c:#a99bff\"><button class=\"ds-stop-btn\" aria-expanded=\"false\"><span class=\"ds-station\"></span><span class=\"ds-main\"><span class=\"ds-label\">Fuel saved each year</span><span class=\"ds-detail\"><span class=\"ds-chip\">Helps</span>$1,190 electric vs $1,870 gas</span></span><span class=\"ds-fig\">~$680</span><span class=\"ds-chev\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M6 3l5 5-5 5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\"/></svg></span></button></li></ol>",
+      "css": ".ds-route { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; font-family: 'Schibsted Grotesk', system-ui, sans-serif; } .ds-stop { position: relative; background: #101a2b; color: #fff; border-radius: 6px; } .ds-stop::before { content: ''; position: absolute; z-index: 1; left: calc(1.75rem - 7px); top: 2.875rem; bottom: calc(-0.6rem - 2.875rem); width: 14px; background: var(--seg, var(--c)); } .ds-stop:last-child::before { display: none; } .ds-stop-btn { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 3.5rem 1fr auto 2.75rem; align-items: center; width: 100%; min-height: 5.75rem; border-radius: 6px; } .ds-stop-btn:focus-visible { outline: 3px solid #d7f75b; outline-offset: 3px; } .ds-stop-btn:hover .ds-chev { color: #fff; } .ds-station { position: relative; z-index: 2; justify-self: center; width: 2.1rem; height: 2.1rem; border-radius: 50%; background: #fff; border: 7px solid var(--c); box-shadow: 0 0 0 4px #101a2b; box-sizing: border-box; } .ds-main { padding: 0.9rem 0.5rem 0.9rem 0.25rem; min-width: 0; } .ds-label { display: block; font-size: 1.25rem; font-weight: 700; line-height: 1.25; } .ds-detail { display: block; margin-top: 0.3rem; color: #c7d0dd; font-size: 0.9375rem; } .ds-chip { display: inline-block; margin-right: 0.45rem; padding: 0.05rem 0.45rem; border-radius: 3px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--c); color: #101a2b; } .ds-check { background: transparent; color: #fff; box-shadow: inset 0 0 0 1.5px #fff; } .ds-fig { font: 900 clamp(2.25rem, 4.5vw, 3.25rem)/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; font-variant-numeric: tabular-nums; color: var(--c); padding: 0 1.1rem 0 0.5rem; text-align: right; white-space: nowrap; } .ds-chev { align-self: stretch; display: grid; place-items: center; border-left: 1px solid #2c3a55; color: #c7d0dd; } .ds-chev svg { transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); } .ds-stop-btn[aria-expanded='true'] .ds-chev svg { transform: rotate(90deg); }"
+    },
+    {
+      "name": "Verdict Band",
+      "kind": "card",
+      "refersTo": "verdict-band",
+      "description": "Teal field with the tier mark, condensed verdict, and the key answer in large bold citron.",
+      "html": "<div class=\"ds-band\"><div class=\"ds-verdict\"><span class=\"ds-mark\"></span><h1>Strong fit</h1></div><p class=\"ds-sum\">An EV fits how you live and drive. <strong>The answer that matters most: ask your landlord about charging.</strong></p></div>",
+      "css": ".ds-band { background: #0b7f8a; color: #fff; padding: 1.75rem 1.5rem; font-family: 'Schibsted Grotesk', system-ui, sans-serif; } .ds-verdict { display: flex; align-items: center; gap: 1.1rem; } .ds-verdict h1 { font: 900 clamp(3rem, 8vw, 6rem)/0.88 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; margin: 0; } .ds-mark { flex: none; width: clamp(2.25rem, 4vw, 3.5rem); height: clamp(2.25rem, 4vw, 3.5rem); background: #d7f75b; border-radius: 50%; } .ds-sum { font-size: 1.1875rem; margin: 0.9rem 0 0; max-width: 48rem; } .ds-sum strong { color: #d7f75b; font-weight: 700; }"
+    },
+    {
+      "name": "Question Progress",
+      "kind": "nav",
+      "description": "Progress drawn as the route: rail line, stations lit in stop colors, current station citron.",
+      "html": "<ol class=\"ds-qroute\" aria-hidden=\"true\"><li class=\"done\" style=\"--seg:#2fd0dc\"></li><li class=\"current\" style=\"--seg:#d7f75b\"></li><li style=\"--seg:#a99bff\"></li><li style=\"--seg:#ff5a36\"></li><li class=\"end\" style=\"--seg:#2fd0dc\"></li></ol>",
+      "css": ".ds-qroute { list-style: none; display: flex; margin: 0; padding: 0.9rem 1.1rem; background: #101a2b; border-radius: 6px; max-width: 36rem; } .ds-qroute li { flex: 1; position: relative; height: 1.75rem; } .ds-qroute li::before { content: ''; position: absolute; left: 0.875rem; right: -0.875rem; top: calc(0.875rem - 7px); height: 14px; background: #2c3a55; } .ds-qroute li::after { content: ''; position: absolute; left: 0; top: 0; z-index: 1; width: 1.75rem; height: 1.75rem; box-sizing: border-box; border-radius: 50%; background: #fff; border: 6px solid #2c3a55; box-shadow: 0 0 0 3px #101a2b; } .ds-qroute li.done::before { background: var(--seg); } .ds-qroute li.done::after { border-color: var(--seg); } .ds-qroute li.current::after { border-color: var(--seg); background: #d7f75b; } .ds-qroute li.end { flex: 0 0 1.75rem; } .ds-qroute li.end::before { display: none; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Family Transit Map",
+    "overview": "The page reads like a transit line run through a gear catalog. A deep navy shell carries saturated stop colors (aqua, citron, ultraviolet-light, poppy), and one 14px line runs through white-ringed stations from home to the park. Every decision about the visitor's EV is a stop on that line: a navy bar with a label, a short sentence, and one oversized condensed figure in the stop's own color. The verdict sits above the line in a full-width teal band, in condensed capitals at display scale.\n\nDensity is moderate and declarative. Each row gives one straight answer, and detail stays folded inside the row until it is opened. Color is loud but never carries meaning alone: every tone, tier, and state also has a shape or a word. The world is flat. Depth comes from navy-on-fog contrast and hard rings, never from blur.\n\nThe same line does two jobs. On results it draws down stop by stop, once. In the questions it fills stations as progress. The landing illustration puts the loaded family car on that line too, so the line is the one recurring signature.",
+    "keyCharacteristics": [
+      "Navy bars on a cool fog ground; teal is reserved for the verdict field.",
+      "One 14px route line with white-ringed stations, colored per stop.",
+      "Condensed 900-weight capitals for verdicts and questions; condensed figures in stop colors.",
+      "Shape plus word for every tier and tone; color is decoration on top of meaning.",
+      "Flat surfaces with hard rings and edges; no blurred shadows.",
+      "Poppy is the action color and appears as a fill, almost never as text."
+    ],
+    "rules": [
+      {
+        "name": "The Stops-On-Navy Rule",
+        "body": "Citron, aqua, ultraviolet-light, and poppy figures and text sit only on navy (5.6 to 14.4:1). On the fog ground poppy measures 2.76:1, so it never appears there as text; it appears only as a button fill under navy text, or as decoration beside text that already carries the meaning.",
+        "section": "colors"
+      },
+      {
+        "name": "The Large-Citron Rule",
+        "body": "Citron on teal measures 3.93:1, so it is used only for bold text at 19px and above (the verdict summary's key line). Smaller citron text belongs on navy.",
+        "section": "colors"
+      },
+      {
+        "name": "The Teal-Is-The-Verdict Rule",
+        "body": "Teal fills exactly one field per page: the verdict band. It is not a second shell color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Figures-Only Tabular Rule",
+        "body": "Tabular numerals are applied only to stop figures, panel data values, the ZIP field, and the mile scale. Schibsted Grotesk widens punctuation under tnum, so running text keeps proportional figures.",
+        "section": "typography"
+      },
+      {
+        "name": "The Condensed-Caps Rule",
+        "body": "Big Shoulders is always 800 to 900 and, at display and headline sizes, always uppercase. It never sets sentences.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hard-Ring Rule",
+        "body": "If something needs separation, give it a zero-blur ring or a border. Soft shadows do not exist in this world.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Tier-Shape Rule",
+        "body": "Each verdict tier has its own silhouette, shown with its word: circle for Strong fit, square for Good fit with a plan, diamond for Possible, with tradeoffs, and a ringed diamond (diamond plus an offset citron outline) for Not yet. In the tier scale, Possible and Not yet share the small diamond, and the word separates them.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do put stop colors (citron, aqua, uv-light, poppy) on navy only, where they measure 5.6 to 14.4:1.",
+      "Do use poppy as a button fill with navy text (5.62:1), and keep it the one action color.",
+      "Do pair every tier and tone with a shape or form and a word: circle, square, diamond, ringed diamond; filled, outlined, dashed, rail-filled.",
+      "Do switch the focus ring to citron on navy and teal surfaces and keep it navy on light ones (3px, offset 3px).",
+      "Do give stop rows a 1px #33456a edge in dark mode so they still read as bars.",
+      "Do keep light-mode borders at Steel Border (#77828c, 3.48:1 on fog) or darker.",
+      "Do limit tabular numerals to figures and data.",
+      "Do separate surfaces with hard, zero-blur rings or 1 to 2px borders."
+    ],
+    "donts": [
+      "Don't set poppy, citron, aqua, or uv-light as text on the fog ground or on white.",
+      "Don't use citron on teal below bold 19px.",
+      "Don't let color alone tell a tier, a tone, or an error.",
+      "Don't add blurred or offset drop shadows.",
+      "Don't apply tnum to running text; it widens Schibsted Grotesk's punctuation.",
+      "Don't use teal as a second shell color; it belongs to the verdict.",
+      "Don't set sentences in Big Shoulders Display, or use it below weight 800.",
+      "Don't use any automaker's name, logo, or visual identity."
+    ]
+  }
+}

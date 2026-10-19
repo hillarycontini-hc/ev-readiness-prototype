@@ -45,7 +45,7 @@
   --stop-fuel: var(--uv-light);
   --stop-parks: var(--poppy);
 
-  /* Type scale: four sizes and nothing between */
+  /* Type scale (sizes in use are recorded in DESIGN.md) */
   --t-display: clamp(3rem, 8vw, 6rem);
   --t-figure: clamp(2.25rem, 4.5vw, 3.25rem);
   --t-title: clamp(1.375rem, 2.6vw, 1.75rem);
