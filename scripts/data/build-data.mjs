@@ -116,12 +116,23 @@ class Grid {
 // ---------- charging stations (NREL / AFDC) ----------
 
 const stationRows = toObjects(parseCsv(raw('nrel_elec_stations.csv').toString('utf8')));
+// Connector types, one letter each: J = J1772 (Level 2), C = CCS, N = NACS (Tesla), D = CHAdeMO.
+const CONNECTOR_CODES = { J1772: 'J', J1772COMBO: 'C', TESLA: 'N', CHADEMO: 'D', NEMA1450: '', NEMA515: '', NEMA520: '' };
 const stations = stationRows
   .map((s) => ({
     lat: Number(s.Latitude),
     lon: Number(s.Longitude),
     l2: Number(s['EV Level2 EVSE Num']) || 0,
     dc: Number(s['EV DC Fast Count']) || 0,
+    // Detail for the plan's "chargers near this place" lists (rendered as text only).
+    id: Number(s.ID) || 0,
+    name: (s['Station Name'] || '').trim().slice(0, 80),
+    street: (s['Street Address'] || '').trim().slice(0, 80),
+    city: (s.City || '').trim().slice(0, 40),
+    network: (s['EV Network'] || '').trim().slice(0, 40),
+    connectors: (s['EV Connector Types'] || '').trim().split(/s+/).filter(Boolean).map((c) => CONNECTOR_CODES[c] || '').filter(Boolean).join(''),
+    hours: (s['Access Days Time'] || '').trim().slice(0, 60),
+    price: (s['EV Pricing'] || '').trim().slice(0, 60),
   }))
   .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lon) && (s.l2 > 0 || s.dc > 0));
 const dcGrid = new Grid(stations.filter((s) => s.dc > 0));
@@ -226,6 +237,9 @@ for (const [zip, loc] of zctas) {
   records.push({
     zip,
     s: st,
+    // ZIP center (3 decimals, about 100 m): default "Home" for the plan's charger search.
+    la: round(loc.lat, 3),
+    lo: round(loc.lon, 3),
     // Share of homes that are single-family (detached or attached): the home-charging prior.
     sf: housing >= 20 ? pct(Number(u.B25024_E002) + Number(u.B25024_E003), housing) : null,
     own: t && Number(t.B25003_E001) >= 20 ? pct(Number(t.B25003_E002), Number(t.B25003_E001)) : null,
@@ -353,6 +367,20 @@ if (problems.length) {
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(path.join(OUT, 'zip'), { recursive: true });
 
+// Per-station detail, sharded into half-degree cells (about 35 x 25 miles) so the browser
+// loads only the cells around a searched place. Arrays keep the files small:
+// [id, name, street, city, lat, lon, level2 ports, fast ports, network, connector codes, hours, pricing]
+mkdirSync(path.join(OUT, 'stations'), { recursive: true });
+const STATION_CELL = 0.5;
+const cells = new Map();
+for (const st of stations) {
+  const key = `${Math.floor(st.lat / STATION_CELL)}_${Math.floor(st.lon / STATION_CELL)}`;
+  if (!cells.has(key)) cells.set(key, []);
+  cells.get(key).push([st.id, st.name, st.street, st.city, round(st.lat, 4), round(st.lon, 4), st.l2, st.dc, st.network, st.connectors, st.hours, st.price]);
+}
+for (const [key, list] of cells) writeFileSync(path.join(OUT, 'stations', `${key}.json`), JSON.stringify(list));
+console.log(`station detail: ${stations.length} stations in ${cells.size} cells`);
+
 const shards = new Map();
 for (const r of records) {
   const k = r.zip.slice(0, 3);
@@ -381,6 +409,7 @@ const meta = {
   nationalCommuteMinutes: round(totalMinutes / totalWorkers, 1),
   fetchedAt: fetchedAt.fetchedAt,
   zipCount: records.length,
+  stationCellDegrees: STATION_CELL,
   stationCount: stations.length,
   fleet,
   electricityCentsPerKwh: electricity,

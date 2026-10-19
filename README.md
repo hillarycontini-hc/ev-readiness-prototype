@@ -4,10 +4,12 @@
 questions, and get a personal, explained answer: where you could charge, the range you
 actually need compared with electric SUVs, minivans, and pickups on sale today, what you
 would spend on charging versus gas, and whether you can charge on the way to the national
-parks near you. Then get a printable plan for what to sort out before you buy.
+parks near you. Then work through a plan: find chargers near work and home, compare every
+fully electric SUV and pickup against your budget, book a test drive, and share the plan
+with a partner.
 
-A working prototype built on free public data. No sign-up, no API keys at runtime, and
-nothing personal is stored.
+A working prototype built on free public data. No sign-up, no API keys in the browser, and
+nothing personal is stored on a server.
 
 > **Live demo: https://ev-readiness-prototype.hillarycontini.workers.dev** · Or run it locally in two commands (below).
 > One-page product brief (user, problem, solution, north star, platform decisions):
@@ -52,10 +54,19 @@ reasoning shown might.
 3. **A verdict with reasons:** Strong fit, Good fit with a plan, Possible with tradeoffs, or
    Not yet. Each reason says whether it works for or against you. Four cards follow:
    charging, range, cost, and outdoor trips.
-4. **"Get my EV plan."** A checklist built from the answers: who to ask about charging, what
+4. **"Get my EV plan."** Steps built from the answers: who to ask about charging, what
    to shop for, which park trips need a charging stop, and what to bring to a test drive.
-   This is a fake-door test for lead capture. It measures interest and says plainly that
-   nothing was collected.
+   It asks for no contact details; it started as a fake-door test for lead capture.
+5. **Tools inside the plan** ([plan v2](docs/plan-v2.md)):
+   - **Chargers near work, lunch, home, and the gym.** Search an address or use a ZIP, then
+     save the chargers that fit your week.
+   - **A car explorer.** Every fully electric SUV and pickup on sale in the U.S., listed
+     neutrally, filtered by a price cap or by an estimated loan or lease payment. Starting
+     prices are checked monthly against each brand's site ([refresh process](docs/price-refresh.md)).
+   - **Test drives.** Links to each brand's own booking page or dealer locator.
+   - **A partner summary** to print, save as a PDF, or share by link. The plan is saved on
+     your device; the share link leaves saved places out unless you include them.
+   - Next (phase B): a road-trip planner with charging stops you can step through.
 
 ## How personalization works
 
@@ -130,7 +141,7 @@ finish reviewer before shipping. The system is documented in [`DESIGN.md`](DESIG
 
 | Area | Decision |
 |---|---|
-| Backend | **None for v1.** Static site; the "database" is precomputed public data in versioned JSON. Nothing to secure, pay for, or breach. |
+| Backend | **Static, plus one Worker endpoint.** The "database" is precomputed public data in versioned JSON. The only server code is a Cloudflare Worker that proxies address search so the API key stays off the client; it stores nothing. |
 | Database (when needed) | Cloudflare D1 (SQLite) with Workers, for example to rate-limit a future chat mode. Supabase only if accounts or saved results become a goal. |
 | Authentication | **None for visitors.** That keeps the privacy promise and the funnel friction-free. Admin access is through GitHub, Cloudflare, and PostHog accounts with 2FA. |
 | Testing | Unit tests, browser tests (privacy payloads, axe accessibility, keyboard), and build-time data checks, all running in GitHub Actions on every push and pull request. |
@@ -145,14 +156,19 @@ Privacy is a product requirement here, not a footnote:
   named for the ZIP's first three digits from the same site. The ZIP is never sent to
   analytics, and PostHog's IP-based location lookup is switched off. Events carry the
   state (for example, CO) instead.
-- **No cookies, no local storage, no consent banner needed.** Analytics identity lives in
+- **Your plan stays on your device.** Saved chargers and cars are kept in this browser only,
+  and only after you save something. Share links carry the plan after the `#`, which is
+  never sent to a server.
+- **Address search goes through our own proxy,** so the search provider never sees your IP,
+  and nothing is logged.
+- **No cookies and no consent banner needed.** Analytics identity lives in
   memory for one page view.
-- **No session replay, no autocapture.** Only 16 named events are sent, and an allowlist
+- **No session replay, no autocapture.** Only 26 named events are sent, and an allowlist
   filter strips everything else, including URL query strings, ad click ids, full user agent,
   and timezone.
 - **Global Privacy Control and Do Not Track are respected:** analytics does not load at all.
-- **No secrets in the client.** All data is precomputed at build time into static JSON, so
-  the live site calls no data APIs and holds no keys.
+- **No secrets in the client.** Data is precomputed at build time into static JSON. The one
+  live API key (address search) is a server-side secret behind a rate-limited proxy.
 - **Verified, not just configured.** A browser test intercepts the real analytics traffic
   and asserts that the ZIP never appears, nothing is stored, and only allowlisted fields
   are sent ([`tests/e2e/privacy.e2e.mjs`](tests/e2e/privacy.e2e.mjs)).
@@ -178,6 +194,9 @@ All free and public, downloaded and precomputed by `npm run data`:
 | U.S. Census Bureau ACS 2024 5-year, ZCTA Gazetteer | Housing type, commute time, ZIP locations |
 | EIA | State residential electricity prices, regional gasoline prices |
 | National Park Service API (116 outdoor park units) | Outdoor destinations |
+| Each automaker's U.S. site, checked monthly (52 models) | Starting prices, seats, test-drive and dealer links ([process](docs/price-refresh.md)) |
+| Experian *State of the Automotive Finance Market* | Starting loan APR for payment estimates |
+| Geoapify (live, through the proxy) | Address search in the plan tools |
 
 Every assumption that is not from these sources (gas car mpg, public charging prices, range
 buffer) is listed in [`DECISIONS.md`](DECISIONS.md) and on the results page.
@@ -221,11 +240,16 @@ npm run serve
 Then open http://localhost:8080. Analytics stays off until a PostHog project key is added to
 [`site/js/config.js`](site/js/config.js).
 
+Address search in the plan tools needs the Worker. Without it, the tools say search is
+unavailable and use a ZIP instead. To run it locally, put `GEOAPIFY_KEY=...` in a
+`.dev.vars` file (gitignored) and run `npx wrangler dev`.
+
 | Command | What it does |
 |---|---|
-| `npm test` | Unit tests for the decision logic, analytics filter, and vendored library |
-| `npm run test:e2e` | Browser tests: accessibility (axe, keyboard, reflow) and privacy (real analytics payloads). First run: `npx playwright install chromium` |
+| `npm test` | Unit tests for the decision logic, analytics filter, vendored library, search proxy, plan storage, and loan and lease math |
+| `npm run test:e2e` | Browser tests: accessibility (axe, keyboard, reflow) privacy (real analytics payloads), and the plan tools. First run: `npx playwright install chromium` |
 | `npm run data` | Re-download all public data and rebuild `site/data/` (a few minutes, about 200 MB of downloads) |
+| `npm run data:vehicles` | Rebuild the car explorer from `data/vehicles-curated.json` after the monthly price check |
 | `npm run vendor` | Refresh the vendored PostHog library after upgrading it |
 
 ## Repository map
@@ -237,11 +261,18 @@ site/                 the whole website (deploy this folder)
   js/app.js           UI flow and rendering
   js/analytics.js     privacy-first PostHog wrapper and A/B assignment
   js/copy.js          all visitor-facing text, including both A/B variants
-  data/               precomputed JSON (one shard per 3-digit ZIP prefix)
+  js/plan-tools.js    the tools inside the plan: chargers, car explorer, test drives
+  js/plan-store.js    saved plan and share links (validated on load)
+  js/finance.js       loan and lease estimates (unit tested)
+  js/places.js        address search client and nearby-charger lookup
+  data/               precomputed JSON (ZIP shards, station map cells, vehicles)
   vendor/             pinned PostHog browser build
+worker/index.js       the address-search proxy (Cloudflare Worker)
+data/vehicles-curated.json  hand-checked prices and brand links
 scripts/data/         download and precompute public data
 tests/                unit tests and browser tests
-docs/                 decision logic, analytics, test plan, accessibility, security
+docs/                 decision logic, analytics, test plan, accessibility, security,
+                      plan v2, monthly price refresh
 DECISIONS.md          every default decision and why
 ```
 
@@ -249,7 +280,8 @@ DECISIONS.md          every default decision and why
 
 Estimates only, not financial advice. Distances are straight-line (road miles estimated at
 1.25x). Park charging is measured from one point per park, which can understate gateway-town
-charging for large parks. Incentives, purchase price, insurance, and maintenance are not
+charging for large parks. Loan and lease payments are estimates from editable inputs, not quotes. Incentives,
+taxes, insurance, and maintenance are not
 modeled. ZIPs without a Census ZCTA (some PO-box and single-business ZIPs) are not covered.
 
 ---

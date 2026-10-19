@@ -105,3 +105,29 @@ Direction contract: `.impeccable/surfaces/site-index-html.md`. Design system: `D
 | 57 | Landing illustration is authored inline SVG (no image generation available): a loaded family EV climbing the route to a park | Brandless, no photos, consistent with the route language; the strict CSP allows SVG attributes but not inline styles. |
 | 58 | A/B variants now reorder the route: savings puts Fuel second, adventure puts Parks second | The old "first card" became "first stop after Home". |
 | 59 | Impeccable design skill installed locally (`.claude/`, gitignored) with its edit hooks; its anonymous usage ping is disabled with `IMPECCABLE_NO_TELEMETRY=1` | Hillary asked for the full install; sending usage data to a third party was not something she had agreed to. |
+
+## Plan v2, phase A (October 2026)
+
+Full plan: [`docs/plan-v2.md`](docs/plan-v2.md).
+
+| # | Decision | Why |
+|---|---|---|
+| 60 | The plan's steps get working tools: chargers near work and lunch, near home and the gym, a car explorer, and test-drive links, plus a partner summary to print or share | Hillary's call: the plan helped with only the first step. "Confident next steps" is the north star, so the steps should be doable on the page. |
+| 61 | Address search goes through one Cloudflare Worker (`/api/geocode`) to Geoapify; the key is a Worker secret | No keys in client code. The provider never sees the visitor's IP. The Worker stores and logs nothing (observability off). |
+| 62 | The proxy only answers same-origin GET requests, limits each visitor (hashed IP) to 30 searches a minute, filters to the U.S., and times out after 5 seconds | Keeps the key from being used as a free geocoder by other sites. The spend cap is Geoapify's free plan with no card on file: past the free quota it refuses requests rather than billing. |
+| 63 | If search is down or limited, the tool offers a ZIP instead | Every tool works with no third-party service, the same rule as the rest of the site. |
+| 64 | Station details ship as static half-degree map cells (`data/stations/{i}_{j}.json`) | Chargers near any point load from the same site with no API call. A cell is small and cacheable. |
+| 65 | The plan is saved on the device (`localStorage`, key `evrc-plan-v1`) only after the visitor saves something or checks a step | Nothing is stored for a visitor who only reads. "Clear" on the landing page deletes it; "Start over" keeps it so the visitor can resume. |
+| 66 | Share links carry the plan after `#` (compressed, then base64url), and are checked field by field when opened | Browsers never send the fragment to a server, so nothing is stored anywhere. A tampered link can't inject content: every value is validated and rendered as text. |
+| 67 | Saved places are left out of share links unless the visitor ticks "Include my saved places" | Where someone works or works out is personal. The default is the private choice. |
+| 68 | The car explorer lists every fully electric SUV, minivan, and pickup on sale in the U.S., neutrally, sorted only by the visitor's budget | Hillary asked for all options, with Rivian included but not favored. No brand is featured or badged. |
+| 69 | Price rule: the least expensive trim orderable today, from the brand's own U.S. site where possible | One comparable number per model. Old stock and discontinued trims would understate prices. |
+| 70 | A vehicle with no EPA range rating is left out of the explorer (now: Cadillac Escalade IQ and IQL) | Range is the reason the explorer exists. A guessed range would break the "real data only" rule. |
+| 71 | Models not on sale (for example Ford F-150 Lightning, Hyundai Kona Electric) are listed separately with a dated reason, and minivans show "none on sale" | Visitors searching for them get an answer instead of a silent gap. |
+| 72 | Loan and lease figures are estimates from editable inputs. Loan APR starts at Experian's average new-car rate (6.35%, Q2 2026); lease residual 50% and money factor 0.0025 are labeled as typical values, not averages | No published average exists for lease terms. The page says to use the dealer's real numbers. |
+| 73 | Lease math: (capitalized cost − residual) ÷ months, plus (capitalized cost + residual) × money factor; taxes and fees excluded | The standard formula, shown as "est." and unit tested. |
+| 74 | Prices are refreshed monthly, Tesla mid-month, and every model monthly from August to October; the build warns after 35 days | Most brands change prices a few times a year, but Tesla changes without notice and model-year changeover lands in late summer. See [`docs/price-refresh.md`](docs/price-refresh.md). |
+| 75 | Test-drive links go only to each brand's own U.S. site: its booking page and its dealer locator, checked in a browser | Hillary chose official links only. No dealer groups or lead sites, so no one is paid for the referral. |
+| 76 | A brand link includes the visitor's ZIP only where the brand's page was shown to use it, and the link says "near 80302" | It saves the visitor typing their ZIP again. Saying so in the link and the note keeps the "we only collect your ZIP" promise honest: the visitor chooses to send it, to a brand they picked. |
+| 77 | VinFast links to its dealer page only; its test-drive form is on a Salesforce domain | A link to an unfamiliar domain looks like phishing even when it is official. |
+| 78 | Analytics for the tools sends only event names and coarse values (slot, method, class, make, counts) | The blocked-name filter (`zip`, `address`, `lat`, `lon`, `name`...) still applies; the privacy test now runs search, save, and share and checks that no address, coordinate, ZIP, or station name is sent. |

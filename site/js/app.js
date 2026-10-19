@@ -8,10 +8,11 @@ import {
   QUESTION_COPY, REASON_COPY, TIER_COPY, TONE_COPY, VARIANTS,
 } from './copy.js';
 import * as analytics from './analytics.js';
+import { chevron, el, externalLink as linkTo, num, srOnly, usd, usd10 as money } from './dom.js';
+import { createPlanTools } from './plan-tools.js';
+import { clearSaved, decodeShare, emptyPlan, encodeShare, loadSaved, savePlan, sharePayload } from './plan-store.js';
 
 const $ = (id) => document.getElementById(id);
-const num = new Intl.NumberFormat('en-US');
-const money = (n) => `$${num.format(Math.abs(Math.round(n / 10) * 10))}`;
 // Questions that apply to this visitor (work charging only when home charging is uncertain).
 const applicable = () => questionsFor(state.answers);
 const answeredCount = () => applicable().filter((k) => state.answers[k]).length;
@@ -25,82 +26,18 @@ const state = {
   refineSet: null, // when refining: only the questions skipped the first time
   nextStepSent: false, // north star: one next_step_taken per visit
   lastRec: null,
+  plan: null, // the visitor's EV plan (saved on this device once they act)
   meta: null,
   parks: null,
   variant: 'control',
 };
 
-// ---------- tiny DOM helper ----------
-
-function el(tag, props = {}, ...children) {
-  const node = document.createElement(tag);
-  for (const [k, v] of Object.entries(props)) {
-    if (v == null || v === false) continue;
-    if (k === 'class') node.className = v;
-    else if (k === 'text') node.textContent = v;
-    else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
-    else node.setAttribute(k, v === true ? '' : String(v));
-  }
-  for (const c of children.flat()) {
-    if (c == null || c === false) continue;
-    node.append(typeof c === 'string' ? document.createTextNode(c) : c);
-  }
-  return node;
-}
-
-const SVG_NS = 'http://www.w3.org/2000/svg';
-function chevron() {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 16 16');
-  svg.setAttribute('width', '18');
-  svg.setAttribute('height', '18');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  const path = document.createElementNS(SVG_NS, 'path');
-  path.setAttribute('d', 'M6 3 L11 8 L6 13');
-  path.setAttribute('fill', 'none');
-  path.setAttribute('stroke', 'currentColor');
-  path.setAttribute('stroke-width', '2.5');
-  path.setAttribute('stroke-linecap', 'round');
-  path.setAttribute('stroke-linejoin', 'round');
-  svg.append(path);
-  return svg;
-}
-
-function arrowIcon() {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 16 16');
-  svg.setAttribute('width', '14');
-  svg.setAttribute('height', '14');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  const path = document.createElementNS(SVG_NS, 'path');
-  path.setAttribute('d', 'M4 12 L12 4 M6 4 L12 4 L12 10');
-  path.setAttribute('fill', 'none');
-  path.setAttribute('stroke', 'currentColor');
-  path.setAttribute('stroke-width', '2.5');
-  path.setAttribute('stroke-linecap', 'round');
-  path.setAttribute('stroke-linejoin', 'round');
-  svg.append(path);
-  return svg;
-}
-
-function srOnly(text) {
-  return el('span', { class: 'sr-only', text });
-}
-
+// Outbound "learn more" links: https only, new tab, counted as a next step.
 function externalLink(text, url, linkId, extra = {}) {
-  // URLs come from our own data files, but only https links are ever rendered.
-  if (!/^https:\/\//i.test(String(url))) return el('span', { text });
-  return el('a', {
-    href: url,
-    target: '_blank',
-    rel: 'noopener noreferrer',
-    onclick: () => {
-      analytics.track('learn_more_clicked', { link_id: linkId, ...extra });
-      markNextStep('learn_more');
-    },
-  }, text, arrowIcon(), srOnly(' (opens in a new tab)'));
+  return linkTo(text, url, () => {
+    analytics.track('learn_more_clicked', { link_id: linkId, ...extra });
+    markNextStep('learn_more');
+  });
 }
 
 // ---------- views ----------
@@ -157,6 +94,35 @@ function setZipError(message) {
   }
 }
 
+async function loadZip(zip) {
+  const [, shard] = await Promise.all([loadStatic(), fetchJson(`data/zip/${zip.slice(0, 3)}.json`)]);
+  return shard && Object.hasOwn(shard, zip) ? shard[zip] : null;
+}
+
+/** Open a plan (from this device or a share link): its ZIP, its answers, its results, and the plan itself. */
+async function openPlan(saved, { shared }) {
+  show('view-loading');
+  try {
+    const rec = await loadZip(saved.zip);
+    if (!rec) { show('view-landing', 'zip'); return; }
+    state.zip = saved.zip;
+    state.zipRec = rec;
+    state.answers = { ...saved.answers };
+    state.refineSet = null;
+    state.plan = saved;
+    renderResults();
+    if (shared) {
+      $('shared-banner').textContent = loadSaved()
+        ? 'You’re viewing a shared EV plan. If you change anything, it replaces the plan saved on this device.'
+        : 'You’re viewing a shared EV plan. Anything you change is saved on this device only.';
+    }
+    $('shared-banner').hidden = !shared;
+    onPlanCta({ resumed: true });
+  } catch {
+    show('view-error', 'error-title');
+  }
+}
+
 async function onZipSubmit(event) {
   event.preventDefault();
   const zip = normalizeZip($('zip').value);
@@ -168,8 +134,7 @@ async function onZipSubmit(event) {
   setZipError(null);
   show('view-loading');
   try {
-    const [, shard] = await Promise.all([loadStatic(), fetchJson(`data/zip/${zip.slice(0, 3)}.json`)]);
-    const rec = shard && Object.hasOwn(shard, zip) ? shard[zip] : null;
+    const rec = await loadZip(zip);
     if (!rec) {
       analytics.track('zip_error', { reason: 'not_found' });
       show('view-landing');
@@ -180,6 +145,7 @@ async function onZipSubmit(event) {
     state.zipRec = rec;
     state.answers = {};
     state.refineSet = null;
+    state.plan = null;
     analytics.track('zip_submitted', { state: rec.s });
     renderQuestion(0);
   } catch {
@@ -580,6 +546,36 @@ function resetPlan() {
 
 // The plan is the route's last leg: one station per step, colored by what the step is about,
 // a short action to scan, the detail under it, and a "Done" box (nothing is saved).
+// ---------- the plan: saved on this device once the visitor acts ----------
+
+function plan() {
+  if (!state.plan) state.plan = emptyPlan();
+  return state.plan;
+}
+
+/** Change the plan, then save it on this device and refresh the summary. */
+function updatePlan(fn) {
+  const p = plan();
+  fn(p);
+  p.zip = state.zip;
+  p.answers = { ...state.answers };
+  savePlan(p);
+  renderSummary();
+}
+
+let tools = null;
+function planTools() {
+  tools ??= createPlanTools({
+    plan,
+    update: updatePlan,
+    track: analytics.track,
+    get rec() { return state.lastRec; },
+    get zip() { return state.zip; },
+    get zipRec() { return state.zipRec; },
+  });
+  return tools;
+}
+
 function renderPlan(rec) {
   const steps = planFor(rec);
   $('plan-thanks').textContent = PLAN_CTA.thanksBody(steps.length);
@@ -588,22 +584,133 @@ function renderPlan(rec) {
     const title = def.title(step.value);
     const next = steps[i + 1] ? PLAN_STEPS[steps[i + 1].id].stop : null;
     const id = `plan-done-${i}`;
+    const tool = planTools().toolFor(step.id);
+    let toolNodes = [];
+    if (tool) {
+      const panelId = `tool-${step.id}`;
+      const panel = el('div', { class: 'tool-panel', id: panelId, hidden: true });
+      let loaded = false;
+      const btn = el('button', {
+        type: 'button', class: 'tool-btn', 'aria-expanded': 'false', 'aria-controls': panelId,
+        onclick: async () => {
+          const open = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', String(!open));
+          panel.hidden = open;
+          if (!open && !loaded) { loaded = true; await planTools().renderTool(step.id, panel); }
+        },
+      }, tool.label, chevron());
+      toolNodes = [btn, panel];
+    }
     const li = el('li', { class: `plan-step p-${def.stop}` },
       el('span', { class: 'plan-station', 'aria-hidden': 'true', text: String(i + 1) }),
       el('div', { class: 'plan-main' },
         el('h3', { class: 'plan-title', text: title }),
-        el('p', { class: 'plan-detail' }, el('span', { class: 'chip', text: PLAN_CATEGORY[def.stop] }), def.detail(step.value))),
+        el('p', { class: 'plan-detail' }, el('span', { class: 'chip', text: PLAN_CATEGORY[def.stop] }), def.detail(step.value)),
+        toolNodes),
       el('label', { class: 'plan-done', for: id },
-        el('input', { type: 'checkbox', id }),
+        el('input', {
+          type: 'checkbox', id, checked: plan().done.includes(step.id),
+          onchange: (e) => {
+            updatePlan((p) => { p.done = p.done.filter((s) => s !== step.id); if (e.target.checked) p.done.push(step.id); });
+            if (e.target.checked) analytics.track('plan_step_done', { step: step.id.replace('plan-', '') });
+          },
+        }),
         PLAN_CTA.done, srOnly(`: ${title}`)));
     if (next) li.style.setProperty('--seg', next === 'finish' ? 'var(--poppy)' : `var(--stop-${next})`);
     return li;
   }));
+  renderSummary();
 }
 
-function onPlanCta() {
-  analytics.track('plan_cta_clicked', { tier: state.lastRec.tier });
-  markNextStep('plan');
+// ---------- partner summary: print, save as PDF, or share by link ----------
+
+async function renderSummary() {
+  const box = $('plan-summary');
+  const rec = state.lastRec;
+  if (!box || !rec) return;
+  const p = plan();
+  const steps = planFor(rec);
+  const doneCount = steps.filter((s) => p.done.includes(s.id)).length;
+  const c = rec.costs;
+  const nodes = [
+    el('h3', { id: 'summary-title', text: 'Your plan at a glance' }),
+    el('p', { class: 'summary-verdict' },
+      el('strong', { text: `${rec.tierLabel} for ZIP ${state.zip}. ` }), focusLine(rec)),
+    el('dl', { class: 'summary-facts' },
+      el('dt', { text: 'Fuel vs. gas' }), el('dd', { text: c.savings == null ? 'Not available' : c.savings >= 0 ? `About ${money(c.savings)} a year saved` : `About ${money(c.savings)} a year more` }),
+      el('dt', { text: 'Charging, per month' }), el('dd', { text: `About ${money(c.evCost / 12)} (vs. about ${c.gasCost == null ? 'n/a' : money(c.gasCost / 12)} on gas)` }),
+      el('dt', { text: 'Range you need' }), el('dd', { text: `${num.format(rec.range.need)} miles between charges` }),
+      el('dt', { text: 'Steps done' }), el('dd', { text: `${doneCount} of ${steps.length}` })),
+  ];
+
+  if (p.shortlist.length) {
+    const data = await planTools().loadVehicles().catch(() => null);
+    const f = p.finance;
+    const tools = planTools();
+    const cars = (data?.vehicles || []).filter((v) => p.shortlist.includes(v.id));
+    if (cars.length) {
+      // Same figures as the car explorer, so the partner sees exactly what the planner saw.
+      const cols = [
+        ['Starting price', (v) => usd(v.msrp), true],
+        ['Destination', (v) => (v.destination ? usd(v.destination) : 'Not published'), true],
+        f.mode === 'price' ? null : [f.mode === 'lease' ? 'Lease est. /mo' : 'Loan est. /mo', (v) => tools.figureFor(v, f), true],
+        ['EPA range', (v) => tools.rangeText(v), true],
+        ['kWh/100 mi', (v) => (v.kwh100 ? String(v.kwh100) : '—'), true],
+        ['Seats', (v) => String(v.seats), true],
+      ].filter(Boolean);
+      nodes.push(el('h4', { text: 'Cars on your shortlist' }),
+        el('div', { class: 'table-scroll', role: 'region', 'aria-label': 'Shortlisted cars', tabindex: '0' }, el('table', { class: 'summary-table' },
+          el('thead', {}, el('tr', {}, el('th', { scope: 'col', text: 'Car' }), cols.map(([h, , n]) => el('th', { scope: 'col', class: n ? 'num' : null, text: h })))),
+          el('tbody', {}, cars.map((v) => el('tr', {},
+            el('th', { scope: 'row', text: `${v.make} ${v.model}` }),
+            cols.map(([h, get, n]) => { const td = el('td', { class: n ? 'num' : null, text: get(v) }); td.setAttribute('data-label', h); return td; })))))),
+        el('p', { class: 'small', text: `${f.mode === 'price' ? 'Starting prices' : 'Estimates'} before taxes, fees, and incentives${f.mode === 'loan' ? `, with $${num.format(f.down)} down at ${f.aprPct}% for ${f.months} months` : f.mode === 'lease' ? `, with $${num.format(f.dueAtSigning)} due at signing for ${f.leaseMonths} months` : ''}. Where a brand doesn't publish its destination fee, the estimate leaves it out. Add charging (about ${money(c.evCost / 12)} a month) for the full monthly picture.` }));
+    }
+  }
+
+  const placesWithSaves = p.places.filter((pl) => (p.saved[pl.id] || []).length);
+  if (placesWithSaves.length) {
+    const asOf = state.meta?.fetchedAt ? new Date(state.meta.fetchedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : null;
+    nodes.push(el('h4', { text: 'Chargers you saved' }),
+      el('ul', { class: 'summary-places' }, placesWithSaves.map((pl) => el('li', {},
+        el('strong', { text: pl.name }),
+        el('ul', { class: 'summary-chargers' }, p.saved[pl.id].map((st) => el('li', {},
+          el('span', { class: 'summary-charger-name', text: `${st.name}, ${planTools().milesText(st.miles)} mi` }),
+          el('span', { class: 'small', text: [[st.street, st.city].filter(Boolean).join(', '), st.hours, st.price].filter(Boolean).join(' · ') }),
+          el('span', { class: 'small', text: [st.level2 ? `${st.level2} Level 2` : null, st.fast ? `${st.fast} fast` : null, st.network].filter(Boolean).join(' · ') }))))))),
+      asOf ? el('p', { class: 'small', text: `Stations as of ${asOf}, from the U.S. Department of Energy. Check hours and prices before you go.` }) : null);
+  }
+
+  nodes.push(el('p', { class: 'small print-only', text: `Made ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} with EV Readiness Check · ${location.origin}` }));
+
+  const shareStatus = el('p', { class: 'tool-status', role: 'status' });
+  const linkOut = el('input', { type: 'text', class: 'share-link', readonly: true, 'aria-label': 'Share link', hidden: true });
+  const includeId = 'share-include-places';
+  nodes.push(
+    el('div', { class: 'summary-actions' },
+      el('button', { type: 'button', class: 'btn btn-go', onclick: () => { analytics.track('plan_printed'); window.print(); } }, PLAN_CTA.print),
+      el('label', { class: 'check', for: includeId }, el('input', { type: 'checkbox', id: includeId }), 'Include my saved places and the chargers near them'),
+      el('button', {
+        type: 'button', class: 'btn btn-quiet',
+        onclick: async () => {
+          const includePlaces = $(includeId).checked;
+          const url = `${location.origin}${location.pathname}#plan=${await encodeShare(sharePayload({ ...plan(), zip: state.zip, answers: state.answers }, { includePlaces }))}`;
+          linkOut.value = url;
+          linkOut.hidden = false;
+          try { await navigator.clipboard.writeText(url); shareStatus.textContent = 'Link copied. Anyone with it can see this plan.'; } catch { linkOut.select(); shareStatus.textContent = 'Copy the link below. Anyone with it can see this plan.'; }
+          analytics.track('share_link_copied', { places: includePlaces });
+        },
+      }, 'Copy a share link')),
+    linkOut, shareStatus,
+    el('p', { class: 'small screen-only', text: 'Your plan is saved on this device only. A share link carries the plan inside the link itself; nothing is stored on our servers. Saved places are left out unless you include them.' }));
+  box.replaceChildren(...nodes);
+}
+
+function onPlanCta(opts = {}) {
+  if (!opts.resumed) {
+    analytics.track('plan_cta_clicked', { tier: state.lastRec.tier });
+    markNextStep('plan');
+  }
   renderPlan(state.lastRec);
   $('plan-result').hidden = false;
   $('plan-result').scrollIntoView({ block: 'start' });
@@ -617,6 +724,8 @@ function onStartOver() {
   state.answers = {};
   state.refineSet = null;
   state.lastRec = null;
+  state.plan = null;
+  $('shared-banner').hidden = true;
   $('zip').value = '';
   show('view-landing', 'zip');
 }
@@ -649,9 +758,7 @@ function boot() {
   $('error-retry').addEventListener('click', () => show('view-landing', 'zip'));
   $('plan-cta').textContent = PLAN_CTA.button;
   $('plan-result-title').textContent = PLAN_CTA.thanksTitle;
-  $('plan-print').textContent = PLAN_CTA.print;
-  $('plan-cta').addEventListener('click', onPlanCta);
-  $('plan-print').addEventListener('click', () => { analytics.track('plan_printed'); window.print(); });
+  $('plan-cta').addEventListener('click', () => onPlanCta());
   $('analytics-toggle').addEventListener('click', () => { analytics.optOut(); renderAnalyticsToggle(); });
 
   loadStatic().then(() => {
@@ -660,6 +767,24 @@ function boot() {
   }).catch(() => {});
 
   analytics.track('landing_viewed');
+
+  // A share link opens straight into that plan; the fragment is cleared so it is not re-shared by accident.
+  const m = /^#plan=([A-Za-z0-9_-]+)$/.exec(location.hash);
+  if (m) {
+    history.replaceState(null, '', location.pathname + location.search);
+    decodeShare(m[1]).then((shared) => {
+      if (shared?.zip) { analytics.track('shared_plan_opened'); openPlan(shared, { shared: true }); }
+    });
+    return;
+  }
+  // A plan saved on this device can be picked up again from the landing page.
+  const saved = loadSaved();
+  if (saved?.zip) {
+    $('resume-text').textContent = `You have a saved EV plan for ZIP ${saved.zip}.`;
+    $('resume').hidden = false;
+    $('resume-btn').addEventListener('click', () => { analytics.track('plan_resumed'); openPlan(saved, { shared: false }); });
+    $('resume-clear').addEventListener('click', () => { clearSaved(); $('resume').hidden = true; $('zip').focus(); });
+  }
 }
 
 boot();

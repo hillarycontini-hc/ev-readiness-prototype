@@ -6,7 +6,7 @@ Target: **WCAG 2.1 AA**. What was checked, how, and what still needs a human.
 
 | Check | Tool | Coverage | Result |
 |---|---|---|---|
-| WCAG 2.0/2.1 A and AA rules + best practices | axe-core via Playwright | Landing, ZIP error, question, question error, results (all answered), results with the EV plan open, results (ZIP only, method section open) | 0 violations |
+| WCAG 2.0/2.1 A and AA rules + best practices | axe-core via Playwright | Landing, ZIP error, question, question error, results (all answered), results with the EV plan open, plan tools open (chargers near work found by ZIP with one saved, car explorer with one shortlisted, test-drive links, partner summary), results (ZIP only, method section open) | 0 violations |
 | Same, dark mode | axe-core | All of the above with `prefers-color-scheme: dark` | 0 violations |
 | Reflow (1.4.10) | Playwright | All views at 320 px wide, both themes | No horizontal scrolling |
 | Keyboard only (2.1.1, 2.4.3, 2.4.7) | Playwright | Skip link first; ZIP to results with Tab, arrows, Enter; every results control reachable; visible focus outline on each | Pass |
@@ -35,6 +35,15 @@ it flagged both.
   tier with "(your result)" and `aria-current`.
 - **Route stops** are real buttons with `aria-expanded` and `aria-controls`; a browser test
   opens and closes one by keyboard.
+- **Plan tools:** each tool opens from a button with `aria-expanded`; search is a labelled
+  `role="search"` form; results, loading, and "search unavailable" messages are in
+  `role="status"` regions; Save buttons report their state with `aria-pressed` and are
+  disabled (dashed, not only dimmed) at the limit; body style and budget choices are native
+  radio groups in fieldsets; every number field has a visible label, and its $ or % is
+  outside the input as text. Links to brand sites say "(opens in a new tab)" to screen readers.
+  The shortlist table in the partner summary scrolls sideways on phones inside a labelled
+  region that takes keyboard focus. Fixed: axe flagged that region as not reachable by
+  keyboard at 320 px.
 - **Errors (3.3.1, 3.3.3):** ZIP and missing-answer errors are text, announced with
   `role="alert"`, tied to the field with `aria-describedby`, and focus returns to the field.
 - **Focus management:** each new view moves focus to its heading so screen-reader and

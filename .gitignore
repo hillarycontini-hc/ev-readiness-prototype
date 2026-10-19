@@ -12,3 +12,6 @@ test-results/
 .impeccable/build/
 .impeccable/live/
 .impeccable/questions/
+.dev.vars
+.dev.vars.*
+.wrangler/
