@@ -63,10 +63,15 @@ reasoning shown might.
    - **A car explorer.** Every fully electric SUV and pickup on sale in the U.S., listed
      neutrally, filtered by a price cap or by an estimated loan or lease payment. Starting
      prices are checked monthly against each brand's site ([refresh process](docs/price-refresh.md)).
+   - **A trip planner** for the park trip and your longest drive. Pick a nearby park or search
+     a place; the road route comes from Geoapify through the site's Worker, and fast-charging
+     stops come from the same static NREL station files, chosen so no leg is longer than your
+     miles between charges (two-thirds of a shortlisted car's lowest EPA range, editable). Step
+     through the legs with Previous and Next, then save up to three trips.
    - **Test drives.** Links to each brand's own booking page or dealer locator.
-   - **A partner summary** to print, save as a PDF, or share by link. The plan is saved on
-     your device; the share link leaves saved places out unless you include them.
-   - Next (phase B): a road-trip planner with charging stops you can step through.
+   - **A partner summary** to print, save as a PDF, or share by link, with your shortlist,
+     saved chargers, and trips. The plan is saved on your device; the share link leaves saved
+     places and trips out unless you include them.
 
 ## How personalization works
 
