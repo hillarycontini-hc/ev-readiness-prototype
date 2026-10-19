@@ -103,10 +103,12 @@ function load() {
       mask_all_text: true,
       mask_all_element_attributes: true,
       save_referrer: false,
-      ip: false,
       before_send: sanitizeEvent,
     });
     ph.register({
+      // PostHog looks up each request's IP on its servers and would add city,
+      // postal code, and coordinates to stored events. This turns that off.
+      $geoip_disable: true,
       app_version: APP_VERSION,
       messaging_variant: variant,
       [`$feature/${EXPERIMENT_KEY}`]: variant,

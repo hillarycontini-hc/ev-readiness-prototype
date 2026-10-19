@@ -35,4 +35,4 @@ createServer(async (req, res) => {
     res.writeHead(err.code === 'ENOENT' ? 404 : 500, { 'Content-Type': 'text/plain' });
     res.end(err.code === 'ENOENT' ? 'Not found' : 'Server error');
   }
-}).listen(PORT, () => console.log(`Serving ${ROOT} at http://localhost:${PORT}`));
+}).listen(PORT, '127.0.0.1', () => console.log(`Serving ${ROOT} at http://localhost:${PORT}`));

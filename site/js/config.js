@@ -5,7 +5,7 @@
 // in client code. Leave it empty to run with analytics fully off.
 //
 // If you switch to PostHog EU cloud, change POSTHOG_HOST to https://eu.i.posthog.com
-// AND update connect-src in the Content-Security-Policy in index.html to match.
+// AND update connect-src in the Content-Security-Policy in both index.html and _headers.
 
 export const POSTHOG_KEY = '';
 export const POSTHOG_HOST = 'https://us.i.posthog.com';

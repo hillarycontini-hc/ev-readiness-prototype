@@ -45,6 +45,8 @@ function srOnly(text) {
 }
 
 function externalLink(text, url, linkId, extra = {}) {
+  // URLs come from our own data files, but only https links are ever rendered.
+  if (!/^https:\/\//i.test(String(url))) return el('span', { text });
   return el('a', {
     href: url,
     target: '_blank',
@@ -144,11 +146,12 @@ function renderQuestion(step) {
   const total = state.queue.length;
 
   $('question-progress').textContent = `Question ${step + 1} of ${total}`;
+  $('question-step-sr').textContent = `Question ${step + 1} of ${total}: `;
   $('progress-fill').style.width = `${Math.round((100 * step) / total)}%`;
-  $('question-legend').textContent = copy.legend;
+  $('question-text').textContent = copy.legend;
   $('question-hint').textContent = copy.hint;
   $('question-error').hidden = true;
-  $('question-fieldset').removeAttribute('aria-invalid');
+  $('question-error').textContent = '';
   $('question-back').textContent = step === 0 && state.queue === QUESTION_ORDER ? 'Change ZIP' : 'Back';
   $('question-next').textContent = step === total - 1 ? 'See my results' : 'Next';
   $('question-skip-all').parentElement.hidden = step === total - 1;
@@ -161,7 +164,7 @@ function renderQuestion(step) {
       el('span', { text: copy.options[opt.value] }));
   }));
 
-  show('view-question', 'question-progress');
+  show('view-question', 'question-legend');
   analytics.track('question_viewed', { question: key, step: step + 1 });
 }
 
@@ -178,7 +181,6 @@ function onQuestionSubmit(event) {
     const err = $('question-error');
     err.textContent = 'Choose an answer, or skip this question.';
     err.hidden = false;
-    $('question-fieldset').setAttribute('aria-invalid', 'true');
     document.querySelector(`input[name="${key}"]`).focus();
     return;
   }

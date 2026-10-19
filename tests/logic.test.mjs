@@ -37,6 +37,15 @@ test('cold start: a ZIP alone produces a full answer with low confidence', () =>
   assert.ok(Number.isFinite(rec.score));
 });
 
+test('cold start never claims "Strong fit" without knowing about home charging', () => {
+  const suburb = { ...city, sf: 95 };
+  const rec = recommend({ zipRec: suburb, answers: { dailyMiles: '20to40', longTrips: 'rarely', outdoor: 'rarely' }, meta, parks });
+  assert.equal(rec.inputs.homeCharging, 'unknown');
+  assert.notEqual(rec.tier, 'strong');
+  const answered = recommend({ zipRec: suburb, answers: { dailyMiles: '20to40', homeCharging: 'yes', longTrips: 'rarely', outdoor: 'rarely' }, meta, parks });
+  assert.equal(answered.tier, 'strong');
+});
+
 test('priors scale daily miles by local commute and home charging by single-family share', () => {
   const longCommute = priorsFor({ ...city, cm: meta.nationalCommuteMinutes * 1.5, sf: 90 }, meta);
   const shortCommute = priorsFor({ ...city, cm: meta.nationalCommuteMinutes * 0.5, sf: 10 }, meta);

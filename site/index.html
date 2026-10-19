@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://us.i.posthog.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>EV Readiness Check</title>
-  <meta name="description" content="Is an EV right for you? Enter a ZIP code and answer four quick questions for a personalized answer on charging, range, cost, and road trips. Built on public data. Nothing is stored.">
+  <meta name="description" content="Is an EV right for you? Enter a ZIP code and answer four quick questions for a personalized answer on charging, range, cost, and road trips. Built on public data. No sign-up.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/styles.css">
   <script type="module" src="js/app.js"></script>
@@ -42,18 +42,20 @@
         </form>
 
         <p class="privacy-line">
-          <strong>Private by design:</strong> no sign-up, no name, no email. Your ZIP and answers stay in your browser and are never stored.
+          <strong>Private by design:</strong> no sign-up, no name, no email. Your ZIP stays in your browser. We count answers anonymously, never with your ZIP.
           <a href="#privacy">What we collect</a>
         </p>
       </section>
 
       <!-- Questions (rendered from js/copy.js) -->
-      <section id="view-question" class="view" aria-labelledby="question-progress" hidden>
-        <p id="question-progress" class="progress" tabindex="-1"></p>
+      <!-- No region label here: the fieldset's legend already names the question once. -->
+      <section id="view-question" class="view" hidden>
+        <!-- Visual progress; screen readers hear the same words at the start of the heading. -->
+        <p id="question-progress" class="progress" aria-hidden="true"></p>
         <div class="progress-bar" aria-hidden="true"><span id="progress-fill"></span></div>
         <form id="question-form" novalidate>
-          <fieldset id="question-fieldset" aria-describedby="question-hint">
-            <legend id="question-legend"></legend>
+          <fieldset id="question-fieldset" aria-describedby="question-hint question-error">
+            <legend><h1 id="question-legend" tabindex="-1"><span class="sr-only" id="question-step-sr"></span><span id="question-text"></span></h1></legend>
             <p id="question-hint" class="hint"></p>
             <div id="question-options" class="options"></div>
           </fieldset>
@@ -120,7 +122,8 @@
         <ul>
           <li>We ask for a ZIP code and four multiple-choice answers. Nothing else: no name, email, phone, or account.</li>
           <li>Your ZIP is used in your browser to load public data for your area. It is never stored or sent to analytics.</li>
-          <li>We count anonymous page events (for example, &ldquo;finished the questions&rdquo;) with PostHog to improve the tool. Those events include your state and your multiple-choice answers, never your ZIP. No cookies, no session recording, no IP address kept.</li>
+          <li>We count anonymous page events (for example, &ldquo;finished the questions&rdquo;) with PostHog to improve the tool. Those events include your state, your multiple-choice answers, your browser type, screen size, and the site that sent you here. Never your ZIP, and no location lookup.</li>
+          <li>No cookies, no session recording, and your IP address is not kept.</li>
           <li>If your browser sends a Global Privacy Control or Do Not Track signal, we do not load analytics at all.</li>
         </ul>
         <p><button type="button" class="btn btn-link" id="analytics-toggle" hidden></button></p>

@@ -76,6 +76,7 @@ test('analytics on: only named events, no ZIP, no storage, variant on every even
     const variant = e.properties['$feature/landing-messaging'];
     assert.ok(['control', 'adventure'].includes(variant), `${e.event} carries the experiment variant`);
     assert.equal(e.properties.$ip, undefined, 'no $ip property');
+    assert.equal(e.properties.$geoip_disable, true, 'server-side GeoIP lookup is disabled');
     assert.equal(e.properties.$raw_user_agent, undefined, 'no raw user agent');
     assert.equal(e.properties.$timezone, undefined, 'no timezone');
     for (const [k, v] of Object.entries(e.properties)) {

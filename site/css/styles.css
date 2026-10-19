@@ -5,7 +5,7 @@
   --surface: #f3f6f7;
   --text: #1a1f24;
   --muted: #4a555f;
-  --border: #9aa6b0;
+  --border: #77828c;
   --primary: #0b5f5a;
   --primary-text: #ffffff;
   --primary-hover: #084844;
@@ -143,7 +143,8 @@ input[aria-invalid="true"] { border-color: var(--error); }
 .progress-bar span { display: block; height: 100%; width: 0; background: var(--primary); }
 
 fieldset { border: none; padding: 0; margin: 0; min-width: 0; }
-legend { font-size: clamp(1.4rem, 4vw, 1.8rem); font-weight: 700; line-height: 1.25; padding: 0; }
+legend { padding: 0; }
+legend h1 { font-size: clamp(1.4rem, 4vw, 1.8rem); line-height: 1.25; margin: 0; }
 
 .options { display: grid; gap: 0.6rem; margin-top: 1rem; }
 .option {

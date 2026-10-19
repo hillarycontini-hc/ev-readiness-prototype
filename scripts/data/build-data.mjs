@@ -192,7 +192,8 @@ const parks = parksRaw
       name: p.fullName,
       kind: /\bNational Parks?\b/i.test(p.designation) ? 'national-park' : 'outdoor',
       states: p.states,
-      url: p.url,
+      // Only official NPS pages become links on the site.
+      url: /^https:\/\/www\.nps\.gov\/[a-z0-9/._-]+$/i.test(p.url) ? p.url : `https://www.nps.gov/${p.parkCode}/index.htm`,
       lat: round(p.lat, 3),
       lon: round(p.lon, 3),
       dc_25: c.dc_25,
@@ -312,7 +313,7 @@ for (const tr of epm.split(/<tr[^>]*>/i).slice(1)) {
 // Weekly retail regular gasoline by area: average the weeks shown (about six).
 const gasHtml = raw('eia_gasoline_by_area.html').toString('utf8');
 const gasWeeks = [...gasHtml.matchAll(/class="Series5">([\d/]+)</g)].map((m) => m[1]);
-const gasArea = {};
+const gasArea = Object.create(null); // keyed by upstream text, so no prototype
 for (const block of gasHtml.split(/class="DataStub1">/).slice(1)) {
   const name = cellText(block.split('</td>')[0]);
   const nums = [...block.split('DataHist')[0].matchAll(/class="(?:DataB|Current2)">([\d.]+)</g)].map((m) => Number(m[1]));

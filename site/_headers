@@ -1,0 +1,10 @@
+# HTTP security headers for hosts that read a _headers file (Cloudflare Pages, Netlify).
+# GitHub Pages ignores this file; the page's <meta> CSP still applies there,
+# but frame-ancestors (clickjacking protection) only works as a real header.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://us.i.posthog.com; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  X-Frame-Options: DENY

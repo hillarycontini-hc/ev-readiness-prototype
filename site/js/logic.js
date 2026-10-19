@@ -276,6 +276,8 @@ export function recommend({ zipRec, answers, meta, parks }) {
   // can make it work, but it should never read as "Strong fit". The cap slides
   // from 74 (certainly no home charging) to 99 (certainly yes).
   score = Math.min(score, Math.round(74 + 25 * inp.homeChargeOdds));
+  // "Strong fit" needs to know about home charging, not guess it from the ZIP.
+  if (inp.homeCharging === 'unknown') score = Math.min(score, 79);
 
   // Hard blockers cap the verdict no matter how good the rest looks.
   const blockers = [];
