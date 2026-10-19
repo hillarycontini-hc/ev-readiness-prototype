@@ -5,7 +5,7 @@ import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { AxeBuilder } from '@axe-core/playwright';
-import { completeFlow, startServer } from './helpers.mjs';
+import { RENTER_TRIPS, completeFlow, startServer, tripRouteBody } from './helpers.mjs';
 
 let server;
 let browser;
@@ -65,6 +65,18 @@ const VIEWS = {
     await page.locator('.car-item .btn-save').first().click();
     await page.click('.tool-btn:has-text("Book a test drive")');
     await page.waitForSelector('#tool-plan-test-drive .drive-list, #tool-plan-test-drive .tool-note');
+  },
+  'trip planner open, stepped, and saved': async (page) => {
+    await page.route('**/api/route*', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(tripRouteBody()) }));
+    await completeFlow(page, '80302', RENTER_TRIPS);
+    await page.click('#plan-cta');
+    await page.click('.tool-btn:has-text("Plan the trip")');
+    await page.click('#tool-plan-park .trip-plan-btn');
+    await page.waitForSelector('#tool-plan-park .trip-legs');
+    await page.click('#tool-plan-park button:has-text("Next leg")');
+    await page.click('#tool-plan-park .trip-save');
+    await page.click('.tool-btn:has-text("Plan a trip")');
+    await page.waitForSelector('#tool-plan-route .trip-saved-list');
   },
   'results (ZIP only)': async (page) => {
     await page.fill('#zip', '10001');

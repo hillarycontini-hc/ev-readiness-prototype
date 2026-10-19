@@ -1,10 +1,11 @@
 // Interactive tools inside the EV plan: chargers near the places in your week (steps 2 and 3),
-// a car explorer with price, loan, and lease estimates (step 4), test-drive links (step 7),
-// and a one-page summary to print or share. Rendering uses textContent only.
+// a car explorer with price, loan, and lease estimates (step 4), a trip planner with
+// fast-charging stops (steps 5 and 6, in trip-tool.js), and test-drive links (step 7). Rendering uses textContent only.
 
 import { el, externalLink, num, srOnly, usd } from './dom.js';
 import { SearchUnavailable, chargersNear, connectorNames, searchPlaces, zipCenter } from './places.js';
 import { leasePayment, loanPayment, moneyFactorToApr } from './finance.js';
+import { createTripTool } from './trip-tool.js';
 
 const SLOT_LABEL = {
   home: { title: 'Home', search: 'Your home address' },
@@ -19,6 +20,8 @@ const TOOLS = {
   'plan-public': { kind: 'places', slots: ['home', 'gym'], label: 'Find chargers near home and the gym' },
   'plan-range': { kind: 'cars', label: 'Compare cars that fit' },
   'plan-range-any': { kind: 'cars', label: 'Compare cars that fit' },
+  'plan-park': { kind: 'trip', label: 'Plan the trip' },
+  'plan-route': { kind: 'trip', label: 'Plan a trip' },
   'plan-test-drive': { kind: 'testdrive', label: 'Book a test drive' },
 };
 
@@ -36,7 +39,8 @@ const uid = (slot) => `${slot}-${Math.random().toString(36).slice(2, 8)}`;
  * ctx: {
  *   plan(): the current plan object,
  *   update(fn): mutate the plan, then save it to this device,
- *   track(event, props), rec: the recommendation, zip, zipRec
+ *   track(event, props), rec: the recommendation, zip, zipRec,
+ *   parks: the static park list, meta: data dates and the fleet summary
  * }
  */
 export function createPlanTools(ctx) {
@@ -168,7 +172,7 @@ export function createPlanTools(ctx) {
 
     const near = slot === 'lunch' ? placeFor('work') : null;
     const homeZipCenter = slot === 'home' && ctx.zipRec?.la ? { name: `Center of ZIP ${ctx.zip}`, detail: ctx.zipRec.s, lat: ctx.zipRec.la, lon: ctx.zipRec.lo } : null;
-    const form = el('form', { class: 'tool-row', role: 'search', novalidate: true, onsubmit: async (e) => {
+    const form = el('form', { class: 'tool-row', role: 'search', 'aria-label': `Search: ${labels.title}`, novalidate: true, onsubmit: async (e) => {
       e.preventDefault();
       const q = e.target.elements[inputId].value.trim();
       if (q.length < 3) { status.textContent = 'Type at least 3 characters.'; return; }
@@ -390,6 +394,11 @@ export function createPlanTools(ctx) {
       : 'Links open each brand’s own site. We don’t send anything to brands or dealers.' }));
   }
 
+  // ---------- trips ----------
+
+  let trips = null;
+  const tripTool = () => (trips ??= createTripTool({ ctx, searchForm, loadVehicles }));
+
   // ---------- public API ----------
 
   return {
@@ -397,13 +406,14 @@ export function createPlanTools(ctx) {
     figureFor,
     milesText,
     toolFor(stepId) { return TOOLS[stepId] || null; },
-    async renderTool(stepId, box) {
+    async renderTool(stepId, box, value) {
       const t = TOOLS[stepId];
       if (!t) return;
       ctx.track('plan_tool_opened', { tool: t.kind });
       if (t.kind === 'places') renderPlaces(box, t.slots);
       else if (t.kind === 'cars') await renderCars(box);
       else if (t.kind === 'testdrive') await renderTestDrive(box);
+      else if (t.kind === 'trip') await tripTool().render(box, stepId, value);
     },
     loadVehicles,
     monthlyFor,

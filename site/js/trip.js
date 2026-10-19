@@ -59,8 +59,8 @@ export function corridorCells(points, corridor = CORRIDOR_MILES, cell = 0.5) {
 // Which fast chargers a car can use. Stations with only CHAdeMO are never used: no electric SUV,
 // minivan, or pickup on sale in the U.S. charges with it.
 export const PLUGS = {
-  any: { label: 'CCS or NACS (I have an adapter)', ok: (c) => /[CN]/.test(c) },
-  ccs: { label: 'CCS (most non-Tesla models)', ok: (c) => c.includes('C') },
+  any: { label: 'Either (CCS or NACS)', ok: (c) => /[CN]/.test(c) },
+  ccs: { label: 'CCS only', ok: (c) => c.includes('C') },
   nacs: { label: 'NACS (Tesla plug)', ok: (c) => c.includes('N') },
 };
 
