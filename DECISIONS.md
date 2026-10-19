@@ -60,7 +60,7 @@ Default decisions made while building, with the reason for each. Anything marked
 | 31 | Recommend Cloudflare Pages; GitHub Pages acceptable | Both free. Cloudflare applies `site/_headers` (real CSP with `frame-ancestors`, `X-Frame-Options`, `Permissions-Policy`); GitHub Pages cannot set headers. **Hillary to choose.** |
 | 32 | Strict CSP in a `<meta>` tag as well as `_headers` | Protects the page on any host, including GitHub Pages. |
 | 33 | `$geoip_disable: true` on every PostHog event | PostHog's server would otherwise add postal code and coordinates from the IP, which would contradict "never your ZIP". |
-| 34 | Security review done by an independent reviewer agent instead of the `security-review` skill | The skill diffs against `origin/HEAD`, which does not exist until the GitHub repo is created. Re-run the skill after pushing. |
+| 34 | Security review done by an independent reviewer agent instead of the `security-review` skill | The skill reviews only changes not yet pushed to `origin`, so it cannot cover an initial build. Use it on future changes before pushing. |
 | 35 | A ZIP-only (cold start) result is capped at "Good fit with a plan" | Found in the screen-reader review: Boulder with zero answers read "Strong fit" on a 46% guess about home charging. |
 | 36 | Each question is the view's `h1` inside the fieldset legend, and gets focus | Screen readers hear "Question 2 of 4: ..." once; previously it was announced three times. |
 | 37 | Real screen-reader testing left to a person | Automated checks (axe, keyboard, accessibility tree) cannot replace NVDA/VoiceOver; listed in the go/no-go. |

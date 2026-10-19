@@ -2,7 +2,7 @@
 
 ## Launch go/no-go (for Hillary)
 
-**Verdict: GO for posting publicly once the five "Must" items are checked.** The code side is
+**Verdict: GO for posting publicly once the four open "Must" items are checked.** The code side is
 done and tested; the remaining items are account settings only you can change.
 
 ### Must, before sharing with the cohort or on LinkedIn
@@ -14,9 +14,10 @@ done and tested; the remaining items are account settings only you can change.
 - [ ] **Live payload check:** do one run on the deployed site with
   `?utm_source=internal`, open the event in PostHog, and confirm no `$ip` value and no
   `$geoip_*` properties.
-- [ ] **Re-run the `security-review` skill** after the GitHub repo exists. It compares
-  against `origin/HEAD`, so it could not run on a repo with no remote; an equivalent
-  independent review was done instead (below).
+- [x] **Security review of all code.** The `security-review` skill reviews changes not yet
+  pushed to `origin`, so it could not cover the initial build (first there was no remote,
+  then nothing was unpushed). An equivalent independent review of the whole repository
+  was done instead (below). Run the skill on future changes before pushing them.
 
 ### Should
 - [ ] **Host on Cloudflare Pages** (free) rather than GitHub Pages, so `site/_headers` applies
