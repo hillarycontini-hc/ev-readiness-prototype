@@ -165,7 +165,10 @@ main:focus { outline: none; }
 
 .view-landing { background: var(--navy); color: #fff; }
 .hero { display: grid; gap: 2rem; padding-top: 2.5rem; padding-bottom: 3rem; align-items: center; }
-@media (min-width: 60rem) { .hero { grid-template-columns: 1.05fr 1fr; padding-top: 4rem; padding-bottom: 5rem; } }
+@media (min-width: 60rem) {
+  .hero { grid-template-columns: 1fr 1.1fr; padding-top: 4rem; padding-bottom: 5rem; align-items: start; }
+  .hero-art { margin-top: 1.5rem; }
+}
 .hero h1 {
   font: 900 var(--t-display) / 0.9 var(--display);
   text-transform: uppercase; letter-spacing: 0; margin: 0 0 1.25rem; color: #fff;
@@ -183,7 +186,7 @@ main:focus { outline: none; }
 .zip-row input[aria-invalid="true"] { border-color: var(--poppy); }
 .privacy-line { margin: 1.5rem 0 0; font-size: var(--t-small); color: var(--row-sub); }
 .privacy-line a { color: #fff; }
-.hero-art { width: 100%; height: auto; max-height: 26rem; }
+.hero-art { width: 100%; height: auto; }
 
 /* ---------- questions ---------- */
 

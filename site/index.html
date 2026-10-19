@@ -53,50 +53,46 @@
         </div>
 
         <!-- Decorative: a loaded family EV on the route to a park. The same facts are in the text. -->
-        <svg class="hero-art" viewBox="0 120 640 300" aria-hidden="true" focusable="false" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <!-- Terrain: flat color bands with contour lines, behind the route -->
-          <path d="M230 364 C 310 250, 395 150, 470 150 C 545 150, 605 225, 640 272 L640 297 Z" fill="#0b7f8a"/>
+        <svg class="hero-art" viewBox="80 130 560 290" aria-hidden="true" focusable="false" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Terrain: an irregular ridge in flat color, broken contour lines offset below each peak; both ranges rest on the route -->
+          <path d="M300 352 L352 300 L378 312 L420 246 L444 262 L492 178 L516 204 L540 186 L578 236 L604 218 L640 262 L640 293 Z" fill="#0b7f8a"/>
           <g stroke="#2fd0dc" stroke-width="4">
-            <path d="M282 348 C 350 262, 418 186, 470 186 C 525 186, 575 240, 612 285"/>
-            <path d="M342 334 C 392 270, 438 222, 470 222 C 506 222, 542 258, 578 300"/>
-            <path d="M405 320 C 430 286, 452 258, 470 258 C 489 258, 510 280, 536 310"/>
+            <path d="M392 300 L428 268 L446 280 L494 212 L514 232"/>
+            <path d="M462 296 L500 252 L522 262 L546 226 L574 260"/>
+            <path d="M548 280 L580 252 L604 246 L628 268"/>
           </g>
-          <path d="M440 328 C 485 280, 528 245, 566 245 C 600 245, 625 262, 640 276 L640 297 Z" fill="#5b3df5"/>
+          <path d="M452 326 L492 292 L514 302 L552 262 L578 280 L604 258 L640 286 L640 293 Z" fill="#5b3df5"/>
           <g stroke="#a99bff" stroke-width="4">
-            <path d="M478 318 C 512 288, 540 272, 566 272 C 592 272, 614 282, 636 296"/>
-            <path d="M528 306 C 545 294, 556 290, 567 290 C 580 290, 594 294, 606 300"/>
+            <path d="M508 314 L540 290 L556 298 L584 276"/>
           </g>
           <!-- The route: one line, one color per stop, ending at a park terminus -->
           <g stroke-width="16">
-            <path d="M20 400 L130 381" stroke="#ffffff"/>
-            <path d="M130 381 L270 357" stroke="#2fd0dc"/>
-            <path d="M270 357 L420 331" stroke="#d7f75b"/>
-            <path d="M420 331 L520 314" stroke="#a99bff"/>
-            <path d="M520 314 L596 301" stroke="#ff5a36"/>
+            <path d="M88 388 L170 374" stroke="#ffffff"/>
+            <path d="M170 374 L300 352" stroke="#2fd0dc"/>
+            <path d="M300 352 L440 328" stroke="#d7f75b"/>
+            <path d="M440 328 L530 312" stroke="#a99bff"/>
+            <path d="M530 312 L596 301" stroke="#ff5a36"/>
           </g>
-          <g fill="#ffffff" stroke="#101a2b" stroke-width="5">
-            <circle cx="130" cy="381" r="11"/><circle cx="520" cy="314" r="11"/>
-          </g>
+          <circle cx="530" cy="312" r="11" fill="#ffffff" stroke="#101a2b" stroke-width="5"/>
           <circle cx="600" cy="300" r="20" fill="#ffffff" stroke="#ff5a36" stroke-width="9"/>
-          <path d="M600 222 L584 256 L592 256 L578 282 L622 282 L608 256 L616 256 Z" fill="#d7f75b"/>
-          <path d="M600 282 L600 290" stroke="#d7f75b" stroke-width="5"/>
+          <path d="M600 214 L582 252 L591 252 L575 282 L625 282 L609 252 L618 252 Z" fill="#d7f75b"/>
           <!-- The loaded family EV, facing the park, tilted to the road with both wheels on the line -->
-          <g transform="translate(170 363) rotate(-9.78) scale(0.8) translate(-80 -184)">
+          <g transform="translate(176 365) rotate(-9.78) translate(-80 -184)">
             <rect x="62" y="16" width="150" height="24" rx="9" fill="#101a2b" stroke="#d7f75b" stroke-width="7"/>
-            <path d="M92 16 L92 40 M122 16 L122 40" stroke="#d7f75b" stroke-width="4"/>
+            <path d="M96 16 L96 40 M128 16 L128 40" stroke="#d7f75b" stroke-width="5"/>
             <path d="M10 150 L10 72 Q12 44 44 40 L226 40 Q244 40 256 52 L292 84 L338 94 Q352 98 352 116 L352 150 Z" fill="#101a2b" stroke="#d7f75b" stroke-width="7"/>
-            <path d="M30 86 L30 60 Q32 52 42 52 L110 52 L110 86 Z" stroke="#d7f75b" stroke-width="5"/>
-            <path d="M124 52 L200 52 L200 86 L124 86 Z" stroke="#d7f75b" stroke-width="5"/>
-            <path d="M214 52 L238 52 Q248 52 256 60 L280 86 L214 86 Z" stroke="#d7f75b" stroke-width="5"/>
-            <!-- dog looking out the rear window -->
-            <path d="M48 86 L48 74 Q48 62 60 62 L74 62 Q86 62 88 70 L96 72 Q100 74 98 78 L88 80 L84 86 Z" fill="#ffffff"/>
-            <path d="M58 64 Q50 66 50 78 Q56 76 60 70 Z" fill="#a99bff"/>
-            <circle cx="78" cy="70" r="2.5" fill="#101a2b"/>
-            <!-- child seat with a small passenger -->
-            <path d="M144 86 L144 64 Q144 56 152 56 L174 56 Q182 56 182 64 L182 86 Z" fill="#ff5a36"/>
-            <circle cx="163" cy="70" r="9" fill="#ffffff"/>
-            <path d="M151 86 Q163 78 175 86" fill="#ffffff"/>
-            <path d="M286 104 L320 104" stroke="#d7f75b" stroke-width="5"/>
+            <path d="M28 88 L28 60 Q30 52 40 52 L112 52 L112 88 Z" stroke="#d7f75b" stroke-width="5"/>
+            <path d="M126 52 L200 52 L200 88 L126 88 Z" stroke="#d7f75b" stroke-width="5"/>
+            <path d="M214 52 L238 52 Q248 52 256 60 L282 88 L214 88 Z" stroke="#d7f75b" stroke-width="5"/>
+            <!-- dog: one bold silhouette filling the rear window -->
+            <path d="M40 88 L40 70 Q40 58 54 58 L76 58 Q90 58 94 68 L106 70 Q112 72 110 78 Q108 82 100 82 L90 82 L86 88 Z" fill="#ffffff"/>
+            <path d="M52 58 Q38 60 40 82 Q50 78 56 66 Z" fill="#a99bff"/>
+            <circle cx="80" cy="68" r="3.5" fill="#101a2b"/>
+            <!-- child seat: one bold seat shape with a passenger -->
+            <path d="M138 88 L138 62 Q138 54 148 54 L178 54 Q188 54 188 62 L188 88 Z" fill="#ff5a36"/>
+            <circle cx="163" cy="68" r="11" fill="#ffffff"/>
+            <path d="M148 88 Q163 76 178 88" fill="#ffffff"/>
+            <path d="M286 106 L322 106" stroke="#d7f75b" stroke-width="5"/>
             <circle cx="80" cy="150" r="34" fill="#101a2b" stroke="#d7f75b" stroke-width="7"/>
             <circle cx="80" cy="150" r="11" fill="#d7f75b"/>
             <circle cx="290" cy="150" r="34" fill="#101a2b" stroke="#d7f75b" stroke-width="7"/>
