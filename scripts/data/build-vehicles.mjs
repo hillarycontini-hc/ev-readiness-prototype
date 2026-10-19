@@ -50,7 +50,7 @@ function epaStats(make, epaModel, modelYear) {
   const rows = matches.filter((r) => Number(r[col('year')]) === year);
   const ranges = rows.map((r) => Number(r[col('range')]));
   const effs = rows.map((r) => Number(r[col('combE')])).filter((x) => x > 0);
-  return { epaYear: year, rangeMin: Math.min(...ranges), rangeMax: Math.max(...ranges), kwh100: effs.length ? Math.min(...effs) : null };
+  return { epaYear: year, rangeMin: Math.min(...ranges), rangeMax: Math.max(...ranges), kwh100: effs.length ? Math.round(Math.min(...effs)) : null };
 }
 
 const problems = [];
@@ -87,7 +87,9 @@ if (ageDays > 35) console.warn(`WARN vehicle prices were checked ${ageDays} days
 const month = new Date().getUTCMonth() + 1;
 if (month >= 8 && month <= 10) console.warn('NOTE model-year changeover season (Aug-Oct): re-check every model, not just the frequent changers.');
 
-if (problems.length) console.warn(`WARN ${problems.join('; ')}`);
+if (problems.length) console.warn(`WARN ${problems.join("; ")}`);
+const linkProblems = problems.filter((p) => /brand links|booking nor|https URL|placeholder/.test(p));
+if (linkProblems.length) { console.error(`ERROR brand links: ${linkProblems.join("; ")}`); process.exit(1); }
 
 writeFileSync(path.join(ROOT, 'site', 'data', 'vehicles.json'), JSON.stringify({
   checkedAt: curated.checkedAt,

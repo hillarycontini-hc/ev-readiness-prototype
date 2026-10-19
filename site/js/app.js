@@ -8,7 +8,7 @@ import {
   QUESTION_COPY, REASON_COPY, TIER_COPY, TONE_COPY, VARIANTS,
 } from './copy.js';
 import * as analytics from './analytics.js';
-import { chevron, el, externalLink as linkTo, num, srOnly, usd10 as money } from './dom.js';
+import { chevron, el, externalLink as linkTo, num, srOnly, usd, usd10 as money } from './dom.js';
 import { createPlanTools } from './plan-tools.js';
 import { clearSaved, decodeShare, emptyPlan, encodeShare, loadSaved, savePlan, sharePayload } from './plan-store.js';
 
@@ -111,6 +111,11 @@ async function openPlan(saved, { shared }) {
     state.refineSet = null;
     state.plan = saved;
     renderResults();
+    if (shared) {
+      $('shared-banner').textContent = loadSaved()
+        ? 'You’re viewing a shared EV plan. If you change anything, it replaces the plan saved on this device.'
+        : 'You’re viewing a shared EV plan. Anything you change is saved on this device only.';
+    }
     $('shared-banner').hidden = !shared;
     onPlanCta({ resumed: true });
   } catch {
@@ -641,32 +646,42 @@ async function renderSummary() {
   if (p.shortlist.length) {
     const data = await planTools().loadVehicles().catch(() => null);
     const f = p.finance;
-    const label = f.mode === 'lease' ? 'Lease est. /mo' : f.mode === 'loan' ? 'Loan est. /mo' : 'Starting price';
+    const tools = planTools();
     const cars = (data?.vehicles || []).filter((v) => p.shortlist.includes(v.id));
     if (cars.length) {
+      // Same figures as the car explorer, so the partner sees exactly what the planner saw.
+      const cols = [
+        ['Starting price', (v) => usd(v.msrp), true],
+        ['Destination', (v) => (v.destination ? usd(v.destination) : 'Not published'), true],
+        f.mode === 'price' ? null : [f.mode === 'lease' ? 'Lease est. /mo' : 'Loan est. /mo', (v) => tools.figureFor(v, f), true],
+        ['EPA range', (v) => tools.rangeText(v), true],
+        ['kWh/100 mi', (v) => (v.kwh100 ? String(v.kwh100) : '—'), true],
+        ['Seats', (v) => String(v.seats), true],
+      ].filter(Boolean);
       nodes.push(el('h4', { text: 'Cars on your shortlist' }),
         el('div', { class: 'table-scroll', role: 'region', 'aria-label': 'Shortlisted cars', tabindex: '0' }, el('table', { class: 'summary-table' },
-          el('thead', {}, el('tr', {}, ['Car', 'Starting price', label, 'EPA range', 'Seats'].map((h) => el('th', { scope: 'col', text: h })))),
-          el('tbody', {}, cars.map((v) => {
-            const m = planTools().monthlyFor(v, f);
-            return el('tr', {},
-              el('th', { scope: 'row', text: `${v.make} ${v.model}` }),
-              el('td', { text: money(v.msrp) }),
-              el('td', { text: m == null ? money(v.msrp) : `~${money(m)}` }),
-              el('td', { text: `${v.rangeMin}–${v.rangeMax} mi` }),
-              el('td', { text: String(v.seats) }));
-          })))),
-        el('p', { class: 'small', text: `Estimates before taxes, fees, and incentives. Add charging (about ${money(c.evCost / 12)} a month) for the full monthly picture.` }));
+          el('thead', {}, el('tr', {}, el('th', { scope: 'col', text: 'Car' }), cols.map(([h, , n]) => el('th', { scope: 'col', class: n ? 'num' : null, text: h })))),
+          el('tbody', {}, cars.map((v) => el('tr', {},
+            el('th', { scope: 'row', text: `${v.make} ${v.model}` }),
+            cols.map(([h, get, n]) => { const td = el('td', { class: n ? 'num' : null, text: get(v) }); td.setAttribute('data-label', h); return td; })))))),
+        el('p', { class: 'small', text: `${f.mode === 'price' ? 'Starting prices' : 'Estimates'} before taxes, fees, and incentives${f.mode === 'loan' ? `, with $${num.format(f.down)} down at ${f.aprPct}% for ${f.months} months` : f.mode === 'lease' ? `, with $${num.format(f.dueAtSigning)} due at signing for ${f.leaseMonths} months` : ''}. Where a brand doesn't publish its destination fee, the estimate leaves it out. Add charging (about ${money(c.evCost / 12)} a month) for the full monthly picture.` }));
     }
   }
 
   const placesWithSaves = p.places.filter((pl) => (p.saved[pl.id] || []).length);
   if (placesWithSaves.length) {
+    const asOf = state.meta?.fetchedAt ? new Date(state.meta.fetchedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : null;
     nodes.push(el('h4', { text: 'Chargers you saved' }),
       el('ul', { class: 'summary-places' }, placesWithSaves.map((pl) => el('li', {},
-        el('strong', { text: `${pl.name}: ` }),
-        p.saved[pl.id].map((s) => `${s.name} (${s.miles} mi)`).join('; ')))));
+        el('strong', { text: pl.name }),
+        el('ul', { class: 'summary-chargers' }, p.saved[pl.id].map((st) => el('li', {},
+          el('span', { class: 'summary-charger-name', text: `${st.name}, ${planTools().milesText(st.miles)} mi` }),
+          el('span', { class: 'small', text: [[st.street, st.city].filter(Boolean).join(', '), st.hours, st.price].filter(Boolean).join(' · ') }),
+          el('span', { class: 'small', text: [st.level2 ? `${st.level2} Level 2` : null, st.fast ? `${st.fast} fast` : null, st.network].filter(Boolean).join(' · ') }))))))),
+      asOf ? el('p', { class: 'small', text: `Stations as of ${asOf}, from the U.S. Department of Energy. Check hours and prices before you go.` }) : null);
   }
+
+  nodes.push(el('p', { class: 'small print-only', text: `Made ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} with EV Readiness Check · ${location.origin}` }));
 
   const shareStatus = el('p', { class: 'tool-status', role: 'status' });
   const linkOut = el('input', { type: 'text', class: 'share-link', readonly: true, 'aria-label': 'Share link', hidden: true });
@@ -687,7 +702,7 @@ async function renderSummary() {
         },
       }, 'Copy a share link')),
     linkOut, shareStatus,
-    el('p', { class: 'small', text: 'Your plan is saved on this device only. A share link carries the plan inside the link itself; nothing is stored on our servers. Saved places are left out unless you include them.' }));
+    el('p', { class: 'small screen-only', text: 'Your plan is saved on this device only. A share link carries the plan inside the link itself; nothing is stored on our servers. Saved places are left out unless you include them.' }));
   box.replaceChildren(...nodes);
 }
 

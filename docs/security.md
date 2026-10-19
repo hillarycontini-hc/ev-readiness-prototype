@@ -82,6 +82,33 @@ strict CSP with no `unsafe-inline`; vendored PostHog file matches the pinned npm
 (sha384 in `site/vendor/README.txt`); lockfile pins exact versions; no secrets in the files or
 git history; `npm audit` reports 0 vulnerabilities; dev server path traversal blocked.
 
+## Review: plan v2 phase A (October 2026)
+
+A diff-based security review of the search proxy, saved plans, share links, the plan tools, and
+the brand links found **no high-confidence vulnerabilities**. What was traced:
+
+- **Proxy to Geoapify:** fixed host and protocol, every parameter set with `URLSearchParams`
+  (a query can't add `apiKey` or other parameters), and the key set last from the secret.
+  Errors are fixed codes; upstream bodies are never echoed. Responses are rebuilt from a
+  whitelist and never cached.
+- **Search results, share links, and saved plans to the page:** text only, never `href`,
+  `src`, `innerHTML`, or styles. Share fragments are character-checked, size-limited, and
+  rebuilt field by field by `sanitizePlan`; localStorage goes through the same path.
+- **Links:** `externalLink` allows only `https:` and adds `rel="noopener noreferrer"`. A
+  brand ZIP template is filled only with a ZIP re-checked as five digits.
+- **Analytics:** no new property carries an address, coordinate, ZIP, or station id, and the
+  `#plan=` fragment is cleared before analytics can load.
+
+Lower-confidence notes, and what was done:
+
+| Note | Status |
+|---|---|
+| Opening a share link and changing anything replaced a plan already saved on the device, without saying so | **Fixed:** the shared-plan banner says so when a saved plan exists |
+| The vehicle build only warned on a non-https brand link or a bad `{zip}` template | **Fixed:** it now fails (the page also refuses non-https links) |
+| A lunch-spot search sends the chosen work place's rough location as a ranking hint | **Disclosed:** the privacy list now says so; it goes through the proxy and is not stored |
+| Share-link size is checked after decompression | Accepted: a crafted link can only slow the visitor's own tab |
+| `Sec-Fetch-Site` can be forged outside a browser | Accepted: the per-visitor rate limit and the no-card free plan cap the cost |
+
 ## Automated guards
 
 - `tests/e2e/privacy.e2e.mjs` intercepts real analytics traffic (nothing reaches PostHog) and
@@ -100,4 +127,4 @@ git history; `npm audit` reports 0 vulnerabilities; dev server path traversal bl
   checks that analytics never receives an address, coordinate, ZIP, or station name, and
   that brand links are https, open in a new tab with `noopener`, and include the ZIP only
   where labeled.
-- `npm run data:vehicles` rejects any brand link that isn't `https://`.
+- `npm run data:vehicles` fails on any brand link that isn't `https://` or has a bad `{zip}` template.

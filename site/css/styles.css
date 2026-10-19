@@ -448,17 +448,22 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .result-btn:hover { box-shadow: inset 0 0 0 2px #fff; }
 .result-btn:focus-visible { outline: 3px solid var(--citron); outline-offset: 2px; }
 
-.station-list, .car-list, .drive-list { list-style: none; padding: 0; margin: 0.5rem 0 0; display: grid; gap: 0.5rem; }
-.station-item, .car-item {
-  display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 1rem; align-items: center;
-  padding: 0.7rem 0.85rem; border-radius: var(--radius); background: var(--navy); box-shadow: inset 0 0 0 1px #2c3a55;
+/* Rows, not cards: the panel is the surface; rows are divided like route stops. */
+.plan-step { --fig: var(--c); }
+.plan-step.p-home { --fig: var(--aqua); } /* a white figure would not stand apart from white names */
+.station-list, .car-list, .drive-list { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+.station-item, .car-item, .drive-list li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.25rem 1rem; align-items: center;
+  padding: 0.8rem 0; border-top: 1px solid #2c3a55;
 }
-.station-item.is-saved, .car-item.is-saved { box-shadow: inset 0 0 0 2px var(--c); }
+.station-list > :first-child, .car-list > :first-child, .drive-list > :first-child { border-top: 0; }
 .station-main p, .car-main p { margin: 0; }
-.station-name, .car-name { font-weight: 700; color: #fff; }
-.station-miles { color: var(--c); font-weight: 700; }
+.station-name, .car-name { display: flex; align-items: center; gap: 0.55rem; font-weight: 700; color: #fff; }
+.saved-mark { flex: none; width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 2px #fff; }
+.is-saved .saved-mark { background: var(--c); }
 .station-meta { color: var(--row-sub); font-size: var(--t-small); }
-.station-meta a { color: #fff; }
+.station-main .station-meta, .car-main .station-meta { padding-left: calc(14px + 0.55rem); }
+.station-meta a { color: #fff; white-space: nowrap; }
 .btn-save {
   font: 700 var(--t-small) var(--text); cursor: pointer; min-height: 2.75rem; min-width: 6.5rem; padding: 0.4rem 0.8rem;
   border-radius: var(--radius); border: 2px solid var(--c); background: transparent; color: #fff;
@@ -467,8 +472,7 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .btn-save:disabled { border-style: dashed; color: var(--row-sub); cursor: default; }
 .btn-save:focus-visible { outline: 3px solid var(--citron); outline-offset: 2px; }
 
-.car-item { grid-template-columns: 1fr auto auto; }
-.car-figure { margin: 0; font: 900 1.75rem/1 var(--display); color: var(--c); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.row-figure { margin: 0; font: 900 1.75rem/1 var(--display); color: var(--fig); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .car-unit { font: 600 var(--t-small) var(--text); color: var(--row-sub); }
 .car-controls { display: grid; gap: 0.9rem; }
 .seg { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
@@ -483,31 +487,38 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .field label { font-size: var(--t-small); }
 .input-affix { display: flex; align-items: center; gap: 0.35rem; color: var(--row-sub); font-weight: 700; }
 .input-affix input { width: 100%; }
-.drive-list li { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: var(--navy); box-shadow: inset 0 0 0 1px #2c3a55; }
+.drive-list li { display: block; }
 .drive-list p { margin: 0 0 0.3rem; }
 .drive-list a { color: #fff; font-weight: 700; }
 .drive-links { display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; }
 .field-wide { grid-column: 1 / -1; margin: 0; }
 
 @media (max-width: 40rem) {
-  .station-item, .car-item { grid-template-columns: 1fr; }
-  .car-figure { text-align: left; }
-  .btn-save { justify-self: start; }
+  .station-item, .car-item { grid-template-columns: minmax(0, 1fr) auto; }
+  .row-figure { white-space: normal; }
+  .station-main, .car-main { grid-column: 1 / -1; }
+  .row-figure { text-align: left; padding-left: calc(14px + 0.55rem); }
 }
 
 /* ---------- partner summary ---------- */
 
-.summary { margin-top: 1.5rem; padding: 1.25rem 1.25rem 1.1rem; border-radius: 6px; background: #fff; color: var(--navy); }
+.summary { margin-top: 1.5rem; padding: 1.25rem 1.25rem 1.1rem; border-radius: 6px; background: #fff; color: var(--navy); color-scheme: light; }
 .summary h3 { margin: 0 0 0.5rem; font: 900 clamp(1.5rem, 3vw, 2rem)/1 var(--display); text-transform: uppercase; }
 .summary h4 { margin: 1.25rem 0 0.4rem; }
 .summary-verdict { margin: 0 0 0.75rem; }
 .summary-facts { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1.25rem; margin: 0; }
 .summary-facts dt { color: var(--muted); }
-.summary-facts dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
-.summary-table { width: 100%; border-collapse: collapse; font-size: var(--t-small); font-variant-numeric: tabular-nums; }
+.summary-facts dd { margin: 0; font-weight: 700; }
+.summary-table { width: 100%; border-collapse: collapse; font-size: var(--t-small); }
+.summary-table .num { text-align: right; white-space: nowrap; }
 .summary-table th, .summary-table td { text-align: left; padding: 0.45rem 0.5rem; border-bottom: 1px solid #d3dae2; }
 .summary-table thead th { color: var(--muted); font-weight: 700; }
 .summary-places { padding-left: 1.2rem; margin: 0; }
+.summary-places > li + li { margin-top: 0.6rem; }
+.summary-chargers { padding-left: 1.1rem; margin: 0.25rem 0 0; }
+.summary-chargers li { display: grid; margin: 0.3rem 0; }
+.summary-charger-name { font-weight: 600; }
+.print-only { display: none; }
 .summary .small { color: var(--muted); }
 .summary-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; margin-top: 1.25rem; }
 .summary .check input { accent-color: var(--navy); }
@@ -519,7 +530,17 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .share-link { width: 100%; margin-top: 0.6rem; font: 400 var(--t-small) var(--text); padding: 0.5rem 0.6rem; border: 2px solid #77828c; border-radius: var(--radius); color: var(--navy); background: #fff; }
 .table-scroll { overflow-x: auto; }
 .table-scroll:focus-visible { outline: 3px solid #101a2b; outline-offset: 2px; }
-.summary-table { min-width: 30rem; }
+@media (max-width: 40rem) {
+  .summary-facts { grid-template-columns: 1fr; gap: 0; }
+  .summary-facts dt { font-size: var(--t-small); margin-top: 0.5rem; }
+  .summary-table, .summary-table tbody, .summary-table tr, .summary-table th, .summary-table td { display: block; }
+  .summary-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .summary-table tr { padding: 0.5rem 0; border-bottom: 1px solid #d3dae2; }
+  .summary-table th, .summary-table td { border: 0; padding: 0.15rem 0; }
+  .summary-table th { font-size: var(--t-body); }
+  .summary-table td { display: flex; justify-content: space-between; gap: 1rem; text-align: right; }
+  .summary-table td::before { content: attr(data-label); color: var(--muted); text-align: left; }
+}
 
 .resume { margin: 1.5rem 0 0; padding: 1rem 1.1rem; border-radius: 6px; background: var(--navy-2); box-shadow: inset 0 0 0 1px #2c3a55; display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; }
 .resume p { margin: 0; flex-basis: 100%; color: #fff; font-weight: 600; }
@@ -567,5 +588,13 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   .plan-step::before { background: #000 !important; width: 4px; left: calc(1.75rem - 2px); }
   .plan-station { background: #fff !important; border-color: #000 !important; box-shadow: none; color: #000; }
   .plan-detail .chip { background: none; border: 1px solid #000; color: #000; }
-  .plan-done { border-color: #000; color: #000; }
+  .plan-done { border: 0; padding: 0; min-height: 0; font-size: 0; color: #000; }
+  .plan-done input { width: 1rem; height: 1rem; }
+  /* The partner summary leads the printout; the step list follows as the checklist. */
+  .plan:not([hidden]) { display: flex; flex-direction: column; }
+  #plan-result-title { order: -3; }
+  #plan-thanks { display: none !important; }
+  #plan-summary { order: -1; margin: 0 0 1.5rem; padding: 0; }
+  .summary .screen-only { display: none; }
+  .print-only { display: block; }
 }

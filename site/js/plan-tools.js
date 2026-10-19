@@ -74,16 +74,20 @@ export function createPlanTools(ctx) {
     if (nowSaved) ctx.track('charger_saved', { slot: place.slot, count: (ctx.plan().saved[place.id] || []).length });
   }
 
+  // The route's white-ringed station, filled with the stop color once saved.
+  const savedMark = () => el('span', { class: 'saved-mark', 'aria-hidden': 'true' });
+  const milesText = (miles) => (miles < 0.1 ? '<0.1' : String(miles));
+
   function stationItem(place, s, rerender) {
     const ports = [s.level2 ? `${s.level2} Level 2` : null, s.fast ? `${s.fast} fast` : null].filter(Boolean).join(' · ');
     const saved = isSaved(place, s);
     const plugs = connectorNames(s.connectors).join(', ');
     return el('li', { class: `station-item${saved ? ' is-saved' : ''}` },
       el('div', { class: 'station-main' },
-        el('p', { class: 'station-name' }, el('span', { text: s.name }), el('span', { class: 'station-miles', text: ` ${s.miles} mi` })),
-        el('p', { class: 'station-meta', text: [s.street, s.city].filter(Boolean).join(', ') }),
-        el('p', { class: 'station-meta', text: [ports, plugs, s.network].filter(Boolean).join(' · ') }),
-        s.hours || s.price ? el('p', { class: 'station-meta', text: [s.hours, s.price].filter(Boolean).join(' · ') }) : null),
+        el('p', { class: 'station-name' }, savedMark(), el('span', { text: s.name })),
+        el('p', { class: 'station-meta', text: [[s.street, s.city].filter(Boolean).join(', '), s.hours, s.price].filter(Boolean).join(' · ') }),
+        el('p', { class: 'station-meta', text: [ports, plugs, s.network].filter(Boolean).join(' · ') })),
+      el('p', { class: 'row-figure' }, milesText(s.miles), el('span', { class: 'car-unit', text: ' mi' })),
       el('button', {
         type: 'button', class: 'btn-save', 'aria-pressed': String(saved),
         onclick: () => { toggleSaved(place, s); rerender(); },
@@ -203,6 +207,11 @@ export function createPlanTools(ctx) {
 
   // ---------- cars ----------
 
+  const CLASS_LABEL = { suv: 'SUV', minivan: 'Minivan', pickup: 'Pickup' };
+  // The one number shown for a car, here and in the partner summary.
+  const figureFor = (v, f) => { const m = monthlyFor(v, f); return m == null ? usd(v.msrp) : `~${usd(m)}`; };
+  const rangeText = (v) => (v.rangeMin === v.rangeMax ? `${v.rangeMax} mi` : `${v.rangeMin}–${v.rangeMax} mi`);
+
   function monthlyFor(v, f) {
     const price = v.msrp + (v.destination || 0);
     if (f.mode === 'lease') return leasePayment({ msrp: v.msrp, price, dueAtSigning: f.dueAtSigning, residualPct: f.residualPct, moneyFactor: f.moneyFactor, months: f.leaseMonths });
@@ -216,12 +225,12 @@ export function createPlanTools(ctx) {
     const monthly = monthlyFor(v, f);
     return el('li', { class: `car-item${shortlisted ? ' is-saved' : ''}` },
       el('div', { class: 'car-main' },
-        el('p', { class: 'car-name', text: `${v.make} ${v.model}` }),
-        el('p', { class: 'station-meta', text: [`${v.modelYear}`, v.class === 'pickup' ? 'Pickup' : 'SUV', `${v.seats} seats`, v.thirdRow ? 'third row available' : null, `${v.rangeMin}–${v.rangeMax} mi EPA range`].filter(Boolean).join(' · ') }),
+        el('p', { class: 'car-name' }, savedMark(), el('span', { text: `${v.make} ${v.model}` })),
+        el('p', { class: 'station-meta', text: [`${v.modelYear}`, CLASS_LABEL[v.class] || v.class, `${v.seats} seats`, v.thirdRow ? 'third row available' : null, `${rangeText(v)} EPA range`, v.kwh100 ? `${v.kwh100} kWh/100 mi` : null].filter(Boolean).join(' · ') }),
         el('p', { class: 'station-meta' },
-          `From ${usd(v.msrp)}${v.destination ? ` + ${usd(v.destination)} destination` : ''} · checked ${data.checkedAtLabel} · `,
+          `From ${usd(v.msrp)} + ${v.destination ? `${usd(v.destination)} destination` : 'destination not published'} · checked ${data.checkedAtLabel} · `,
           externalLink('price source', v.priceSource))),
-      el('p', { class: 'car-figure' }, monthly == null ? usd(v.msrp) : `~${usd(monthly)}`, el('span', { class: 'car-unit', text: monthly == null ? ' starting' : ' /mo est.' })),
+      el('p', { class: 'row-figure' }, figureFor(v, f), el('span', { class: 'car-unit', text: monthly == null ? ' starting' : ' /mo est.' })),
       el('button', {
         type: 'button', class: 'btn-save', 'aria-pressed': String(shortlisted), disabled: full,
         onclick: () => {
@@ -384,6 +393,9 @@ export function createPlanTools(ctx) {
   // ---------- public API ----------
 
   return {
+    rangeText,
+    figureFor,
+    milesText,
     toolFor(stepId) { return TOOLS[stepId] || null; },
     async renderTool(stepId, box) {
       const t = TOOLS[stepId];

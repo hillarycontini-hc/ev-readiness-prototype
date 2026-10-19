@@ -145,7 +145,7 @@ test('analytics never receives searched addresses, coordinates, or station names
   await page.click('#tool-plan-work form[role=search] button[type=submit]');
   await page.click('.result-btn >> nth=0');
   await page.locator('#tool-plan-work .btn-save').first().click();
-  const stationName = await page.locator('#tool-plan-work .station-name span').first().innerText();
+  const stationName = await page.locator('#tool-plan-work .station-name span:not(.saved-mark)').first().innerText();
   await page.click('.tool-btn:has-text("Compare cars that fit")');
   await page.locator('.car-item .btn-save').first().click();
   await page.waitForTimeout(4500);
