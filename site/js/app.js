@@ -67,6 +67,24 @@ function chevron() {
   return svg;
 }
 
+function arrowIcon() {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 16 16');
+  svg.setAttribute('width', '14');
+  svg.setAttribute('height', '14');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', 'M4 12 L12 4 M6 4 L12 4 L12 10');
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', 'currentColor');
+  path.setAttribute('stroke-width', '2.5');
+  path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('stroke-linejoin', 'round');
+  svg.append(path);
+  return svg;
+}
+
 function srOnly(text) {
   return el('span', { class: 'sr-only', text });
 }
@@ -82,7 +100,7 @@ function externalLink(text, url, linkId, extra = {}) {
       analytics.track('learn_more_clicked', { link_id: linkId, ...extra });
       markNextStep('learn_more');
     },
-  }, text, el('span', { 'aria-hidden': 'true', text: ' ↗' }), srOnly(' (opens in a new tab)'));
+  }, text, arrowIcon(), srOnly(' (opens in a new tab)'));
 }
 
 // ---------- views ----------
@@ -178,7 +196,7 @@ function currentQueue() {
 }
 
 // Progress drawn as the route: one station per question, colored as it is passed.
-const ROUTE_COLORS = ['var(--teal)', 'var(--uv)', 'var(--poppy)', 'var(--teal)', 'var(--uv)'];
+const ROUTE_COLORS = ['var(--stop-charger)', 'var(--stop-range)', 'var(--stop-fuel)', 'var(--stop-parks)', 'var(--stop-charger)'];
 function renderQuestionRoute(step, total) {
   const stations = Array.from({ length: total }, (_, i) => {
     const li = el('li', { class: [i < step ? 'done' : '', i === step ? 'current' : '', i === total - 1 ? 'end' : ''].join(' ').trim() });

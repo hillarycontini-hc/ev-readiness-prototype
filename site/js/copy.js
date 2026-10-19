@@ -173,5 +173,5 @@ export const HOME_STOP = {
   ask: { figure: 'Ask', detail: 'You rent. Home charging is possible if your landlord agrees.' },
   'no-work': { figure: 'Work', detail: 'No home charging, but you can charge during the day.' },
   no: { figure: 'No', detail: 'No home charging. Public charging would carry you.' },
-  unknown: { figure: '?', detail: (pct) => `Typical for your ZIP: ${pct}% of homes are single-family.` },
+  unknown: { figure: 'Unknown', detail: (pct) => `Typical for your ZIP: ${pct}% of homes are single-family.` },
 };

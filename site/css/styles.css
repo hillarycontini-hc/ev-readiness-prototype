@@ -19,7 +19,7 @@
   /* World */
   --navy: #101a2b;
   --navy-2: #1a2740;
-  --teal: #0a6d77;
+  --teal: #0b7f8a; /* white text 4.75:1; the citron focus line is bold 19px (large text) at 3.9:1 */
   --poppy: #ff5a36;
   --poppy-hover: #ff7a5c;
   --citron: #d7f75b;
@@ -70,6 +70,8 @@
     --focus: #d7f75b;
     color-scheme: dark;
   }
+  /* Rows keep their navy, with an edge so they read as bars on the deep ground. */
+  .stop { box-shadow: 0 0 0 1px #33456a; }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -188,18 +190,18 @@ main:focus { outline: none; }
 .view-question { padding: 2rem 0 4rem; }
 .progress-text { font-weight: 700; color: var(--muted); margin: 0 0 0.5rem; font-size: var(--t-small); }
 
-/* Progress is the route: a line with one station per question. */
-.q-route { list-style: none; display: flex; padding: 0; margin: 0 0 2rem; }
-.q-route li { flex: 1; position: relative; height: 1.5rem; }
-.q-route li::before { content: ""; position: absolute; left: 0.75rem; right: -0.75rem; top: 0.5rem; height: 0.5rem; background: var(--chip); }
+/* Progress is the route itself: the same 14px line and white-ringed stations, on navy. */
+.q-route { list-style: none; display: flex; margin: 0 0 2rem; padding: 0.9rem 1.1rem; background: var(--navy); border-radius: 6px; }
+.q-route li { flex: 1; position: relative; height: 1.75rem; }
+.q-route li::before { content: ""; position: absolute; left: 0.875rem; right: -0.875rem; top: calc(0.875rem - 7px); height: 14px; background: #2c3a55; }
 .q-route li::after {
-  content: ""; position: absolute; left: 0; top: 0; z-index: 1; width: 1.5rem; height: 1.5rem; border-radius: 50%;
-  background: var(--surface); border: 4px solid var(--chip);
+  content: ""; position: absolute; left: 0; top: 0; z-index: 1; width: 1.75rem; height: 1.75rem; border-radius: 50%;
+  background: #fff; border: 6px solid #2c3a55; box-shadow: 0 0 0 3px var(--navy);
 }
 .q-route li.done::before { background: var(--seg); }
-.q-route li.done::after { border-color: var(--seg); background: var(--seg); }
-.q-route li.current::after { border-color: var(--ink); background: var(--citron); }
-.q-route li.end { flex: 0 0 1.5rem; }
+.q-route li.done::after { border-color: var(--seg); }
+.q-route li.current::after { border-color: var(--seg); background: var(--citron); }
+.q-route li.end { flex: 0 0 1.75rem; }
 .q-route li.end::before { display: none; }
 
 fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
@@ -301,9 +303,10 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: 0.1em;
   background: var(--c); color: var(--navy);
 }
-.chip.t-minus { background: var(--poppy); }
-.chip.t-check { background: #fff; }
-.chip.assumed-chip { background: transparent; color: #fff; box-shadow: inset 0 0 0 1px var(--row-sub); }
+/* Valence by form, not stop color: helps is filled, check is outlined, hurts is dashed. */
+.chip.t-check { background: transparent; color: #fff; box-shadow: inset 0 0 0 1.5px #fff; }
+.chip.t-minus { background: transparent; color: #fff; border: 1.5px dashed var(--poppy); padding: 0 0.4rem; }
+.chip.assumed-chip { background: #2c3a55; color: #fff; }
 .stop-figure { font: 900 var(--t-figure) / 1 var(--display); color: var(--c); padding: 0 1.1rem 0 0.5rem; text-align: right; white-space: nowrap; }
 .stop-chev { align-self: stretch; display: grid; place-items: center; border-left: 1px solid #2c3a55; color: var(--row-sub); }
 .stop-chev svg { transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -355,12 +358,23 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .plan-steps li { margin: 0.55rem 0; padding-left: 0.25rem; }
 .plan-steps li::marker { font: 900 1.25rem var(--display); color: var(--ink); }
 
-.link-list { padding-left: 1.2rem; }
-.link-list li { margin: 0.4rem 0; }
+.link-list { list-style: none; padding: 0; }
+.link-list li { margin: 0.5rem 0; padding-left: 1.6rem; position: relative; }
+.link-list li::before {
+  content: ""; position: absolute; left: 0; top: 0.35em; width: 0.8rem; height: 0.8rem; border-radius: 50%;
+  background: var(--surface); border: 3px solid var(--teal);
+}
+.link-list a svg, .park-list a svg { vertical-align: -0.1em; margin-left: 0.25em; }
 .link-list .src { color: var(--muted); font-size: var(--t-small); }
 
 .method { margin: 2rem 0 1.5rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1.1rem; background: var(--surface); }
-.method summary { cursor: pointer; font-weight: 700; min-height: 2rem; }
+.method summary { cursor: pointer; font-weight: 700; min-height: 2rem; list-style: none; display: flex; align-items: center; gap: 0.6rem; }
+.method summary::-webkit-details-marker { display: none; }
+.method summary::before {
+  content: ""; width: 0.5rem; height: 0.5rem; border: solid var(--poppy); border-width: 3px 3px 0 0;
+  transform: rotate(45deg); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); flex: none;
+}
+.method[open] summary::before { transform: rotate(135deg); }
 .method ul { padding-left: 1.2rem; }
 .small { color: var(--muted); font-size: var(--t-small); }
 .start-over { margin: 0 0 3rem; }
