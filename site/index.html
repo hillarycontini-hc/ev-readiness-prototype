@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Scripts and styles load only from this site. The one outside connection allowed is the analytics endpoint. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://us.i.posthog.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>EV Readiness Check</title>
+  <meta name="description" content="Is an EV right for you? Enter a ZIP code and answer four quick questions for a personalized answer on charging, range, cost, and road trips. Built on public data. Nothing is stored.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <p class="brand"><span class="brand-mark" aria-hidden="true"></span>EV Readiness Check</p>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <div class="wrap">
+
+      <!-- Landing -->
+      <section id="view-landing" class="view" aria-labelledby="landing-title">
+        <h1 id="landing-title" tabindex="-1" data-variant-text="headline">Is an EV right for you?</h1>
+        <p class="lede" data-variant-text="subhead">Enter your ZIP code for a one-minute, personalized check on charging, range, and cost.</p>
+
+        <form id="zip-form" class="zip-form" novalidate>
+          <label for="zip">ZIP code</label>
+          <p id="zip-hint" class="hint">5 digits. We use it only to look up public data for your area.</p>
+          <div class="zip-row">
+            <input id="zip" name="zip" type="text" inputmode="numeric" autocomplete="postal-code"
+                   maxlength="5" pattern="[0-9]{5}" required spellcheck="false"
+                   aria-describedby="zip-hint zip-error">
+            <button type="submit" class="btn btn-primary">Check my ZIP</button>
+          </div>
+          <p id="zip-error" class="error" role="alert" hidden></p>
+        </form>
+
+        <p class="privacy-line">
+          <strong>Private by design:</strong> no sign-up, no name, no email. Your ZIP and answers stay in your browser and are never stored.
+          <a href="#privacy">What we collect</a>
+        </p>
+      </section>
+
+      <!-- Questions (rendered from js/copy.js) -->
+      <section id="view-question" class="view" aria-labelledby="question-progress" hidden>
+        <p id="question-progress" class="progress" tabindex="-1"></p>
+        <div class="progress-bar" aria-hidden="true"><span id="progress-fill"></span></div>
+        <form id="question-form" novalidate>
+          <fieldset id="question-fieldset" aria-describedby="question-hint">
+            <legend id="question-legend"></legend>
+            <p id="question-hint" class="hint"></p>
+            <div id="question-options" class="options"></div>
+          </fieldset>
+          <p id="question-error" class="error" role="alert" hidden></p>
+          <div class="actions">
+            <button type="submit" class="btn btn-primary" id="question-next">Next</button>
+            <button type="button" class="btn btn-secondary" id="question-back">Back</button>
+            <button type="button" class="btn btn-link" id="question-skip">Skip this question</button>
+          </div>
+        </form>
+        <p class="skip-all"><button type="button" class="btn btn-link" id="question-skip-all">Skip the rest and see my results</button></p>
+      </section>
+
+      <!-- Loading -->
+      <section id="view-loading" class="view" hidden>
+        <p class="loading" role="status">Looking up your area&hellip;</p>
+      </section>
+
+      <!-- Results -->
+      <section id="view-results" class="view" aria-labelledby="results-title" hidden>
+        <p class="eyebrow" id="results-where"></p>
+        <h1 id="results-title" tabindex="-1"></h1>
+        <p class="lede" id="results-summary"></p>
+        <div class="tier-scale" id="tier-scale"></div>
+        <p class="confidence" id="results-confidence"></p>
+
+        <h2>Why</h2>
+        <ul class="reasons" id="results-reasons"></ul>
+
+        <div id="assumed" class="callout" hidden>
+          <h2 id="assumed-title">What we assumed</h2>
+          <ul id="assumed-list"></ul>
+          <button type="button" class="btn btn-secondary" id="answer-more">Answer these to sharpen your result</button>
+        </div>
+
+        <div id="cards" class="cards"></div>
+
+        <section class="next-steps" aria-labelledby="next-title">
+          <h2 id="next-title">Learn more</h2>
+          <ul id="learn-more" class="link-list"></ul>
+        </section>
+
+        <details class="method">
+          <summary>How we calculated this</summary>
+          <div id="method-body"></div>
+        </details>
+
+        <p><button type="button" class="btn btn-secondary" id="start-over">Start over with a new ZIP</button></p>
+      </section>
+
+      <!-- Data load failure -->
+      <section id="view-error" class="view" aria-labelledby="error-title" hidden>
+        <h1 id="error-title" tabindex="-1">Something went wrong</h1>
+        <p>We couldn&rsquo;t load the data for this check. Please try again in a moment.</p>
+        <p><button type="button" class="btn btn-primary" id="error-retry">Try again</button></p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <section id="privacy" aria-labelledby="privacy-title">
+        <h2 id="privacy-title">Privacy</h2>
+        <ul>
+          <li>We ask for a ZIP code and four multiple-choice answers. Nothing else: no name, email, phone, or account.</li>
+          <li>Your ZIP is used in your browser to load public data for your area. It is never stored or sent to analytics.</li>
+          <li>We count anonymous page events (for example, &ldquo;finished the questions&rdquo;) with PostHog to improve the tool. Those events include your state and your multiple-choice answers, never your ZIP. No cookies, no session recording, no IP address kept.</li>
+          <li>If your browser sends a Global Privacy Control or Do Not Track signal, we do not load analytics at all.</li>
+        </ul>
+        <p><button type="button" class="btn btn-link" id="analytics-toggle" hidden></button></p>
+      </section>
+      <p class="footnote">
+        An independent prototype by Hillary Contini, built on public data from NREL, EPA, the U.S. Census Bureau, EIA, and the National Park Service.
+        Not affiliated with any automaker or dealer. Estimates only; not financial advice.
+        <span id="data-date"></span>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
