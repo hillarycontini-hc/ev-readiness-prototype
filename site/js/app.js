@@ -2,21 +2,26 @@
 // Rendering uses createElement + textContent only. Nothing typed by the visitor
 // is ever inserted as HTML, and the ZIP is validated before it is used in a path.
 
-import { ASSUMPTIONS, QUESTIONS, QUESTION_ORDER, TIERS, normalizeZip, recommend } from './logic.js';
-import { ASSUMED_COPY, CHARGING_AT_PARK, LEARN_MORE, QUESTION_COPY, REASON_COPY, TIER_COPY, VARIANTS } from './copy.js';
+import { ASSUMPTIONS, FLEET_KEY, QUESTIONS, TIERS, normalizeZip, planFor, questionsFor, recommend } from './logic.js';
+import { ASSUMED_COPY, CHARGING_AT_PARK, LEARN_MORE, PLAN_COPY, PLAN_CTA, QUESTION_COPY, REASON_COPY, TIER_COPY, VARIANTS } from './copy.js';
 import * as analytics from './analytics.js';
 
 const $ = (id) => document.getElementById(id);
 const num = new Intl.NumberFormat('en-US');
 const money = (n) => `$${num.format(Math.abs(Math.round(n / 10) * 10))}`;
-const answeredCount = () => QUESTION_ORDER.filter((k) => state.answers[k]).length;
+// Questions that apply to this visitor (work charging only when home charging is uncertain).
+const applicable = () => questionsFor(state.answers);
+const answeredCount = () => applicable().filter((k) => state.answers[k]).length;
 
 const state = {
   zip: null,
   zipRec: null,
   answers: {},
   step: 0,
-  queue: QUESTION_ORDER, // questions to ask in this pass (all, or only the skipped ones when refining)
+  queue: [], // questions in this pass; recomputed as answers change
+  refineSet: null, // when refining: only the questions skipped the first time
+  nextStepSent: false, // north star: one next_step_taken per visit
+  lastRec: null,
   meta: null,
   parks: null,
   variant: 'control',
@@ -51,7 +56,10 @@ function externalLink(text, url, linkId, extra = {}) {
     href: url,
     target: '_blank',
     rel: 'noopener noreferrer',
-    onclick: () => analytics.track('learn_more_clicked', { link_id: linkId, ...extra }),
+    onclick: () => {
+      analytics.track('learn_more_clicked', { link_id: linkId, ...extra });
+      markNextStep('learn_more');
+    },
   }, text, el('span', { 'aria-hidden': 'true', text: ' ↗' }), srOnly(' (opens in a new tab)'));
 }
 
@@ -128,7 +136,7 @@ async function onZipSubmit(event) {
     state.zip = zip;
     state.zipRec = rec;
     state.answers = {};
-    state.queue = QUESTION_ORDER;
+    state.refineSet = null;
     analytics.track('zip_submitted', { state: rec.s });
     renderQuestion(0);
   } catch {
@@ -139,7 +147,13 @@ async function onZipSubmit(event) {
 
 // ---------- questions ----------
 
+function currentQueue() {
+  const q = applicable();
+  return state.refineSet ? q.filter((k) => state.refineSet.has(k)) : q;
+}
+
 function renderQuestion(step) {
+  state.queue = currentQueue();
   state.step = step;
   const key = state.queue[step];
   const copy = QUESTION_COPY[key];
@@ -152,7 +166,7 @@ function renderQuestion(step) {
   $('question-hint').textContent = copy.hint;
   $('question-error').hidden = true;
   $('question-error').textContent = '';
-  $('question-back').textContent = step === 0 && state.queue === QUESTION_ORDER ? 'Change ZIP' : 'Back';
+  $('question-back').textContent = step === 0 && !state.refineSet ? 'Change ZIP' : 'Back';
   $('question-next').textContent = step === total - 1 ? 'See my results' : 'Next';
   $('question-skip-all').parentElement.hidden = step === total - 1;
 
@@ -168,8 +182,11 @@ function renderQuestion(step) {
   analytics.track('question_viewed', { question: key, step: step + 1 });
 }
 
-function nextQuestion() {
-  if (state.step + 1 < state.queue.length) renderQuestion(state.step + 1);
+// Answers can add or remove a later question, so find our place by key, not index.
+function nextQuestion(fromKey) {
+  const queue = currentQueue();
+  const next = queue.indexOf(fromKey) + 1;
+  if (next > 0 && next < queue.length) renderQuestion(next);
   else finish();
 }
 
@@ -187,15 +204,17 @@ function onQuestionSubmit(event) {
   // Only accept values defined in logic.js, whatever the DOM says.
   if (!QUESTIONS[key].options.some((o) => o.value === picked.value)) return;
   state.answers[key] = picked.value;
+  // An answer to a question that no longer applies is dropped.
+  for (const k of Object.keys(state.answers)) if (!applicable().includes(k)) delete state.answers[k];
   analytics.track('question_answered', { question: key, answer: picked.value });
-  nextQuestion();
+  nextQuestion(key);
 }
 
 function onSkip() {
   const key = state.queue[state.step];
   delete state.answers[key];
   analytics.track('question_skipped', { question: key });
-  nextQuestion();
+  nextQuestion(key);
 }
 
 function onSkipAll() {
@@ -205,14 +224,14 @@ function onSkipAll() {
 
 function onBack() {
   if (state.step > 0) renderQuestion(state.step - 1);
-  else if (state.queue === QUESTION_ORDER) show('view-landing', 'zip');
+  else if (!state.refineSet) show('view-landing', 'zip');
   else renderResults();
 }
 
 function finish() {
   analytics.track('inputs_completed', {
     answered: answeredCount(),
-    skipped: QUESTION_ORDER.length - answeredCount(),
+    skipped: applicable().length - answeredCount(),
     state: state.zipRec.s,
   });
   renderResults();
@@ -258,7 +277,7 @@ function chargingCard(rec) {
 }
 
 function rangeCard(rec) {
-  const f = state.meta.fleet.all;
+  const f = state.meta.fleet[FLEET_KEY];
   const [y1, y2] = state.meta.fleet.modelYears;
   const need = rec.range.need;
   const max = Math.max(f.rangeMax, need) * 1.05;
@@ -285,9 +304,9 @@ function rangeCard(rec) {
   return el('section', { class: 'card', 'aria-labelledby': 'card-range' },
     el('h2', { id: 'card-range', text: 'Range you need vs. what EVs offer' }),
     el('p', { class: 'big', text: `About ${num.format(need)} miles between charges` }),
-    el('p', { text: `${num.format(rec.range.covered)} of ${num.format(rec.range.total)} current EV configurations (model years ${y1}–${y2}) are rated for at least that. Rated ranges run from ${f.rangeMin} to ${f.rangeMax} miles; the median is ${f.rangeMedian}.` }),
+    el('p', { text: `${num.format(rec.range.covered)} of ${num.format(rec.range.total)} electric SUV, minivan, and pickup configurations (model years ${y1}–${y2}) are rated for at least that. Those are the classes with room for car seats, a dog, and gear. Their rated ranges run from ${f.rangeMin} to ${f.rangeMax} miles; the median is ${f.rangeMedian}.` }),
     ruler,
-    el('p', { class: 'small', text: `The shaded band shows the middle half of EVs on sale (${f.rangeP25} to ${f.rangeP75} miles). ${why}` }));
+    el('p', { class: 'small', text: `The shaded band shows the middle half of those vehicles (${f.rangeP25} to ${f.rangeP75} miles). ${why}` }));
 }
 
 function costsCard(rec) {
@@ -332,7 +351,7 @@ function methodBody() {
     el('h3', { text: 'Assumptions' }),
     el('ul', {},
       el('li', { text: `Gas car: ${ASSUMPTIONS.gasMpg} mpg, the recent new-vehicle average (EPA).` }),
-      el('li', { text: `EV efficiency: ${m.fleet.all.kwhPer100Median} kWh per 100 miles, the median of current EVs (EPA, measured at the wall).` }),
+      el('li', { text: `EV efficiency: ${m.fleet[FLEET_KEY].kwhPer100Median} kWh per 100 miles, the median of current electric SUVs, minivans, and pickups (EPA, measured at the wall).` }),
       el('li', { text: `Public fast charging: $${ASSUMPTIONS.dcFastPricePerKwh.toFixed(2)}/kWh (Paren U.S. average, Q1 2026). Public Level 2: about $${ASSUMPTIONS.publicL2PricePerKwh.toFixed(2)}/kWh.` }),
       el('li', { text: `Each long drive adds about ${ASSUMPTIONS.extraMilesPerLongTrip} miles to your year.` }),
       el('li', { text: 'Distances are straight-line; road miles are estimated at 1.25 times that.' })),
@@ -350,9 +369,10 @@ function renderResults() {
   $('results-title').textContent = rec.tierLabel;
   $('results-summary').textContent = TIER_COPY[rec.tier];
   $('tier-scale').replaceWith(Object.assign(tierScale(rec.tier), { id: 'tier-scale' }));
-  $('results-confidence').textContent = answered === QUESTION_ORDER.length
-    ? 'Based on your ZIP and all four of your answers.'
-    : `Based on your ZIP and ${answered} of 4 answers. We filled in the rest with typical values for your area, so this is a ${rec.confidence}-confidence result.`;
+  const total = applicable().length;
+  $('results-confidence').textContent = answered === total
+    ? 'Based on your ZIP and all of your answers.'
+    : `Based on your ZIP and ${answered} of ${total} answers. We filled in the rest with typical values for your area, so this is a ${rec.confidence}-confidence result.`;
 
   $('results-reasons').replaceChildren(...rec.reasons.map(reasonItem));
 
@@ -367,6 +387,8 @@ function renderResults() {
 
   $('learn-more').replaceChildren(...LEARN_MORE.map((l) => el('li', {}, externalLink(l.label, l.url, l.id), el('span', { class: 'src', text: ` (${l.source})` }))));
   $('method-body').replaceChildren(...methodBody());
+  state.lastRec = rec;
+  resetPlan();
 
   show('view-results', 'results-title');
   analytics.track('recommendation_viewed', {
@@ -380,11 +402,35 @@ function renderResults() {
 }
 
 function onAnswerMore() {
-  const skipped = QUESTION_ORDER.filter((k) => !state.answers[k]);
+  const skipped = applicable().filter((k) => !state.answers[k]);
   if (!skipped.length) return;
   analytics.track('refine_clicked', { skipped: skipped.length });
-  state.queue = skipped;
+  // Include work charging too, in case answering home charging makes it apply.
+  state.refineSet = new Set([...skipped, 'workCharging']);
   renderQuestion(0);
+}
+
+// ---------- next steps: north star and the "Get my EV plan" fake door ----------
+
+function markNextStep(type) {
+  if (state.nextStepSent || !state.lastRec) return;
+  state.nextStepSent = true;
+  analytics.track('next_step_taken', { type, answered: answeredCount(), confidence: state.lastRec.confidence, tier: state.lastRec.tier });
+}
+
+function resetPlan() {
+  $('plan-cta').hidden = false;
+  $('plan-result').hidden = true;
+  $('plan-steps').replaceChildren();
+}
+
+function onPlanCta() {
+  analytics.track('plan_cta_clicked', { tier: state.lastRec.tier });
+  markNextStep('plan');
+  $('plan-steps').replaceChildren(...planFor(state.lastRec).map((step) => el('li', { text: PLAN_COPY[step.id](step.value) })));
+  $('plan-cta').hidden = true;
+  $('plan-result').hidden = false;
+  $('plan-result').focus();
 }
 
 function onStartOver() {
@@ -392,7 +438,8 @@ function onStartOver() {
   state.zip = null;
   state.zipRec = null;
   state.answers = {};
-  state.queue = QUESTION_ORDER;
+  state.refineSet = null;
+  state.lastRec = null;
   $('zip').value = '';
   show('view-landing', 'zip');
 }
@@ -423,6 +470,14 @@ function boot() {
   $('answer-more').addEventListener('click', onAnswerMore);
   $('start-over').addEventListener('click', onStartOver);
   $('error-retry').addEventListener('click', () => show('view-landing', 'zip'));
+  $('plan-title').textContent = PLAN_CTA.title;
+  $('plan-body').textContent = PLAN_CTA.body;
+  $('plan-cta').textContent = PLAN_CTA.button;
+  $('plan-result-title').textContent = PLAN_CTA.thanksTitle;
+  $('plan-thanks').textContent = PLAN_CTA.thanksBody;
+  $('plan-print').textContent = PLAN_CTA.print;
+  $('plan-cta').addEventListener('click', onPlanCta);
+  $('plan-print').addEventListener('click', () => { analytics.track('plan_printed'); window.print(); });
   $('analytics-toggle').addEventListener('click', () => { analytics.optOut(); renderAnalyticsToggle(); });
 
   loadStatic().then(() => {

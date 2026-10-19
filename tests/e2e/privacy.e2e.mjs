@@ -41,6 +41,7 @@ async function run({ gpc = false } = {}) {
   // Arrive the way a shared link might: campaign tags, an ad click id, a fragment.
   await page.goto(`${server.url}/?utm_source=linkedin&fbclid=CLICKID123#section`);
   await completeFlow(page, ZIP);
+  await page.click('#plan-cta'); // fake door: must send an event and collect nothing
   const [popup] = await Promise.all([
     context.waitForEvent('page'),
     page.click('#learn-more a >> nth=0'),
@@ -63,10 +64,15 @@ test('analytics on: only named events, no ZIP, no storage, variant on every even
   const { hosts, events, posthogPaths, storage, cookies } = await run();
 
   const names = events.map((e) => e.event);
-  for (const step of ['landing_viewed', 'zip_submitted', 'inputs_completed', 'recommendation_viewed', 'learn_more_clicked']) {
+  for (const step of ['landing_viewed', 'zip_submitted', 'inputs_completed', 'recommendation_viewed', 'plan_cta_clicked', 'learn_more_clicked', 'next_step_taken']) {
     assert.ok(names.includes(step), `funnel step ${step} was sent (got ${names.join(', ')})`);
   }
   assert.ok(names.every((n) => !n.startsWith('$') || n === '$opt_in'), `no automatic $ events: ${names.join(', ')}`);
+
+  const northStar = events.filter((e) => e.event === 'next_step_taken');
+  assert.equal(northStar.length, 1, 'north star fires once per visit');
+  assert.equal(northStar[0].properties.type, 'plan', 'first next step was the plan');
+  assert.ok(northStar[0].properties.answered >= 2, 'answered count is attached');
 
   const raw = JSON.stringify(events);
   assert.ok(!raw.includes(ZIP), 'ZIP never appears in any analytics payload');

@@ -1,45 +1,61 @@
 # EV Readiness Check
 
-**Is an EV right for me?** Enter a ZIP code, answer up to four quick questions, and get a
-personal, explained answer: public charging near you, the range you actually need compared
-with EVs on sale today, what you would spend on charging versus gas, and whether you can
-charge on the way to the national parks near you.
+**Is an EV right for me, even if I rent?** Enter a ZIP code, answer up to five quick
+questions, and get a personal, explained answer: where you could charge, the range you
+actually need compared with electric SUVs, minivans, and pickups on sale today, what you
+would spend on charging versus gas, and whether you can charge on the way to the national
+parks near you. Then get a printable plan for what to sort out before you buy.
 
 A working prototype built on free public data. No sign-up, no API keys at runtime, and
 nothing personal is stored.
 
 > Live demo: _not deployed yet_ · Run it locally in two commands (below).
+> One-page product brief (user, problem, solution, north star, platform decisions):
+> [`docs/product-brief.md`](docs/product-brief.md)
 
 ---
 
+## Who it is for
+
+**The EV-curious renter with a full life to haul.** They rent, so home charging is possible
+(with a landlord's help) or not available. They plan to buy their next car in the next
+12-18 months, take trips to parks and trailheads, and need room for car seats, a dog, and
+gear.
+
+It is the hardest common case, and the one generic EV content serves worst: "just charge
+at home overnight" doesn't apply. If the tool earns this person's trust, it works for
+easier cases too.
+
 ## The problem
 
-Most people who are curious about an EV stall on the same few questions, and none of them
-are about the car:
+> *"I can't tell whether an EV fits my life where I live, so I stall."*
 
-- *Can I charge where I live?*
-- *Is the range enough for how I actually drive, including winter?*
-- *Will it really save me money here, at my electricity and gas prices?*
-- *What about the trips that matter to me: the long drive, the weekend at the park?*
+Four doubts block this person, in this order:
+
+- *Can I charge reliably if I rent?*
+- *Is the range enough for how I drive, in winter, with a loaded car?*
+- *Will it save me money here, if I sometimes pay public charging prices?*
+- *Can I get to the parks I go to, and charge when I'm there?*
 
 The answers depend on where you live and how you live. Generic content ("most people drive
 less than 40 miles a day") does not move an individual. A short, personal answer with the
 reasoning shown might.
 
-## Who it is for
-
-EV-curious drivers early in the funnel: not yet comparing models, still deciding whether an
-EV fits their life. Especially people who drive to the outdoors, where charging anxiety is
-sharpest and generic answers are least convincing.
-
 ## How it works
 
-1. **ZIP first.** One field. The browser loads a small (5-15 KB) precomputed file for that ZIP prefix.
-2. **Four optional questions,** one per screen: daily driving, home charging, long drives,
-   outdoor trips. Every question can be skipped.
+1. **ZIP first.** One field. The browser loads a small (5-15 KB) precomputed file for that
+   ZIP prefix.
+2. **Up to five optional questions,** one per screen: daily driving, home charging (including
+   "I rent and could ask my landlord"), long drives, and outdoor trips. A question about
+   charging at work or another daytime spot appears only when home charging is uncertain.
+   Every question can be skipped.
 3. **A verdict with reasons:** Strong fit, Good fit with a plan, Possible with tradeoffs, or
-   Not yet. Each reason says whether it works for or against you, then four cards
-   (charging, range, cost, outdoor trips) and "Learn more" next steps.
+   Not yet. Each reason says whether it works for or against you. Four cards follow:
+   charging, range, cost, and outdoor trips.
+4. **"Get my EV plan."** A checklist built from the answers: who to ask about charging, what
+   to shop for, which park trips need a charging stop, and what to bring to a test drive.
+   This is a fake-door test for lead capture. It measures interest and says plainly that
+   nothing was collected.
 
 ## How personalization works
 
@@ -54,38 +70,43 @@ what is typical where they live:
 |---|---|---|
 | Daily driving | National average scaled by the ZIP's mean commute | Census ACS commute times |
 | Home charging | A probability equal to the ZIP's share of single-family homes | Census ACS housing type |
+| Daytime charging | Not available (conservative) | Default |
 | Long drives, outdoor trips | A few times a year | Default |
 
-**Then it updates.** Each answer replaces a prior. The results page lists exactly what was
-assumed, labels the result high, medium, or low confidence, and offers "Answer these to
-sharpen your result". A ZIP-only visitor never sees "Strong fit": that verdict requires
-knowing about home charging, the factor that matters most.
+**Then it updates.** Each answer replaces a default, and some answers change which questions
+come next. The results page lists exactly what was assumed, labels the result high,
+medium, or low confidence, and offers "Answer these to sharpen your result". A ZIP-only
+visitor never sees "Strong fit": that verdict requires knowing about home charging, the
+factor that matters most.
 
-**Scoring.** Five factors with stated weights: home charging (40%), range fit (20%), public
-charging nearby (15%), road-trip charging (15%), and charging near outdoor destinations (up
-to 15%, only if you take those trips). Caps keep it honest: without home charging the
-verdict tops out at "Good fit with a plan", and with no charging access at all it is
-"Not yet".
+**Scoring.** Five factors with stated weights: regular charging at home or during the day
+(40%), range fit (20%), public charging nearby (15%), road-trip charging (15%), and charging
+near outdoor destinations (up to 15%, only if you take those trips). Caps keep it honest:
+without a regular place to charge, the verdict tops out at "Good fit with a plan", and
+with no charging access at all it is "Not yet".
 
 **Explainable by design.** Every number on the results page traces to a source or a stated
 assumption, shown under "How we calculated this".
 
-## Measurement framework
+## North star and measurement
 
 Full detail: [`docs/analytics.md`](docs/analytics.md).
 
-**Outcome metric:** personalized answers delivered, meaning a recommendation viewed by a
-visitor who answered at least two of the four questions. It counts useful answers, not
-page views.
+**North star: confident next steps.** These are visits in which someone answered at least
+two questions, got a recommendation, and took a next step ("Get my EV plan" or a "Learn
+more" link). It requires both halves of the value: a personal answer for the visitor and
+movement down the funnel. Page views and bounces don't count. It is sent as a single
+`next_step_taken` event per visit, so it is one PostHog insight.
 
 **Funnel** (PostHog, free tier):
 
 ```
-landing_viewed -> zip_submitted -> inputs_completed -> recommendation_viewed -> learn_more_clicked
+landing_viewed -> zip_submitted -> inputs_completed -> recommendation_viewed -> next_step_taken
 ```
 
-Plus quality metrics (answer depth, refinement rate) and health metrics (ZIP error rate,
-data load errors). Every event is listed in an event dictionary with its properties.
+Plus quality metrics (answer depth, refinement rate), fake-door interest
+(`plan_cta_clicked`), and health metrics (ZIP error rate, data load errors). Every event is
+listed in an event dictionary with its properties.
 
 **A/B test: which promise brings people in?** Savings messaging ("Could an EV save you
 money?") versus adventure messaging ("Can an EV keep up with your adventures?"), which also
@@ -97,18 +118,28 @@ It includes an honest power analysis: at a few hundred visitors, only a very lar
 is detectable, so "inconclusive" is the most likely result. The point is the complete loop,
 set up the way it would run at real traffic.
 
+## Platform decisions
+
+| Area | Decision |
+|---|---|
+| Backend | **None for v1.** Static site; the "database" is precomputed public data in versioned JSON. Nothing to secure, pay for, or breach. |
+| Database (when needed) | Cloudflare D1 (SQLite) with Workers, for example to rate-limit a future chat mode. Supabase only if accounts or saved results become a goal. |
+| Authentication | **None for visitors.** That keeps the privacy promise and the funnel friction-free. Admin access is through GitHub, Cloudflare, and PostHog accounts with 2FA. |
+| Testing | Unit tests, browser tests (privacy payloads, axe accessibility, keyboard), and build-time data checks, all running in GitHub Actions on every push and pull request. |
+| Version control | Git and GitHub, with CI on every change, Dependabot, and data refreshes as reviewable diffs. |
+
 ## Privacy approach
 
 Privacy is a product requirement here, not a footnote:
 
-- **Collect the minimum.** A ZIP and four multiple-choice answers. No name, email, or account.
+- **Collect the minimum.** A ZIP and up to five multiple-choice answers. No name, email, or account. The "Get my EV plan" step asks for nothing.
 - **The ZIP never leaves the browser.** The browser only requests the public data file
   named for the ZIP's first three digits from the same site. The ZIP is never sent to
   analytics, and PostHog's IP-based location lookup is switched off. Events carry the
   state (for example, CO) instead.
 - **No cookies, no local storage, no consent banner needed.** Analytics identity lives in
   memory for one page view.
-- **No session replay, no autocapture.** Only 13 named events are sent, and an allowlist
+- **No session replay, no autocapture.** Only 16 named events are sent, and an allowlist
   filter strips everything else, including URL query strings, ad click ids, full user agent,
   and timezone.
 - **Global Privacy Control and Do Not Track are respected:** analytics does not load at all.
@@ -151,15 +182,18 @@ buffer) is listed in [`DECISIONS.md`](DECISIONS.md) and on the results page.
 2. **Measure the value of personalization itself.** Hold out a group that sees a generic
    results page and compare downstream conversion. That is the number that justifies the
    personalization investment.
-3. **Personalize the flow, not just the answer.** Skip or reframe questions the ZIP already
-   answers well (a 95% single-family ZIP needs a different home-charging question than a
-   dense downtown one), and test question order (ZIP-first vs. lifestyle-first).
+3. **Personalize the flow further.** The daytime-charging question already appears only
+   when home charging is uncertain. Next: reframe questions the ZIP already answers well (a
+   95% single-family ZIP needs a different home-charging question than a dense downtown one),
+   and test question order (ZIP-first vs. lifestyle-first).
 4. **Route real trips.** Replace the fast-charger-near-home proxy with corridor analysis to
    the visitor's own destinations, using charger reliability and connector type (NACS/CCS).
 5. **Add trailheads.** USFS, BLM, and OpenStreetMap trailheads, with data-quality filtering.
-6. **Connect discovery to configuration and lead capture.** Map answers to vehicle class,
-   range, and charging equipment needs, hand off to configuration with those choices
-   pre-filled, and capture a lead only with explicit consent.
+6. **Turn the fake door into real lead capture, if the interest is there.** If the
+   "Get my EV plan" click rate justifies it, offer to email the plan with explicit consent,
+   stored in Cloudflare D1 with a retention limit and one-click deletion. Map answers to
+   vehicle class, range, and charging equipment needs, and hand off to configuration with
+   those choices pre-filled.
 7. **Agentic discovery, safely.** An optional chat mode that explains this visitor's result
    in conversation, grounded only in the computed result and the sources, behind a
    serverless proxy with rate limits and a hard spending cap, with evaluations for
@@ -181,7 +215,7 @@ Then open http://localhost:8080. Analytics stays off until a PostHog project key
 
 | Command | What it does |
 |---|---|
-| `npm test` | Unit tests for the decision logic and analytics sanitizer |
+| `npm test` | Unit tests for the decision logic, analytics filter, and vendored library |
 | `npm run test:e2e` | Browser tests: accessibility (axe, keyboard, reflow) and privacy (real analytics payloads). First run: `npx playwright install chromium` |
 | `npm run data` | Re-download all public data and rebuild `site/data/` (a few minutes, about 200 MB of downloads) |
 | `npm run vendor` | Refresh the vendored PostHog library after upgrading it |

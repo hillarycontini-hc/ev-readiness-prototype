@@ -32,8 +32,12 @@ Pre-registered expectation: adventure beats savings on the primary metric by at 
 `landing_viewed` (the exposure event), same visit.
 
 **Secondary (reported, not used to decide):**
+- **North star rate** = visits with `next_step_taken` (answered >= 2) / `landing_viewed`.
+  Not the primary metric only because its lower base rate makes it even harder to detect at
+  this traffic; if the two disagree, that disagreement is the finding to report.
+- Fake-door rate = `plan_cta_clicked` / `recommendation_viewed`
 - Learn-more rate = `learn_more_clicked` / `recommendation_viewed`
-- Answer depth = mean `answered` on `inputs_completed` (0-4)
+- Answer depth = mean `answered` on `inputs_completed`
 - Audience mix = share answering `outdoor = monthly`. Not a success metric: a check on
   whether the adventure message attracts a different audience, which would change how to
   read the primary metric.

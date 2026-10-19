@@ -64,3 +64,20 @@ Default decisions made while building, with the reason for each. Anything marked
 | 35 | A ZIP-only (cold start) result is capped at "Good fit with a plan" | Found in the screen-reader review: Boulder with zero answers read "Strong fit" on a 46% guess about home charging. |
 | 36 | Each question is the view's `h1` inside the fieldset legend, and gets focus | Screen readers hear "Question 2 of 4: ..." once; previously it was announced three times. |
 | 37 | Real screen-reader testing left to a person | Automated checks (axe, keyboard, accessibility tree) cannot replace NVDA/VoiceOver; listed in the go/no-go. |
+
+## Fundamentals (decided with Hillary, 2026-10-19)
+
+Full write-up: [`docs/product-brief.md`](docs/product-brief.md).
+
+| # | Decision | Why |
+|---|---|---|
+| 38 | **North star: confident next steps.** Visits with 2+ answers, a recommendation, and a next step (EV plan or Learn more), sent as one `next_step_taken` event per visit | Requires both a personal answer and funnel movement; hard to inflate. One event makes it a single PostHog insight. |
+| 39 | **Primary persona: EV-curious renter** with possible or no home charging, buying in 12-18 months, takes park trips, needs room for car seats, a dog, and gear | The hardest common case and the one generic EV content serves worst. |
+| 40 | Home-charging question adds "I rent and could ask my landlord" (50% odds, an assumption) | Renters' real situation is "maybe", not yes or no. |
+| 41 | New daytime-charging question, asked only when home charging is not yes or could install. Counts at 80% reliability; priced like public Level 2 | Workplace and daytime charging is how many renters make EVs work. Asking only when it matters keeps the flow short. |
+| 42 | Range and efficiency compared against electric SUVs, minivans, and pickups (343 configurations), not all EVs | The persona needs space for car seats, a dog, and gear. Stated on the results page. |
+| 43 | **Lead capture: fake-door "Get my EV plan."** Counts intent, says plainly nothing was collected, then shows a real printable checklist | Shows lead-capture thinking and measures demand with zero personal data. Real capture waits until the click rate justifies it. |
+| 44 | **Backend: none for v1.** Future server-side needs go to Cloudflare Workers + D1; Supabase only for accounts or saved results | Nothing to secure or pay for; keeps the privacy promise simple and true. |
+| 45 | **Authentication: none for visitors.** Admin via GitHub, Cloudflare, and PostHog accounts with 2FA; Cloudflare Access for any future internal page | A login wall contradicts the privacy promise and costs upper-funnel conversion. |
+| 46 | **Testing in CI:** GitHub Actions runs unit and browser tests on every push and pull request; the data build fails on out-of-range values; a test fails if the vendored PostHog file drifts from the pinned package | Privacy and accessibility stay tested as the code changes. |
+| 47 | **Version control:** Dependabot (npm weekly, Actions monthly). Branch protection, secret scanning, and push protection are GitHub settings for Hillary to turn on | Settings require the repo owner's account. |

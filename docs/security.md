@@ -29,7 +29,9 @@ done and tested; the remaining items are account settings only you can change.
 - [ ] **Read the results page for your own ZIP and two others** and sanity-check the numbers.
 
 ### Nice to have
-- [ ] Turn on GitHub's Dependabot alerts and secret scanning on the repo.
+- [ ] In the GitHub repo settings: turn on **secret scanning with push protection** and
+  **Dependabot alerts**, and protect `main` (require a pull request and the CI check to pass).
+  Dependabot version updates and the CI workflow are already in `.github/`.
 - [ ] Use UTM tags on shared links (`?utm_source=linkedin`, `?utm_source=cohort`).
 
 ## What the site does and does not do

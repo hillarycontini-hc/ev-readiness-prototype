@@ -241,7 +241,20 @@ legend h1 { font-size: clamp(1.4rem, 4vw, 1.8rem); line-height: 1.25; margin: 0;
 .site-footer ul { padding-left: 1.2rem; }
 .footnote { color: var(--muted); font-size: 0.95rem; }
 
+.plan { margin-top: 2rem; }
+.plan #plan-result { margin-top: 1rem; }
+.plan #plan-result:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+.plan-steps { padding-left: 1.4rem; }
+.plan-steps li { margin: 0.5rem 0; }
+
 [hidden] { display: none !important; }
+
+/* Printing the plan: keep the verdict and checklist, drop navigation and controls. */
+@media print {
+  .site-header, .site-footer, .skip-link, button, .next-steps, .method, #cards, .callout, .tier-scale { display: none !important; }
+  body { font-size: 12pt; background: #fff; color: #000; }
+  .card { background: none; padding: 0; }
+}
 
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }

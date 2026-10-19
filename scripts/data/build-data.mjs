@@ -325,6 +325,29 @@ for (const [st, areas] of Object.entries(STATE_TO_GAS_AREA)) {
   gasByState[st] = found ? { price: gasArea[found], area: found } : null;
 }
 
+// ---------- sanity checks: fail the build rather than ship bad numbers ----------
+
+const problems = [];
+const expect = (ok, msg) => { if (!ok) problems.push(msg); };
+expect(stations.length > 50000, `only ${stations.length} public stations (expected 50,000+)`);
+expect(records.length > 30000, `only ${records.length} ZIP records (expected 30,000+)`);
+expect(parks.length >= 100, `only ${parks.length} outdoor destinations (expected 100+)`);
+expect(fleet.all.count >= 100 && fleet.suvTruck.count >= 50, `EV lineup too small (${fleet.all.count} total, ${fleet.suvTruck.count} SUV/van/pickup)`);
+expect(fleet.all.rangeMedian >= 150 && fleet.all.rangeMedian <= 500, `median EV range ${fleet.all.rangeMedian} mi looks wrong`);
+expect(fleet.suvTruck.kwhPer100Median >= 20 && fleet.suvTruck.kwhPer100Median <= 60, `SUV efficiency ${fleet.suvTruck.kwhPer100Median} kWh/100 mi looks wrong`);
+for (const st of Object.keys(STATE_TO_GAS_AREA)) {
+  const e = electricity[st];
+  const g = gasByState[st]?.price;
+  expect(e >= 5 && e <= 60, `${st} electricity ${e} cents/kWh out of range`);
+  expect(g >= 2 && g <= 9, `${st} gasoline $${g}/gal out of range`);
+}
+const withCommute = records.filter((r) => r.cm != null).length / records.length;
+expect(withCommute > 0.8, `only ${Math.round(withCommute * 100)}% of ZIPs have commute data`);
+if (problems.length) {
+  console.error('Data sanity checks failed:\n  ' + problems.join('\n  '));
+  process.exit(1);
+}
+
 // ---------- write ----------
 
 rmSync(OUT, { recursive: true, force: true });

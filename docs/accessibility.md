@@ -6,7 +6,7 @@ Target: **WCAG 2.1 AA**. What was checked, how, and what still needs a human.
 
 | Check | Tool | Coverage | Result |
 |---|---|---|---|
-| WCAG 2.0/2.1 A and AA rules + best practices | axe-core via Playwright | Landing, ZIP error, question, question error, results (all answered), results (ZIP only, method section open) | 0 violations |
+| WCAG 2.0/2.1 A and AA rules + best practices | axe-core via Playwright | Landing, ZIP error, question, question error, results (all answered), results with the EV plan open, results (ZIP only, method section open) | 0 violations |
 | Same, dark mode | axe-core | All of the above with `prefers-color-scheme: dark` | 0 violations |
 | Reflow (1.4.10) | Playwright | All views at 320 px wide, both themes | No horizontal scrolling |
 | Keyboard only (2.1.1, 2.4.3, 2.4.7) | Playwright | Skip link first; ZIP to results with Tab, arrows, Enter; every results control reachable; visible focus outline on each | Pass |

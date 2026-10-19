@@ -30,9 +30,18 @@ export const QUESTION_COPY = {
     legend: 'Could you charge where you park overnight?',
     hint: 'A regular outlet or a charger in a garage, driveway, or assigned spot counts.',
     options: {
-      yes: 'Yes, there is an outlet or charger there',
-      install: 'Not yet, but I could install one',
+      yes: 'Yes, there is an outlet or charger I can use',
+      install: 'Not yet, but I own my place and could install one',
+      ask: 'Maybe: I rent and could ask my landlord or building',
       no: 'No, I park on the street or in shared parking',
+    },
+  },
+  workCharging: {
+    legend: 'Is there charging where your car sits for hours during the day?',
+    hint: 'For example at work, school, or a park-and-ride. Many renters charge this way.',
+    options: {
+      yes: 'Yes, or I could likely get access',
+      no: 'No, or I don’t know of any',
     },
   },
   longTrips: {
@@ -71,6 +80,8 @@ export const REASON_COPY = {
   'home-install': () => 'You could add a home charger. Get an electrician’s quote first; installation cost depends on your electrical panel and where you park.',
   'home-no-dense': () => 'No home charging, but there is a lot of public charging near you. It can work if charging becomes part of your routine, like a weekly fast charge or charging at work.',
   'home-no-sparse': () => 'No home charging, and public charging near you is thin. That is the hardest setup to live with day to day.',
+  'home-ask': () => 'You might be able to charge at home if your landlord agrees. Ask early: some states have “right to charge” rules that help renters, and even a regular outdoor outlet covers most daily driving.',
+  'work-yes': () => 'You can charge where your car sits during the day. For many renters, that stands in for home charging on most days.',
   'home-unknown': (v) => `We don’t know yet whether you can charge at home. About ${v}% of homes in your ZIP are single-family, so we assumed a ${v}% chance. Answering that question sharpens this result the most.`,
   'range-easy': (v) => `Your driving needs about ${v} miles between charges, including a buffer for winter and a reserve. Nearly every EV on sale covers that.`,
   'range-some': (v) => `Your driving needs about ${v} miles between charges. Some EVs cover that, so check rated range carefully.`,
@@ -89,6 +100,7 @@ export const REASON_COPY = {
 
 export const ASSUMED_COPY = {
   dailyMiles: (inp) => `Daily driving: about ${inp.dailyMiles} miles, scaled from the average commute in your ZIP (Census ACS).`,
+  workCharging: () => 'Daytime charging (work, school): assumed not available.',
   homeCharging: (inp) => `Home charging: a ${Math.round(inp.homeChargeOdds * 100)}% chance, from the share of single-family homes in your ZIP (Census ACS).`,
   longTrips: () => 'Long drives: a few times a year.',
   outdoor: () => 'Outdoor trips: a few times a year.',
@@ -106,3 +118,30 @@ export const LEARN_MORE = [
   { id: 'home-charging', label: 'How home charging works', source: 'U.S. Department of Energy', url: 'https://afdc.energy.gov/fuels/electricity-charging-home' },
   { id: 'models', label: 'Compare EV range and efficiency', source: 'fueleconomy.gov', url: 'https://www.fueleconomy.gov/feg/evsbs.shtml' },
 ];
+
+// "Get my EV plan": a fake-door test. It measures interest in a plan follow-up and
+// collects nothing, then gives the visitor a real checklist built from their answers.
+export const PLAN_CTA = {
+  title: 'Get your EV plan',
+  body: 'A checklist built from your answers: where you would charge, what range to shop for, and what to sort out before you buy.',
+  button: 'Get my EV plan',
+  thanksTitle: 'Here is your EV plan',
+  thanksBody: 'Thanks for asking. This is a prototype, so there is no sign-up and we did not collect anything about you. Your click tells us a plan like this is worth building properly. Here is a starter version you can print or save:',
+  print: 'Print or save as PDF',
+};
+
+export const PLAN_COPY = {
+  'plan-install': () => 'Get an electrician’s quote for a Level 2 charger where you park. Ask whether your electrical panel has room.',
+  'plan-landlord': () => 'Ask your landlord or building manager about charging: a dedicated outlet, a shared charger, or permission to install one. Check whether your state has a “right to charge” rule for renters.',
+  'plan-find-home': () => 'Find out whether you can charge where you park overnight. It is the biggest factor in whether an EV is easy to live with.',
+  'plan-work': () => 'Confirm daytime charging: how many chargers there are, whether you need to move the car, and what it costs.',
+  'plan-public': (v) => v == null
+    ? 'Find the closest public chargers to home and to places you already spend time, like a grocery store or gym.'
+    : `Visit your nearest fast charger (about ${v} miles away) and a Level 2 station near somewhere you already spend time, like a grocery store or gym.`,
+  'plan-home-l2': () => 'If you only have a regular outlet, it adds a few miles of range per hour. A Level 2 charger adds about 20 to 30.',
+  'plan-range': (v) => `Shop for at least ${v} miles of rated range in an SUV, minivan, or pickup with the space you need.`,
+  'plan-range-any': () => 'Range will not limit your daily driving: every electric SUV, minivan, and pickup on sale covers it with room to spare. Shop on space, comfort, and charging speed instead.',
+  'plan-park': (v) => `Before a trip to ${v}, plan a fast-charging stop on the way: charging near the park is limited.`,
+  'plan-route': () => 'Try your most common long drive in a charging route planner before you buy.',
+  'plan-test-drive': () => 'Bring your car seats, the dog’s crate, or your gear to a test drive and check that everything fits with the cargo area full.',
+};

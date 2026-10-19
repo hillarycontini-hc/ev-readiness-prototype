@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   normalizeZip, countAtOrAbove, priorsFor, resolveInputs, rangeNeed, recommend, chargingMix, annualCosts, TIERS,
+  questionsFor, planFor, FLEET_KEY,
 } from '../site/js/logic.js';
 
 const meta = JSON.parse(readFileSync(new URL('../site/data/meta.json', import.meta.url)));
@@ -32,7 +33,7 @@ test('countAtOrAbove counts ranges that meet the need', () => {
 test('cold start: a ZIP alone produces a full answer with low confidence', () => {
   const rec = recommend({ zipRec: city, answers: {}, meta, parks });
   assert.equal(rec.confidence, 'low');
-  assert.deepEqual(rec.inputs.assumed, ['dailyMiles', 'homeCharging', 'longTrips', 'outdoor']);
+  assert.deepEqual(rec.inputs.assumed, ['dailyMiles', 'homeCharging', 'workCharging', 'longTrips', 'outdoor']);
   assert.ok(TIERS.some((t) => t.id === rec.tier));
   assert.ok(Number.isFinite(rec.score));
 });
@@ -65,8 +66,8 @@ test('answering a question removes it from the assumed list', () => {
 });
 
 test('unknown answer values are treated as skipped, not trusted', () => {
-  const inp = resolveInputs({ dailyMiles: '<img src=x>', homeCharging: 'maybe', longTrips: 7 }, city, meta);
-  assert.deepEqual(inp.assumed, ['dailyMiles', 'homeCharging', 'longTrips', 'outdoor']);
+  const inp = resolveInputs({ dailyMiles: '<img src=x>', homeCharging: 'maybe', workCharging: 'sometimes', longTrips: 7 }, city, meta);
+  assert.deepEqual(inp.assumed, ['dailyMiles', 'homeCharging', 'workCharging', 'longTrips', 'outdoor']);
 });
 
 test('home charging is the strongest single lever', () => {
@@ -101,10 +102,12 @@ test('range need grows when there is no home charging', () => {
 });
 
 test('charging mix always sums to 1', () => {
-  for (const homeCharging of ['yes', 'install', 'no', undefined]) {
+  for (const homeCharging of ['yes', 'install', 'ask', 'no', undefined]) {
     for (const longTrips of ['rarely', 'few', 'monthly', 'weekly']) {
-      const m = chargingMix(resolveInputs({ homeCharging, longTrips }, city, meta), city);
-      assert.ok(Math.abs(m.home + m.l2 + m.dc - 1) < 1e-9, `${homeCharging}/${longTrips}`);
+      for (const workCharging of ['yes', 'no', undefined]) {
+        const m = chargingMix(resolveInputs({ homeCharging, workCharging, longTrips }, city, meta), city);
+        assert.ok(Math.abs(m.home + m.l2 + m.dc - 1) < 1e-9, `${homeCharging}/${workCharging}/${longTrips}`);
+      }
     }
   }
 });
@@ -136,4 +139,48 @@ test('real data: dense city scores higher on local charging than rural Montana',
   const nyc = recommend({ zipRec: zipRec('10001'), answers: {}, meta, parks });
   const mt = recommend({ zipRec: zipRec('59001'), answers: {}, meta, parks });
   assert.ok(nyc.factors.local > mt.factors.local);
+});
+
+// ---------- renter persona ----------
+
+test('work charging is asked only when home charging is not certain', () => {
+  assert.ok(!questionsFor({ homeCharging: 'yes' }).includes('workCharging'));
+  assert.ok(!questionsFor({ homeCharging: 'install' }).includes('workCharging'));
+  for (const homeCharging of ['ask', 'no', undefined]) assert.ok(questionsFor({ homeCharging }).includes('workCharging'), String(homeCharging));
+  // An answer to a question that no longer applies is ignored, not trusted.
+  const inp = resolveInputs({ homeCharging: 'yes', workCharging: 'yes' }, city, meta);
+  assert.equal(inp.workChargeOdds, 0);
+  assert.equal(inp.workCharging, 'not-asked');
+  assert.ok(!inp.assumed.includes('workCharging'));
+});
+
+test('a renter with charging at work does better than one without', () => {
+  const base = { dailyMiles: '20to40', homeCharging: 'no', longTrips: 'few', outdoor: 'few' };
+  const work = recommend({ zipRec: remote, answers: { ...base, workCharging: 'yes' }, meta, parks });
+  const none = recommend({ zipRec: remote, answers: { ...base, workCharging: 'no' }, meta, parks });
+  assert.ok(work.score > none.score);
+  assert.ok(!work.blockers.includes('no-charging-access'), 'work charging removes the no-access blocker');
+  assert.ok(work.reasons.some((r) => r.id === 'work-yes'));
+});
+
+test('asking the landlord sits between yes and no', () => {
+  const base = { dailyMiles: '20to40', workCharging: 'no', longTrips: 'few', outdoor: 'few' };
+  const score = (homeCharging) => recommend({ zipRec: city, answers: { ...base, homeCharging }, meta, parks }).score;
+  assert.ok(score('yes') > score('ask'));
+  assert.ok(score('ask') > score('no'));
+});
+
+test('compared against SUVs, minivans, and pickups (room for car seats, a dog, and gear)', () => {
+  assert.equal(FLEET_KEY, 'suvTruck');
+  const rec = recommend({ zipRec: city, answers: {}, meta, parks });
+  assert.equal(rec.range.total, meta.fleet.suvTruck.count);
+});
+
+test('the EV plan always ends with a test drive and reflects the renter situation', () => {
+  const rec = recommend({ zipRec: city, answers: { dailyMiles: '20to40', homeCharging: 'ask', workCharging: 'yes', longTrips: 'monthly', outdoor: 'few' }, meta, parks });
+  const ids = planFor(rec).map((s) => s.id);
+  assert.equal(ids.at(-1), 'plan-test-drive');
+  for (const id of ['plan-landlord', 'plan-work', 'plan-public', 'plan-route']) assert.ok(ids.includes(id), id);
+  assert.ok(ids.includes('plan-range-any'), 'range advice adapts when every vehicle covers the need');
+  assert.ok(!ids.includes('plan-home-l2'));
 });

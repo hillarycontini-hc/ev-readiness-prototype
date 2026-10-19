@@ -19,6 +19,7 @@ const EVENTS = new Set([
   'landing_viewed', 'zip_submitted', 'zip_error', 'question_viewed', 'question_answered',
   'question_skipped', 'questions_skipped_rest', 'inputs_completed', 'recommendation_viewed',
   'learn_more_clicked', 'refine_clicked', 'start_over_clicked', 'data_load_error',
+  'plan_cta_clicked', 'plan_printed', 'next_step_taken',
 ]);
 
 // Property names that must never leave the browser, even by mistake.
@@ -55,7 +56,7 @@ function trimUrl(u) {
 const ALLOWED_CUSTOM = new Set([
   'token', 'distinct_id', 'app_version', 'messaging_variant',
   'state', 'question', 'step', 'answer', 'from_question', 'answered', 'skipped',
-  'tier', 'score_band', 'confidence', 'blockers', 'link_id', 'park', 'reason', 'stage',
+  'tier', 'score_band', 'confidence', 'blockers', 'link_id', 'park', 'reason', 'stage', 'type',
   'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term',
 ]);
 // PostHog defaults we do not need: full user agent string and timezone (fingerprinting, coarse location).

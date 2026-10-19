@@ -55,18 +55,23 @@ export function decodePosthogBody(request) {
   return [parsed];
 }
 
-/** Walk the full flow: ZIP, four answers, results. */
-export async function completeFlow(page, zip = '80302', answers = [1, 0, 1, 2]) {
+// Default answers: the primary persona, a renter who could ask the landlord and can charge at work.
+export const RENTER = { dailyMiles: 1, homeCharging: 2, workCharging: 0, longTrips: 1, outdoor: 2 };
+
+/** Walk the flow: ZIP, then each question shown (answer by option index, or skip if absent), then results. */
+export async function completeFlow(page, zip = '80302', answers = RENTER) {
   await page.fill('#zip', zip);
   await page.click('#zip-form button[type=submit]');
-  for (const idx of answers) {
-    await page.waitForSelector('#view-question:not([hidden])');
+  for (let i = 0; i < 10; i++) {
+    await page.waitForSelector('#view-question:not([hidden]), #view-results:not([hidden])');
+    if (await page.isVisible('#view-results')) return;
     const radios = page.locator('#question-options input[type=radio]');
-    if (idx == null) await page.click('#question-skip');
+    const name = await radios.first().getAttribute('name');
+    if (answers[name] == null) await page.click('#question-skip');
     else {
-      await radios.nth(idx).check();
+      await radios.nth(answers[name]).check();
       await page.click('#question-next');
     }
   }
-  await page.waitForSelector('#view-results:not([hidden])');
+  throw new Error('flow did not reach results');
 }

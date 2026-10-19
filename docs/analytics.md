@@ -7,23 +7,30 @@ useful next step. The metrics follow that job, top to bottom:
 
 | Level | Metric | Definition |
 |---|---|---|
-| Outcome | **Personalized answers delivered** | `recommendation_viewed` with `confidence` = high or medium (the visitor answered at least 2 of 4 questions) |
+| **North star** | **Confident next steps** | `next_step_taken` where `answered >= 2`: the visitor answered at least two questions, got a recommendation, and took a next step ("Get my EV plan" or a "Learn more" link). Weekly count, and rate per `landing_viewed` |
+| Outcome | Personalized answers delivered | `recommendation_viewed` with `confidence` = high or medium |
+| Intent | Fake-door interest | `plan_cta_clicked` / `recommendation_viewed`: would people want a plan follow-up? |
 | Funnel | Start rate | `zip_submitted` / `landing_viewed` |
 | Funnel | Completion rate | `inputs_completed` / `zip_submitted` |
 | Funnel | Recommendation rate | `recommendation_viewed` / `landing_viewed` (A/B primary metric) |
-| Funnel | Next-step rate | `learn_more_clicked` / `recommendation_viewed` |
-| Quality | Answer depth | Mean `answered` (0-4) on `inputs_completed` |
+| Funnel | Next-step rate | `next_step_taken` / `recommendation_viewed` |
+| Quality | Answer depth | Mean `answered` on `inputs_completed` (4 or 5 questions apply, depending on home charging) |
 | Quality | Refinement rate | `refine_clicked` / `recommendation_viewed` where confidence is not high |
 | Health | ZIP error rate, data error rate | `zip_error` / `landing_viewed`, `data_load_error` / `zip_submitted` |
 
-The "personalized answers" outcome counts quality, not volume: a ZIP-only answer
-is useful, but the product is working when people tell it enough to get a real answer.
+The north star counts quality, not volume: a ZIP-only answer is useful, but the product
+is working when people tell it enough to get a real answer *and* act on it. Guardrails:
+ZIP error rate, early bail-out rate, and the share of "Not yet" verdicts that still take a
+next step (an honest "not yet" that leads to a useful plan is a success).
 
 ## The funnel
 
 ```
-landing_viewed -> zip_submitted -> inputs_completed -> recommendation_viewed -> learn_more_clicked
+landing_viewed -> zip_submitted -> inputs_completed -> recommendation_viewed -> next_step_taken
 ```
+
+The north star itself: **Product analytics > New insight > Trends**, event `next_step_taken`,
+filter `answered >= 2`, weekly.
 
 In PostHog: **Product analytics > New insight > Funnel**, add those five events in order,
 conversion window 1 hour, and break down by `messaging_variant` (A/B) or `utm_source`
@@ -46,6 +53,9 @@ Every event also carries `messaging_variant`, `$feature/landing-messaging`, and 
 | `inputs_completed` | Questions finished (answered or skipped) | `answered`, `skipped`, `state` |
 | `recommendation_viewed` | Results rendered | `tier`, `score_band` (e.g. `70s`), `confidence`, `answered`, `state`, `blockers` |
 | `learn_more_clicked` | Any outbound link on the results page | `link_id`, `park` (NPS park code, for park links) |
+| `plan_cta_clicked` | "Get my EV plan" (fake door) | `tier` |
+| `plan_printed` | "Print or save as PDF" on the plan | none |
+| `next_step_taken` | **North star.** First plan click or "Learn more" click in a visit (once per visit) | `type` (`plan` or `learn_more`), `answered`, `confidence`, `tier` |
 | `refine_clicked` | "Answer these to sharpen your result" | `skipped` |
 | `start_over_clicked` | "Start over with a new ZIP" | none |
 | `data_load_error` | A data file failed to load | `stage` |

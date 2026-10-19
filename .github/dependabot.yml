@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # posthog-js is vendored into site/vendor; an update must be followed by `npm run vendor`
+    # (tests/vendor.test.mjs fails until it is).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

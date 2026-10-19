@@ -45,7 +45,12 @@ const VIEWS = {
     await page.click('#question-next');
     await page.waitForSelector('#question-error:not([hidden])');
   },
-  'results (all answered)': async (page) => completeFlow(page, '80302', [1, 0, 1, 2]),
+  'results (all answered)': async (page) => completeFlow(page, '80302'),
+  'results with EV plan open': async (page) => {
+    await completeFlow(page, '80302');
+    await page.click('#plan-cta');
+    await page.waitForSelector('#plan-result:not([hidden])');
+  },
   'results (ZIP only)': async (page) => {
     await page.fill('#zip', '10001');
     await page.click('#zip-form button[type=submit]');
@@ -90,15 +95,16 @@ test('keyboard only: ZIP to results without a mouse, focus always visible and mo
   await page.keyboard.press('Enter');
   await page.waitForSelector('#view-question:not([hidden])');
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; !(await page.isVisible('#view-results')); i++) {
+    assert.ok(i < 6, 'reaches results within the question count');
     const focused = await page.evaluate(() => document.activeElement.id);
     assert.equal(focused, 'question-legend', `focus moves to question ${i + 1}`);
     await page.keyboard.press('Tab'); // into the radio group
     assert.equal(await page.evaluate(() => document.activeElement.type), 'radio');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
+    await page.waitForSelector('#view-question:not([hidden]) #question-legend:focus, #view-results:not([hidden])');
   }
-  await page.waitForSelector('#view-results:not([hidden])');
   assert.equal(await page.evaluate(() => document.activeElement.id), 'results-title', 'focus moves to the verdict');
 
   // Every interactive element on the results page can be reached by Tab, with a visible focus outline.

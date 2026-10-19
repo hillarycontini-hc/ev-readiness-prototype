@@ -19,8 +19,13 @@ export const QUESTIONS = {
     ],
   },
   homeCharging: {
-    // 'install' = could add a charger (owns a driveway or garage); 'no' = street or shared parking.
-    options: [{ value: 'yes' }, { value: 'install' }, { value: 'no' }],
+    // 'install' = owns and could add a charger; 'ask' = rents and could ask the landlord;
+    // 'no' = street or shared parking with no charging.
+    options: [{ value: 'yes' }, { value: 'install' }, { value: 'ask' }, { value: 'no' }],
+  },
+  workCharging: {
+    // Asked only when home charging is not certain: somewhere the car sits for hours with charging.
+    options: [{ value: 'yes' }, { value: 'no' }],
   },
   longTrips: {
     // Round trips over about 200 miles, per year.
@@ -41,7 +46,17 @@ export const QUESTIONS = {
   },
 };
 
-export const QUESTION_ORDER = ['dailyMiles', 'homeCharging', 'longTrips', 'outdoor'];
+export const QUESTION_ORDER = ['dailyMiles', 'homeCharging', 'workCharging', 'longTrips', 'outdoor'];
+
+/** Questions that apply given the answers so far. Work charging only matters without certain home charging. */
+export function questionsFor(answers = {}) {
+  const homeSettled = answers.homeCharging === 'yes' || answers.homeCharging === 'install';
+  return QUESTION_ORDER.filter((q) => q !== 'workCharging' || !homeSettled);
+}
+
+// Which EVs the visitor is compared against. The primary persona needs room for car seats,
+// a dog, and gear, so the default is SUVs, minivans, and pickups (fleet.suvTruck).
+export const FLEET_KEY = 'suvTruck';
 
 // Every number the model leans on, in one place, so the UI can show its work.
 export const ASSUMPTIONS = {
@@ -51,6 +66,8 @@ export const ASSUMPTIONS = {
   roadFactor: 1.25, // straight-line distance to road miles
   extraMilesPerLongTrip: 300,
   gasMpg: 27, // recent new-vehicle real-world average (EPA Automotive Trends)
+  landlordYesOdds: 0.5, // renters who ask: assume even odds of getting home charging
+  workChargingReliability: 0.8, // daytime charging covers most, not all, days
   publicL2PricePerKwh: 0.27, // approximate; public Level 2 pricing varies widely
   dcFastPricePerKwh: 0.53, // Paren Q1 2026 U.S. average, excluding free chargers
 };
@@ -109,8 +126,19 @@ export function resolveInputs(answers, zipRec, meta) {
   let homeCharging = a.homeCharging;
   if (homeCharging === 'yes') homeChargeOdds = 1;
   else if (homeCharging === 'install') homeChargeOdds = 0.9; // most who can install, do; permits and panels sometimes block it
+  else if (homeCharging === 'ask') homeChargeOdds = ASSUMPTIONS.landlordYesOdds;
   else if (homeCharging === 'no') homeChargeOdds = 0;
   else { homeCharging = 'unknown'; homeChargeOdds = priors.homeChargeOdds; assumed.push('homeCharging'); }
+
+  // Work (or other daytime) charging, only asked when home charging is not certain.
+  let workCharging = a.workCharging;
+  let workChargeOdds = 0;
+  const workApplies = homeCharging !== 'yes' && homeCharging !== 'install';
+  if (!workApplies) workCharging = 'not-asked';
+  else if (workCharging === 'yes') workChargeOdds = ASSUMPTIONS.workChargingReliability;
+  else if (workCharging !== 'no') { workCharging = 'unknown'; assumed.push('workCharging'); }
+  // Chance the car can charge somewhere it already sits for hours, at home or during the day.
+  const regularChargeOdds = homeChargeOdds + (1 - homeChargeOdds) * workChargeOdds;
 
   let longTrips = a.longTrips;
   if (!isAnswered('longTrips', longTrips)) { longTrips = 'few'; assumed.push('longTrips'); }
@@ -118,7 +146,7 @@ export function resolveInputs(answers, zipRec, meta) {
   let outdoor = a.outdoor;
   if (!isAnswered('outdoor', outdoor)) { outdoor = 'few'; assumed.push('outdoor'); }
 
-  return { dailyMiles, homeCharging, homeChargeOdds, longTrips, outdoor, assumed, priors };
+  return { dailyMiles, homeCharging, homeChargeOdds, workCharging, workChargeOdds, regularChargeOdds, longTrips, outdoor, assumed, priors };
 }
 
 // ---------- factor scores (each 0-100) ----------
@@ -130,17 +158,18 @@ function publicSubstituteScore(z) {
   return 10;
 }
 
+/** Regular charging: home first; charging at work, or dense public charging, can stand in. */
 function homeChargingScore(inp, z) {
-  const sub = publicSubstituteScore(z);
   if (inp.homeCharging === 'yes') return 100;
   if (inp.homeCharging === 'install') return 85;
-  if (inp.homeCharging === 'no') return sub;
+  const sub = Math.max(publicSubstituteScore(z), inp.workChargeOdds > 0 ? 70 : 0);
+  // 'no' (odds 0), 'ask' (landlord odds), and unknown (ZIP prior) all blend the same way.
   return Math.round(inp.homeChargeOdds * 90 + (1 - inp.homeChargeOdds) * sub);
 }
 
 /** Range the visitor needs between charges, and how much of the current EV lineup covers it. */
 export function rangeNeed(inp, fleet) {
-  const daysPerCharge = inp.homeChargeOdds >= 0.5 ? 1 : ASSUMPTIONS.daysBetweenPublicCharges;
+  const daysPerCharge = inp.regularChargeOdds >= 0.5 ? 1 : ASSUMPTIONS.daysBetweenPublicCharges;
   const need = Math.round(inp.dailyMiles * ASSUMPTIONS.rangeBuffer * daysPerCharge);
   const covered = countAtOrAbove(fleet.ranges, need);
   return { need, covered, total: fleet.ranges.length, share: fleet.ranges.length ? covered / fleet.ranges.length : 0, daysPerCharge };
@@ -201,18 +230,21 @@ function outdoorScore(dests) {
 
 // ---------- cost ----------
 
-/** Share of charging energy from home, public Level 2, and DC fast. */
+/**
+ * Share of charging energy from home, Level 2 away from home (work or public), and DC fast.
+ * Work charging is priced like public Level 2, which is conservative: some is free.
+ */
 export function chargingMix(inp, z) {
   const tripsDc = { rarely: 0.05, few: 0.1, monthly: 0.15, weekly: 0.25 }[inp.longTrips];
   const withHome = { home: 1 - tripsDc - 0.03, l2: 0.03, dc: tripsDc };
+  const withWork = { home: 0, l2: 1 - tripsDc - 0.05, dc: tripsDc + 0.05 };
   const noHomeDc = z.l2_5 >= 5 ? 0.5 : 0.7;
-  const withoutHome = { home: 0, l2: 1 - noHomeDc, dc: noHomeDc };
-  const p = inp.homeChargeOdds;
-  return {
-    home: p * withHome.home + (1 - p) * withoutHome.home,
-    l2: p * withHome.l2 + (1 - p) * withoutHome.l2,
-    dc: p * withHome.dc + (1 - p) * withoutHome.dc,
-  };
+  const publicOnly = { home: 0, l2: 1 - noHomeDc, dc: noHomeDc };
+  const pHome = inp.homeChargeOdds;
+  const pWork = (1 - pHome) * inp.workChargeOdds;
+  const pPublic = 1 - pHome - pWork;
+  const blend = (k) => pHome * withHome[k] + pWork * withWork[k] + pPublic * publicOnly[k];
+  return { home: blend('home'), l2: blend('l2'), dc: blend('dc') };
 }
 
 export function annualCosts(inp, z, meta) {
@@ -221,7 +253,7 @@ export function annualCosts(inp, z, meta) {
   const resCents = meta.electricityCentsPerKwh[z.s] ?? meta.electricityCentsPerKwh.US;
   const mix = chargingMix(inp, z);
   const pricePerKwh = mix.home * (resCents / 100) + mix.l2 * ASSUMPTIONS.publicL2PricePerKwh + mix.dc * ASSUMPTIONS.dcFastPricePerKwh;
-  const kwh = (miles * meta.fleet.all.kwhPer100Median) / 100; // EPA kWh/100 mi is measured at the wall, so it includes charging losses
+  const kwh = (miles * meta.fleet[FLEET_KEY].kwhPer100Median) / 100; // EPA kWh/100 mi is measured at the wall, so it includes charging losses
   const evCost = kwh * pricePerKwh;
   const gasCost = gas.price ? (miles / ASSUMPTIONS.gasMpg) * gas.price : null;
   return {
@@ -254,7 +286,7 @@ const WEIGHTS = { home: 0.4, range: 0.2, local: 0.15, trips: 0.15, outdoor: 0.1 
  */
 export function recommend({ zipRec, answers, meta, parks }) {
   const inp = resolveInputs(answers, zipRec, meta);
-  const fleet = meta.fleet.all;
+  const fleet = meta.fleet[FLEET_KEY];
   const range = rangeNeed(inp, fleet);
   const dests = destinations(zipRec, parks, fleet);
 
@@ -272,16 +304,16 @@ export function recommend({ zipRec, answers, meta, parks }) {
   const wSum = Object.values(weights).reduce((a, b) => a + b, 0);
   let score = Math.round(Object.keys(factors).reduce((s, k) => s + factors[k] * weights[k], 0) / wSum);
 
-  // Without home charging, an EV is a plan, not a no-brainer: dense public charging
-  // can make it work, but it should never read as "Strong fit". The cap slides
-  // from 74 (certainly no home charging) to 99 (certainly yes).
-  score = Math.min(score, Math.round(74 + 25 * inp.homeChargeOdds));
+  // Without regular charging (home or work), an EV is a plan, not a no-brainer: dense
+  // public charging can make it work, but it should never read as "Strong fit". The cap
+  // slides from 74 (certainly no regular charging) to 99 (certainly yes).
+  score = Math.min(score, Math.round(74 + 25 * inp.regularChargeOdds));
   // "Strong fit" needs to know about home charging, not guess it from the ZIP.
   if (inp.homeCharging === 'unknown') score = Math.min(score, 79);
 
   // Hard blockers cap the verdict no matter how good the rest looks.
   const blockers = [];
-  if (inp.homeCharging === 'no' && zipRec.l2_5 === 0 && (zipRec.ndc == null || zipRec.ndc > 15)) {
+  if (inp.homeCharging === 'no' && inp.workChargeOdds === 0 && zipRec.l2_5 === 0 && (zipRec.ndc == null || zipRec.ndc > 15)) {
     blockers.push('no-charging-access');
     score = Math.min(score, 40);
   }
@@ -328,8 +360,12 @@ export function reasonsFor({ inp, factors, range, costs, zipRec, blockers }) {
   const r = [];
   if (inp.homeCharging === 'yes') r.push({ id: 'home-yes', tone: 'plus', weight: 40 });
   else if (inp.homeCharging === 'install') r.push({ id: 'home-install', tone: 'check', weight: 30 });
-  else if (inp.homeCharging === 'no') r.push({ id: factors.home >= 50 ? 'home-no-dense' : 'home-no-sparse', tone: factors.home >= 50 ? 'check' : 'minus', weight: 40 });
-  else r.push({ id: 'home-unknown', tone: 'check', weight: 35, value: Math.round(inp.homeChargeOdds * 100) });
+  else if (inp.homeCharging === 'ask') r.push({ id: 'home-ask', tone: 'check', weight: 38 });
+  else if (inp.homeCharging === 'no') {
+    const dense = publicSubstituteScore(zipRec) >= 50;
+    r.push({ id: dense ? 'home-no-dense' : 'home-no-sparse', tone: dense || inp.workCharging === 'yes' ? 'check' : 'minus', weight: 40 });
+  } else r.push({ id: 'home-unknown', tone: 'check', weight: 35, value: Math.round(inp.homeChargeOdds * 100) });
+  if (inp.workCharging === 'yes') r.push({ id: 'work-yes', tone: 'plus', weight: 36 });
 
   if (range.share >= 0.9) r.push({ id: 'range-easy', tone: 'plus', weight: 20, value: range.need });
   else if (range.share >= 0.4) r.push({ id: 'range-some', tone: 'check', weight: 20, value: range.need });
@@ -351,4 +387,28 @@ export function reasonsFor({ inp, factors, range, costs, zipRec, blockers }) {
 
   for (const b of blockers) r.push({ id: `blocker-${b}`, tone: 'minus', weight: 100 });
   return r.sort((a, b) => b.weight - a.weight);
+}
+
+// ---------- the "Get my EV plan" checklist ----------
+
+/**
+ * Concrete next steps from a recommendation, most important first.
+ * Returns ids and values only; the UI maps them to text (copy.js PLAN_COPY).
+ */
+export function planFor(rec) {
+  const inp = rec.inputs;
+  const steps = [];
+  if (inp.homeCharging === 'install') steps.push({ id: 'plan-install' });
+  else if (inp.homeCharging === 'ask') steps.push({ id: 'plan-landlord' });
+  else if (inp.homeCharging === 'unknown') steps.push({ id: 'plan-find-home' });
+  if (inp.workCharging === 'yes') steps.push({ id: 'plan-work' });
+  if (inp.homeCharging !== 'yes' && inp.homeCharging !== 'install') steps.push({ id: 'plan-public', value: rec.charging.nearestDc });
+  if (inp.homeCharging === 'yes') steps.push({ id: 'plan-home-l2' });
+  // When every vehicle in the class covers the need, range is not the thing to shop on.
+  steps.push({ id: rec.range.covered === rec.range.total ? 'plan-range-any' : 'plan-range', value: rec.range.need });
+  const tricky = rec.destinations.find((d) => !d.noStopNeeded && d.chargingAtPark !== 'good' && d.oneWayMiles <= 400);
+  if (inp.outdoor !== 'rarely' && tricky) steps.push({ id: 'plan-park', value: tricky.name });
+  if (inp.longTrips === 'monthly' || inp.longTrips === 'weekly') steps.push({ id: 'plan-route' });
+  steps.push({ id: 'plan-test-drive' });
+  return steps;
 }
