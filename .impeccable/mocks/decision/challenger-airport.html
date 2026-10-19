@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--y:#ffd400;--k:#111111;--g:#2b2b2b;--w:#ffffff}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:#f2f2ef;color:var(--k);font:400 17px/1.4 "Hanken Grotesk",system-ui,sans-serif}
+header{height:60px;background:var(--k);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 40px;font-weight:600}
+.band{background:var(--y);display:flex;align-items:center;gap:28px;padding:28px 40px;border-bottom:6px solid var(--k)}
+.pict{width:84px;height:84px;background:var(--k);display:grid;place-items:center;color:var(--y);font-size:44px;font-weight:800;flex:none}
+.band h1{font-size:84px;font-weight:800;letter-spacing:-.02em;line-height:1;flex:1}
+.arrow{font-size:28px;font-weight:800;display:flex;align-items:center;gap:14px}
+.arrow span{background:var(--k);color:var(--y);width:64px;height:64px;display:grid;place-items:center;font-size:40px}
+.sub{padding:18px 40px;font-size:20px;background:#fff}
+.rows{padding:18px 40px;display:flex;flex-direction:column;gap:12px}
+.row{display:grid;grid-template-columns:64px 1fr 180px 64px;align-items:center;background:var(--g);color:#fff;height:78px}
+.row .ic{background:var(--k);height:100%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:26px}
+.row .t{padding:0 22px;font-size:26px;font-weight:600}
+.row .t small{font-size:15px;font-weight:400;color:#cfcfcf;margin-left:10px}
+.row .d{font-size:40px;font-weight:800;color:var(--y);text-align:right;padding-right:20px}
+.row .a{height:100%;display:grid;place-items:center;font-size:30px;border-left:2px solid #444}
+</style></head><body>
+<header><span>EV Readiness Check</span><span>ZIP 80302 · CO</span></header>
+<div class="band"><div class="pict">■</div><h1>Good fit with a plan</h1><div class="arrow">Get my EV plan<span>→</span></div></div>
+<p class="sub">An EV can work well for you with a little planning. Next decision: ask your landlord about charging.</p>
+<div class="rows">
+  <div class="row"><div class="ic">⚡</div><div class="t">Nearest fast charger<small>12 within 10 mi</small></div><div class="d">3.9 mi</div><div class="a">↗</div></div>
+  <div class="row"><div class="ic">↔</div><div class="t">Range you need<small>343 of 343 SUVs, vans, pickups</small></div><div class="d">45 mi</div><div class="a">→</div></div>
+  <div class="row"><div class="ic">$</div><div class="t">Fuel saved each year<small>$1,360 vs $1,870</small></div><div class="d">~$520</div><div class="a">→</div></div>
+  <div class="row"><div class="ic">▲</div><div class="t">Rocky Mountain National Park<small>round trip on one charge</small></div><div class="d">36 mi</div><div class="a">↗</div></div>
+</div>
+</body></html>

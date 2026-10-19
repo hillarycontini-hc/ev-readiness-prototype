@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--cedar:#4a3121;--cedar2:#5c3d29;--ochre:#e3b44a;--ochre2:#f0d48f;--ground:#eef1ea;--panel:#ffffff;--ink:#1d211c;--muted:#4c5548;--green:#2f5d3a;--blue:#1f4e8c;--black:#1d211c;--rule:#c9d0c3}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--ground);color:var(--ink);font:400 17px/1.5 "Public Sans",system-ui,sans-serif}
+.rail{height:64px;background:var(--cedar);display:flex;align-items:center;justify-content:space-between;padding:0 48px;border-bottom:4px solid var(--ochre)}
+.brand{color:var(--ochre);font-weight:800;letter-spacing:.14em;font-size:15px}
+.rail nav{display:flex;gap:28px;color:var(--ochre2);font-size:15px}
+.rail button{background:transparent;border:2px solid var(--ochre);color:var(--ochre);font:600 14px "Public Sans";padding:8px 16px;border-radius:4px}
+main{display:grid;grid-template-columns:repeat(8,1fr);gap:24px;padding:36px 48px}
+.sign{grid-column:1/6;background:var(--cedar);color:var(--ochre2);border-radius:6px;padding:28px 32px;box-shadow:inset 0 0 0 3px var(--cedar2),inset 0 0 0 6px var(--ochre)}
+.kick{font-size:13px;letter-spacing:.16em;font-weight:600;color:var(--ochre)}
+.verdict{display:flex;align-items:center;gap:18px;margin:10px 0 6px}
+.sq{width:44px;height:44px;background:var(--blue);border:3px solid #fff;flex:none}
+.verdict h1{font-size:46px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1.05}
+.sub{font-size:19px;color:var(--ochre2);margin-bottom:18px}
+.mile{border-top:2px solid var(--ochre);padding-top:12px}
+.mile div{display:flex;align-items:baseline;gap:12px;padding:7px 0;font-weight:600;font-size:19px;color:#fff;border-bottom:1px dashed #7a5a43}
+.mile .dots{flex:1;border-bottom:2px dotted #8d6b52;transform:translateY(-5px)}
+.mile b{color:var(--ochre);font-weight:800;letter-spacing:.06em}
+.key{font-size:11px;font-weight:600;color:var(--cedar);background:var(--ochre);border-radius:2px;padding:0 4px;margin-left:4px;vertical-align:super}
+.scale{grid-column:1/6;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:-8px}
+.scale div{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:10px 12px;font-size:14px;color:var(--muted)}
+.scale .on{border:2px solid var(--blue);color:var(--ink);font-weight:600}
+.c{width:16px;height:16px;border-radius:50%;background:var(--green)}.s{width:16px;height:16px;background:var(--blue)}.d{width:14px;height:14px;background:var(--black);transform:rotate(45deg)}
+.why{grid-column:6/9;grid-row:1/3}
+.why h2,.cards h2{font-size:15px;letter-spacing:.14em;color:var(--muted);font-weight:600;margin-bottom:10px}
+.why li{list-style:none;display:grid;grid-template-columns:22px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--rule);font-size:16px}
+.mk{margin-top:4px}
+.why .conf{font-size:14px;color:var(--muted);margin:12px 0 18px}
+.btn{display:block;width:100%;background:var(--green);color:#fff;font:700 18px "Public Sans";border:0;border-radius:4px;padding:16px;margin-bottom:10px}
+.btn2{display:block;width:100%;background:#fff;color:var(--ink);font:600 16px "Public Sans";border:2px solid var(--ink);border-radius:4px;padding:12px}
+.cards{grid-column:1/9;display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:16px 18px}
+.plate{display:inline-block;background:var(--cedar);color:var(--ochre);font-size:12px;font-weight:800;letter-spacing:.14em;padding:3px 8px;border-radius:2px;margin-bottom:10px}
+.big{font-size:30px;font-weight:800;line-height:1.1}
+.note{font-size:14px;color:var(--muted);margin-top:6px}
+</style></head><body>
+<div class="rail"><span class="brand">EV READINESS CHECK</span><nav><span>Results for ZIP 80302 (CO)</span><span>How we calculated this</span></nav><button>Start over</button></div>
+<main>
+  <section class="sign">
+    <p class="kick">YOUR TRAIL, FROM 80302</p>
+    <div class="verdict"><span class="sq"></span><h1>Good fit with a plan</h1></div>
+    <p class="sub">An EV can work well for you with a little planning.</p>
+    <div class="mile">
+      <div>Nearest fast charger<span class="dots"></span><b>3.9 MI</b><span class="key">1</span></div>
+      <div>Range you need between charges<span class="dots"></span><b>45 MI</b><span class="key">2</span></div>
+      <div>Rocky Mountain National Park<span class="dots"></span><b>36 MI</b><span class="key">3</span></div>
+      <div>Fuel saved each year<span class="dots"></span><b>~$520</b><span class="key">4</span></div>
+    </div>
+  </section>
+  <aside class="why">
+    <h2>WHY</h2>
+    <ul>
+      <li><span class="mk s"></span><span>You might charge at home if your landlord agrees. Ask early; that one answer changes the most.</span></li>
+      <li><span class="mk c"></span><span>Your driving needs about 45 miles between charges. Every electric SUV, minivan, and pickup covers it.</span></li>
+      <li><span class="mk c"></span><span>More public fast charging near you than in 79% of U.S. ZIP codes.</span></li>
+      <li><span class="mk c"></span><span>You would likely save about $520 a year on fuel.</span></li>
+    </ul>
+    <p class="conf">Based on your ZIP and all 5 of your answers.</p>
+    <button class="btn">Get my EV plan</button>
+    <button class="btn2">Change an answer</button>
+  </aside>
+  <div class="scale">
+    <div><span class="c"></span>Strong fit</div>
+    <div class="on"><span class="s"></span>Good fit with a plan</div>
+    <div><span class="d"></span>Possible, with tradeoffs</div>
+    <div><span class="d"></span><span class="d"></span>Not yet</div>
+  </div>
+  <div class="cards">
+    <div class="card"><span class="plate">CHARGING</span><p class="big">12 fast stations</p><p class="note">within 10 miles · 72 Level 2 within 5</p></div>
+    <div class="card"><span class="plate">RANGE</span><p class="big">343 of 343</p><p class="note">SUVs, minivans, pickups cover 45 mi</p></div>
+    <div class="card"><span class="plate">FUEL COST</span><p class="big">$1,360 vs $1,870</p><p class="note">electric vs gas, per year</p></div>
+    <div class="card"><span class="plate">OUTDOORS</span><p class="big">One charge</p><p class="note">round trip to Rocky Mountain NP</p></div>
+  </div>
+</main>
+</body></html>

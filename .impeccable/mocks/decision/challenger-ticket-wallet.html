@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1b2a52;--red:#c8102e;--carbon:#5b4a8a;--white:#ffffff;--sky:#e8ecf4;--ink:#1b2333;--muted:#55607a;--rule:#b9c2d6}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--sky);color:var(--ink);font:400 17px/1.5 Archivo,system-ui,sans-serif}
+header{height:64px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 48px}
+.brand{font-weight:800;letter-spacing:.14em;font-size:15px}
+header .red{background:var(--red);padding:6px 12px;font-weight:600;font-size:14px;letter-spacing:.08em}
+.desk{display:grid;grid-template-columns:1fr 330px;gap:0;margin:40px 48px;height:740px}
+.coupon{background:var(--white);border:1px solid var(--rule);border-right:3px dashed var(--rule);padding:28px 36px;position:relative}
+.coupon .head{display:flex;justify-content:space-between;border-bottom:2px solid var(--navy);padding-bottom:10px;font-weight:800;letter-spacing:.12em;font-size:14px;color:var(--navy)}
+.verdict{font-size:56px;font-weight:800;color:var(--navy);margin:22px 0 4px;letter-spacing:-.01em}
+.sub{font-size:20px;color:var(--muted)}
+.boxes{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--navy);margin:26px 0}
+.boxes div{border-right:1px solid var(--navy);padding:8px 12px;min-height:84px}
+.boxes div:last-child{border-right:0}
+.boxes small{display:block;font-size:11px;letter-spacing:.12em;font-weight:600;color:var(--muted)}
+.carbon{font:700 22px "Courier Prime",monospace;color:var(--carbon);display:block;margin-top:8px}
+.stamp{position:absolute;right:46px;top:120px;border:4px solid var(--red);color:var(--red);font-weight:800;letter-spacing:.14em;padding:8px 16px;transform:rotate(-8deg);font-size:20px}
+.why{display:grid;grid-template-columns:1fr 1fr;gap:12px 32px}
+.why p{border-top:1px solid var(--rule);padding-top:8px;font-size:16px}
+.stub{background:var(--white);border:1px solid var(--rule);border-left:0;padding:28px 26px;display:flex;flex-direction:column}
+.stub .head{font-weight:800;letter-spacing:.12em;font-size:14px;color:var(--red);border-bottom:2px solid var(--red);padding-bottom:10px}
+.stub li{list-style:none;padding:9px 0;border-bottom:1px solid var(--rule);font-size:15px}
+.stub .n{font:700 15px "Courier Prime";color:var(--carbon);margin-right:8px}
+.btn{margin-top:auto;background:var(--red);color:#fff;border:0;font:800 18px Archivo;letter-spacing:.04em;padding:16px;border-radius:2px}
+</style></head><body>
+<header><span class="brand">EV READINESS CHECK</span><span class="red">ZIP 80302 · CO</span></header>
+<div class="desk">
+  <section class="coupon">
+    <div class="head"><span>READINESS COUPON 1 OF 1</span><span>ALL 5 ANSWERS VALIDATED</span></div>
+    <p class="verdict">Good fit with a plan</p>
+    <p class="sub">An EV can work well for you with a little planning.</p>
+    <span class="stamp">ASK LANDLORD</span>
+    <div class="boxes">
+      <div><small>DAILY MILES</small><span class="carbon">20–40</span></div>
+      <div><small>HOME CHARGING</small><span class="carbon">ASK</span></div>
+      <div><small>DAYTIME CHARGING</small><span class="carbon">NONE</span></div>
+      <div><small>NEAREST FAST</small><span class="carbon">3.9 MI</span></div>
+      <div><small>FUEL SAVED / YR</small><span class="carbon">$520</span></div>
+    </div>
+    <div class="why">
+      <p>You might charge at home if your landlord agrees. Ask early.</p>
+      <p>Every electric SUV, minivan, and pickup covers your 45 miles.</p>
+      <p>More fast charging than 79% of U.S. ZIP codes.</p>
+      <p>Rocky Mountain NP, 36 miles: round trip on one charge.</p>
+    </div>
+  </section>
+  <aside class="stub">
+    <p class="head">TEAR-OFF · YOUR EV PLAN</p>
+    <ul>
+      <li><span class="n">01</span>Ask your landlord about charging</li>
+      <li><span class="n">02</span>Visit the fast charger 3.9 mi away</li>
+      <li><span class="n">03</span>Shop on space, not range</li>
+      <li><span class="n">04</span>Plan a stop for Great Sand Dunes</li>
+      <li><span class="n">05</span>Test-drive with car seats and the crate</li>
+    </ul>
+    <button class="btn">Get my EV plan</button>
+  </aside>
+</div>
+</body></html>

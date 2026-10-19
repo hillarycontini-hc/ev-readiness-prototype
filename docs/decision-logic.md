@@ -58,8 +58,8 @@ Weights are renormalized when the outdoor weight is 0.
   odds) x 80% if daytime charging is available. The maximum score slides from 74
   (certainly none) to 99 (certainly yes). Without a regular place to charge, an EV can
   work but it takes a plan, so it never reads as "Strong fit".
-- **Unknown home charging caps at 79** ("Good fit with a plan"): a ZIP-level guess is not
-  enough for "Strong fit".
+- **Uncertain home charging caps at 79** ("Good fit with a plan"): an unknown answer or a
+  landlord "maybe" is not enough for "Strong fit" unless daytime charging is confirmed.
 - **No charging access at all** (no home charging, no daytime charging, no Level 2 within
   5 mi, no fast charger within 15 mi) caps the score at 40: "Not yet".
 - **Range need beyond every EV on sale** caps the score at 40.
