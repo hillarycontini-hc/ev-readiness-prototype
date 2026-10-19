@@ -38,3 +38,17 @@ Default decisions made while building, with the reason for each. Anything marked
 | 19 | Rules-based scoring first; no Claude chat mode in v1 | A rules engine is explainable, testable, free to run, and has no prompt-injection or spend risk on a public page. The chat mode is a stretch goal that needs a serverless proxy with rate limits and a spending cap; see README "What I would do next". |
 | 20 | Home charging weighted 40% and caps the verdict when absent | It is the single biggest predictor of EV satisfaction and cost. A visitor without it should hear "possible with a plan", never "strong fit". |
 | 21 | Every question has "Skip", and skipped answers fall back to ZIP-level priors with a visible confidence level | Handles cold start honestly and shows the personalization mechanism instead of hiding it. |
+
+## Analytics and the A/B test
+
+| # | Decision | Why |
+|---|---|---|
+| 22 | PostHog in memory-only mode (no cookies, no localStorage), no autocapture, no session replay | No consent banner needed, nothing persists on the visitor's device, and only named events are sent. Each page load is one anonymous visitor; the whole funnel happens within one page load, so funnels still work. |
+| 23 | Vendor the pinned posthog-js `no-external` build into `site/vendor/` instead of loading PostHog's CDN snippet | The CSP can stay `script-src 'self'`, the exact code is reviewable in the repo, and the library cannot fetch extra scripts at runtime. `npm run vendor` refreshes it. |
+| 24 | A/B assignment in the browser (50/50 per visit), reported to PostHog as `$feature/landing-messaging` with `landing_viewed` as a custom exposure event | PostHog feature flags need a stable stored identity to be consistent; we store none. PostHog supports experiments with outside assignment. Tradeoff: a reload can switch the variant (documented in the test plan). |
+| 25 | Test messaging (savings vs. adventure), not question order | Messaging maps to a real upper-funnel decision (which promise brings people in), it can change the landing page and the results order without touching the scoring, and question order is already tuned for cold start (ZIP first). |
+| 26 | Primary metric = landing to recommendation, not learn-more clicks | Higher base rate, so it is the most detectable metric at small traffic. Learn-more is reported as secondary. |
+| 27 | Respect Global Privacy Control and Do Not Track by not loading analytics | Simple, honest, and visible in the privacy note. |
+| 28 | Keep UTM tags, drop ad click ids, trim URLs to origin + path, drop full user agent and timezone | UTM tags let Hillary compare LinkedIn vs. cohort traffic. Click ids are cross-site identifiers; query strings and fragments can carry anything. |
+| 29 | "Turn off analytics for this visit" button does not call `posthog.opt_out_capturing()` | That call writes the choice to localStorage. Our wrapper simply stops sending. |
+| 30 | Analytics tests present the headless test browser as desktop Chrome | posthog-js silently drops events from headless browsers as bots. Real visitors are unaffected. |

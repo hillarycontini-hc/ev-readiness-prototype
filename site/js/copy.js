@@ -2,12 +2,12 @@
 
 export const VARIANTS = {
   // A/B test: which promise on the landing page gets more people to a recommendation.
-  savings: {
+  control: { // savings message (baseline)
     headline: 'Could an EV save you money?',
     subhead: 'Enter your ZIP code for a one-minute, personalized check: what you would spend on charging versus gas, and whether charging near you fits your life.',
     firstCard: 'costs',
   },
-  adventure: {
+  adventure: { // adventure message (test)
     headline: 'Can an EV keep up with your adventures?',
     subhead: 'Enter your ZIP code for a one-minute, personalized check: charging near the parks you would drive to, and whether an EV fits your everyday driving.',
     firstCard: 'outdoor',

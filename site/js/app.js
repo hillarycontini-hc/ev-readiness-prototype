@@ -19,7 +19,7 @@ const state = {
   queue: QUESTION_ORDER, // questions to ask in this pass (all, or only the skipped ones when refining)
   meta: null,
   parks: null,
-  variant: 'savings',
+  variant: 'control',
 };
 
 // ---------- tiny DOM helper ----------
