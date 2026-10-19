@@ -13,6 +13,8 @@ they park overnight is possible (with a landlord's help) or not available. They 
 their next car in the next 12-18 months and are still deciding whether it could be electric;
 they are not yet comparing models. They take trips to parks, trailheads, and campgrounds, and
 need room for car seats, a dog, and outdoor gear, so they shop SUVs, minivans, and pickups.
+They are millennials: tech-forward and environmentally conscious, upgrading at a fun but busy
+and complicated point in life, with kids, pets, and a bigger car all arriving at once.
 
 Their job: find out, in a minute or two, whether an EV fits their life where they live, and
 what they would need to sort out first.
@@ -74,6 +76,8 @@ advice ignores. It recommends no vehicle, brand, or dealer.
 ## Brand Commitments
 
 - Name: **EV Readiness Check** (confirmed).
+- Look: **vibrant and exciting, with real visuals** that speak to a tech-forward, eco-minded
+  millennial family (Hillary, 2026-10-19). Not muted, not corporate.
 - Voice: **a knowledgeable friend.** Plain-spoken and honest; says "not yet" when that is true,
   shows its work, no hype or sales tone.
 - Independent prototype by Hillary Contini. It must not use any automaker's name, logo, or visual

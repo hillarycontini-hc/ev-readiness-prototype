@@ -7,3 +7,8 @@ data/raw/
 Thumbs.db
 test-results/
 .claude/
+.impeccable/mocks/
+.impeccable/review/
+.impeccable/build/
+.impeccable/live/
+.impeccable/questions/
