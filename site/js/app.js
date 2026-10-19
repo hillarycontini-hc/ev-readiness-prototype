@@ -8,10 +8,9 @@ import {
   QUESTION_COPY, REASON_COPY, TIER_COPY, TONE_COPY, VARIANTS,
 } from './copy.js';
 import * as analytics from './analytics.js';
+import { chevron, el, externalLink as linkTo, num, srOnly, usd10 as money } from './dom.js';
 
 const $ = (id) => document.getElementById(id);
-const num = new Intl.NumberFormat('en-US');
-const money = (n) => `$${num.format(Math.abs(Math.round(n / 10) * 10))}`;
 // Questions that apply to this visitor (work charging only when home charging is uncertain).
 const applicable = () => questionsFor(state.answers);
 const answeredCount = () => applicable().filter((k) => state.answers[k]).length;
@@ -30,77 +29,12 @@ const state = {
   variant: 'control',
 };
 
-// ---------- tiny DOM helper ----------
-
-function el(tag, props = {}, ...children) {
-  const node = document.createElement(tag);
-  for (const [k, v] of Object.entries(props)) {
-    if (v == null || v === false) continue;
-    if (k === 'class') node.className = v;
-    else if (k === 'text') node.textContent = v;
-    else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
-    else node.setAttribute(k, v === true ? '' : String(v));
-  }
-  for (const c of children.flat()) {
-    if (c == null || c === false) continue;
-    node.append(typeof c === 'string' ? document.createTextNode(c) : c);
-  }
-  return node;
-}
-
-const SVG_NS = 'http://www.w3.org/2000/svg';
-function chevron() {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 16 16');
-  svg.setAttribute('width', '18');
-  svg.setAttribute('height', '18');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  const path = document.createElementNS(SVG_NS, 'path');
-  path.setAttribute('d', 'M6 3 L11 8 L6 13');
-  path.setAttribute('fill', 'none');
-  path.setAttribute('stroke', 'currentColor');
-  path.setAttribute('stroke-width', '2.5');
-  path.setAttribute('stroke-linecap', 'round');
-  path.setAttribute('stroke-linejoin', 'round');
-  svg.append(path);
-  return svg;
-}
-
-function arrowIcon() {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 16 16');
-  svg.setAttribute('width', '14');
-  svg.setAttribute('height', '14');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  const path = document.createElementNS(SVG_NS, 'path');
-  path.setAttribute('d', 'M4 12 L12 4 M6 4 L12 4 L12 10');
-  path.setAttribute('fill', 'none');
-  path.setAttribute('stroke', 'currentColor');
-  path.setAttribute('stroke-width', '2.5');
-  path.setAttribute('stroke-linecap', 'round');
-  path.setAttribute('stroke-linejoin', 'round');
-  svg.append(path);
-  return svg;
-}
-
-function srOnly(text) {
-  return el('span', { class: 'sr-only', text });
-}
-
+// Outbound "learn more" links: https only, new tab, counted as a next step.
 function externalLink(text, url, linkId, extra = {}) {
-  // URLs come from our own data files, but only https links are ever rendered.
-  if (!/^https:\/\//i.test(String(url))) return el('span', { text });
-  return el('a', {
-    href: url,
-    target: '_blank',
-    rel: 'noopener noreferrer',
-    onclick: () => {
-      analytics.track('learn_more_clicked', { link_id: linkId, ...extra });
-      markNextStep('learn_more');
-    },
-  }, text, arrowIcon(), srOnly(' (opens in a new tab)'));
+  return linkTo(text, url, () => {
+    analytics.track('learn_more_clicked', { link_id: linkId, ...extra });
+    markNextStep('learn_more');
+  });
 }
 
 // ---------- views ----------

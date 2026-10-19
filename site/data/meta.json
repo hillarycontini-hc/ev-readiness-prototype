@@ -1,8 +1,9 @@
 {
- "builtAt": "2026-10-19T17:43:56.098Z",
+ "builtAt": "2026-10-19T21:17:18.818Z",
  "nationalCommuteMinutes": 26.4,
  "fetchedAt": "2026-10-19T15:45:12.116Z",
  "zipCount": 33642,
+ "stationCellDegrees": 0.5,
  "stationCount": 82623,
  "fleet": {
   "modelYears": [
