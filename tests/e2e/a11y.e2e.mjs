@@ -129,3 +129,22 @@ test('keyboard only: ZIP to results without a mouse, focus always visible and mo
   assert.ok([...seen].some((k) => k.includes('start-over')), 'start over reachable');
   await context.close();
 });
+
+test('route stops open and close by keyboard, and report their state', async () => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto(server.url);
+  await completeFlow(page, '80302');
+  const btn = page.locator('.stop-btn').nth(1);
+  const panelId = await btn.getAttribute('aria-controls');
+  assert.equal(await btn.getAttribute('aria-expanded'), 'false');
+  assert.equal(await page.isVisible(`#${panelId}`), false);
+  await btn.focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await btn.getAttribute('aria-expanded'), 'true');
+  assert.equal(await page.isVisible(`#${panelId}`), true);
+  await page.keyboard.press('Space');
+  assert.equal(await btn.getAttribute('aria-expanded'), 'false');
+  assert.equal(await page.locator('.stop').count() >= 4, true, 'home, charger, range, fuel (and parks when nearby)');
+  await context.close();
+});

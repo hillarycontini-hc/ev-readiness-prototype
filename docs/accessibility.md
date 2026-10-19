@@ -16,17 +16,25 @@ it flagged both.
 
 ## Checked by hand
 
-- **Non-text contrast (1.4.11):** axe does not test borders. Input and answer-card borders
-  were 2.5:1 in light mode and were darkened to 3.9:1 on white and 3.6:1 on cards. Focus
-  ring: 5.7:1 (light), 10.3:1 (dark). Dark-mode borders: 3.9:1.
+- **Contrast in the Route design (measured):** white on the teal verdict band 4.75:1; citron on
+  teal 3.93:1, used only for bold 19px+ (large) text; navy on poppy buttons 5.62:1 (poppy is
+  never text on the light ground); stop figures on navy 5.6 to 14.4:1; secondary text on navy
+  rows 11.2:1; muted text on the fog ground 6.7:1.
+- **Non-text contrast (1.4.11):** answer-row and input borders 3.5:1 on the fog ground; focus
+  ring navy (15:1) on light surfaces and citron (14:1) on navy and teal; dark-mode rows carry a
+  1px edge so they read as bars.
 - **Accessible names and structure (screen-reader proxy):** reviewed the browser
   accessibility tree. Each question is announced once as "Question 2 of 4: Could you charge
   where you park overnight?" (the question is the page's `h1` inside the fieldset legend),
   answers are a radio group, the verdict is the results `h1`, reasons say "Works in your
   favor / Works against you / Worth checking" in words, not only with color or symbols.
   Fixed: questions were announced three times (region, group, heading).
-- **Color is never the only signal:** verdict scale marks the current tier with text
-  "(your result)" and `aria-current`; reasons have a text prefix.
+- **Color is never the only signal:** tier marks are shapes plus words (circle, square,
+  diamond, ringed diamond); each stop carries a Helps / Check / Hurts word chip that also differs
+  by form (filled, outlined, dashed) plus screen-reader text; the verdict scale marks the current
+  tier with "(your result)" and `aria-current`.
+- **Route stops** are real buttons with `aria-expanded` and `aria-controls`; a browser test
+  opens and closes one by keyboard.
 - **Errors (3.3.1, 3.3.3):** ZIP and missing-answer errors are text, announced with
   `role="alert"`, tied to the field with `aria-describedby`, and focus returns to the field.
 - **Focus management:** each new view moves focus to its heading so screen-reader and

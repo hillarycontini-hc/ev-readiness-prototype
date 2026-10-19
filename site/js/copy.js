@@ -5,12 +5,12 @@ export const VARIANTS = {
   control: { // savings message (baseline)
     headline: 'Could an EV save you money?',
     subhead: 'Enter your ZIP code for a one-minute, personalized check: what you would spend on charging versus gas, and whether charging near you fits your life.',
-    firstCard: 'costs',
+    firstStop: 'fuel', // the stop promoted to second on the results route
   },
   adventure: { // adventure message (test)
     headline: 'Can an EV keep up with your adventures?',
     subhead: 'Enter your ZIP code for a one-minute, personalized check: charging near the parks you would drive to, and whether an EV fits your everyday driving.',
-    firstCard: 'outdoor',
+    firstStop: 'parks',
   },
 };
 
@@ -144,4 +144,34 @@ export const PLAN_COPY = {
   'plan-park': (v) => `Before a trip to ${v}, plan a fast-charging stop on the way: charging near the park is limited.`,
   'plan-route': () => 'Try your most common long drive in a charging route planner before you buy.',
   'plan-test-drive': () => 'Bring your car seats, the dog’s crate, or your gear to a test drive and check that everything fits with the cargo area full.',
+};
+
+// ---------- results route ----------
+
+// One line under the verdict: the single answer or step that would change the result most.
+export const FOCUS_COPY = {
+  'blocker-no-charging-access': 'What stands in the way: there is nowhere to charge near you yet.',
+  'blocker-range-exceeds-lineup': 'What stands in the way: your daily driving is beyond any EV on sale.',
+  unknown: 'The answer that matters most: whether you can charge where you park overnight.',
+  ask: 'The answer that matters most: ask your landlord about charging.',
+  install: 'The step that matters most: an electrician’s quote for a home charger.',
+  work: 'What makes this work: charging where your car sits during the day.',
+  public: 'What makes this work: a charging routine near home, like a weekly fast charge.',
+  yes: 'You can charge at home, and that matters most.',
+};
+
+// Visible tone words on each stop, so tone never rides on color alone.
+export const TONE_COPY = {
+  plus: { chip: 'Helps', sr: 'Works in your favor.' },
+  check: { chip: 'Check', sr: 'Worth checking.' },
+  minus: { chip: 'Hurts', sr: 'Works against you.' },
+};
+
+export const HOME_STOP = {
+  yes: { figure: 'Yes', detail: 'You can charge where you park overnight.' },
+  install: { figure: 'Install', detail: 'You own your place and could add a charger.' },
+  ask: { figure: 'Ask', detail: 'You rent. Home charging is possible if your landlord agrees.' },
+  'no-work': { figure: 'Work', detail: 'No home charging, but you can charge during the day.' },
+  no: { figure: 'No', detail: 'No home charging. Public charging would carry you.' },
+  unknown: { figure: 'Unknown', detail: (pct) => `Typical for your ZIP: ${pct}% of homes are single-family.` },
 };

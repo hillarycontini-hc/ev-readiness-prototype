@@ -118,6 +118,14 @@ It includes an honest power analysis: at a few hundred visitors, only a very lar
 is detectable, so "inconclusive" is the most likely result. The point is the complete loop,
 set up the way it would run at real traffic.
 
+## Design
+
+The look is called **Route**: saturated outdoor-gear color, one straight answer per row, and one
+colored line running through every row like a subway line diagram, from home to the park. It was
+chosen with Hillary from a structured design round (three directions, then a combination of the
+parts she liked), built to WCAG 2.1 AA in light and dark mode, and reviewed by an independent
+finish reviewer before shipping. The system is documented in [`DESIGN.md`](DESIGN.md).
+
 ## Platform decisions
 
 | Area | Decision |

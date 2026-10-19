@@ -87,3 +87,21 @@ Full write-up: [`docs/product-brief.md`](docs/product-brief.md).
 | # | Decision | Why |
 |---|---|---|
 | 48 | **Hosted on Cloudflare Workers static assets** (supersedes #31's Pages recommendation), deployed by Workers Builds on every push to `main` | Cloudflare's dashboard now creates Workers by default, and Workers static assets also apply `site/_headers`. `wrangler.jsonc` serves only `site/`, so docs, tests, and scripts are never published. No Worker script runs. |
+
+## Visual design: "Route" (decided with Hillary, 2026-10-19)
+
+Direction contract: `.impeccable/surfaces/site-index-html.md`. Design system: `DESIGN.md`.
+
+| # | Decision | Why |
+|---|---|---|
+| 49 | **Replace the plain teal look with "Route"**: saturated gear-catalog color (navy, teal, poppy, citron, aqua, ultraviolet), a big condensed verdict band, one row per factor with the figure on the right, and one colored line running through every row | Hillary wanted vibrant and exciting for a tech-forward, eco-minded millennial family, and chose to combine Gear Spec's color, Terminal Yellow's straight-answer rows, and the Transit Map's line. Each fact now appears once. |
+| 50 | Each factor is a "stop" that expands in place; the old reasons list and cards are folded into the stops | The first Gear Spec sketch said everything twice (callouts and cards); one row per fact is easier to follow. |
+| 51 | Fonts self-hosted: Big Shoulders Display (verdict, figures) and Schibsted Grotesk (text), both OFL, 82 KB total | The CSP allows fonts only from the site itself; no third-party font host. |
+| 52 | Teal band `#0b7f8a`; citron on teal only for bold 19px+ text | Keeps the vibrant teal while meeting AA (white 4.75:1; citron 3.93:1 as large text). |
+| 53 | Poppy is a button fill with navy text, never text on the light ground | Poppy on fog is 2.76:1; navy on poppy is 5.62:1. |
+| 54 | Helps / Check / Hurts chips differ by form (filled / outlined / dashed), not color | Stop colors already carry identity; valence must not collide with them, and color is never the only signal. |
+| 55 | Tier marks are shapes plus words: circle, square, diamond, ringed diamond | Readable without color; mirrors the verdict scale chips. |
+| 56 | One motion moment: the line draws down stop by stop when results load; none under reduced motion | The skill's craft floor: one authored moment, not scattered effects. |
+| 57 | Landing illustration is authored inline SVG (no image generation available): a loaded family EV climbing the route to a park | Brandless, no photos, consistent with the route language; the strict CSP allows SVG attributes but not inline styles. |
+| 58 | A/B variants now reorder the route: savings puts Fuel second, adventure puts Parks second | The old "first card" became "first stop after Home". |
+| 59 | Impeccable design skill installed locally (`.claude/`, gitignored) with its edit hooks; its anonymous usage ping is disabled with `IMPECCABLE_NO_TELEMETRY=1` | Hillary asked for the full install; sending usage data to a third party was not something she had agreed to. |
