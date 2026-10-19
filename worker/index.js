@@ -27,6 +27,7 @@ function json(body, status = 200) {
 }
 
 const round4 = (x) => Math.round(x * 1e4) / 1e4;
+const round3 = (x) => Math.round(x * 1e3) / 1e3;
 const inUS = (lat, lon) => lat >= 18 && lat <= 72 && lon >= -180 && lon <= -60;
 
 /** Clean the search text: 3 to 120 printable characters, whitespace collapsed. */
@@ -107,11 +108,11 @@ async function geocode(request, url, env) {
   if (!q) return json({ error: 'bad_query' }, 400);
   const near = cleanNear(url.searchParams.get('near'));
 
-  if (env.SEARCH_LIMITER) {
-    const { success } = await env.SEARCH_LIMITER.limit({ key: await visitorKey(request) });
-    if (!success) return json({ error: 'rate_limited' }, 429);
-  }
   if (!env.GEOAPIFY_KEY) return json({ error: 'search_unavailable' }, 503);
+  // Fail closed: with the key set, a missing limiter (a preview, a renamed binding) refuses.
+  if (!env.SEARCH_LIMITER) return json({ error: 'search_unavailable' }, 503);
+  const { success } = await env.SEARCH_LIMITER.limit({ key: await visitorKey(request) });
+  if (!success) return json({ error: 'rate_limited' }, 429);
 
   const upstream = new URL(GEOCODE_URL);
   upstream.searchParams.set('text', q);
@@ -148,20 +149,25 @@ async function route(request, url, env) {
   const refused = refuse(request);
   if (refused) return refused;
 
-  const from = cleanNear(url.searchParams.get('from'));
+  const start = cleanNear(url.searchParams.get('from'));
   const to = cleanNear(url.searchParams.get('to'));
-  if (!from || !to) return json({ error: 'bad_query' }, 400);
+  if (!start || !to) return json({ error: 'bad_query' }, 400);
+  // The start is often home: send it to the provider only to about 100 m. The route only feeds a
+  // 3-mile search for chargers, so nothing is lost.
+  const from = { lat: round3(start.lat), lon: round3(start.lon) };
   const straight = milesBetween(from.lat, from.lon, to.lat, to.lon);
   if (straight < 0.5) return json({ error: 'too_close' }, 400);
   if (straight > MAX_ROUTE_STRAIGHT_MILES) return json({ error: 'too_far' }, 400);
 
-  // Routing costs more than search, so it has its own, tighter limit.
-  const limiter = env.ROUTE_LIMITER || env.SEARCH_LIMITER;
-  if (limiter) {
-    const { success } = await limiter.limit({ key: await visitorKey(request) });
-    if (!success) return json({ error: 'rate_limited' }, 429);
-  }
   if (!env.GEOAPIFY_KEY) return json({ error: 'route_unavailable' }, 503);
+  // Routing costs more than search, so it has its own, tighter per-visitor limit, plus a
+  // site-wide one: the same-origin check stops other sites' pages, not scripts, so a few
+  // addresses must not be able to drain the shared quota. Both fail closed if missing.
+  if (!env.ROUTE_LIMITER || !env.ROUTE_GLOBAL_LIMITER) return json({ error: 'route_unavailable' }, 503);
+  const { success } = await env.ROUTE_LIMITER.limit({ key: await visitorKey(request) });
+  if (!success) return json({ error: 'rate_limited' }, 429);
+  const site = await env.ROUTE_GLOBAL_LIMITER.limit({ key: 'all-visitors' });
+  if (!site.success) return json({ error: 'route_unavailable' }, 503);
 
   const upstream = new URL(ROUTING_URL);
   upstream.searchParams.set('waypoints', `${from.lat},${from.lon}|${to.lat},${to.lon}`);

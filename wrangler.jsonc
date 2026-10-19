@@ -12,9 +12,13 @@
   },
   // Per-visitor limits (hashed IP, per Cloudflare location): 30 place searches a minute,
   // and 6 routes a minute, since a route costs more and a visitor plans a trip at a time.
+  // ROUTE_GLOBAL_LIMITER is one shared key: at most 30 routes a minute per location for
+  // everyone, so scripted callers can't drain the free Geoapify quota that search also uses.
+  // The Worker refuses search or routing if its limiter is missing.
   "ratelimits": [
     { "name": "SEARCH_LIMITER", "namespace_id": "4317", "simple": { "limit": 30, "period": 60 } },
-    { "name": "ROUTE_LIMITER", "namespace_id": "4318", "simple": { "limit": 6, "period": 60 } }
+    { "name": "ROUTE_LIMITER", "namespace_id": "4318", "simple": { "limit": 6, "period": 60 } },
+    { "name": "ROUTE_GLOBAL_LIMITER", "namespace_id": "4319", "simple": { "limit": 30, "period": 60 } }
   ],
   // No request logs: searched addresses and routes are never recorded.
   "observability": { "enabled": false },

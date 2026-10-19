@@ -10,6 +10,8 @@ const req = (path, headers = { 'Sec-Fetch-Site': 'same-origin', 'CF-Connecting-I
 const env = (over = {}) => ({
   GEOAPIFY_KEY: 'test-key',
   SEARCH_LIMITER: { limit: async () => ({ success: true }) },
+  ROUTE_LIMITER: { limit: async () => ({ success: true }) },
+  ROUTE_GLOBAL_LIMITER: { limit: async () => ({ success: true }) },
   ASSETS: { fetch: async () => new Response('asset') },
   ...over,
 });
@@ -98,6 +100,17 @@ test('route: cross-site, non-GET, rate limit, and missing key', async () => {
   assert.match(used, /^[0-9a-f]{24}$/, 'limited by a hashed key, never the raw IP');
   const nokey = await worker.fetch(req(`/api/route?from=${BOULDER}&to=${ESTES}`), env({ GEOAPIFY_KEY: '' }));
   assert.equal(nokey.status, 503);
+  // Fail closed: no limiter binding means no routing, and the site-wide budget is enforced too.
+  let called = false;
+  globalThis.fetch = async () => { called = true; return new Response('{}'); };
+  assert.equal((await worker.fetch(req(`/api/route?from=${BOULDER}&to=${ESTES}`), env({ ROUTE_LIMITER: undefined }))).status, 503);
+  assert.equal((await worker.fetch(req(`/api/route?from=${BOULDER}&to=${ESTES}`), env({ ROUTE_GLOBAL_LIMITER: undefined }))).status, 503);
+  let siteKey = null;
+  const busy = env({ ROUTE_GLOBAL_LIMITER: { limit: async ({ key }) => { siteKey = key; return { success: false }; } } });
+  assert.equal((await worker.fetch(req(`/api/route?from=${BOULDER}&to=${ESTES}`), busy)).status, 503);
+  assert.equal(siteKey, 'all-visitors', 'one key for everyone');
+  assert.equal((await worker.fetch(req('/api/geocode?q=boulder'), env({ SEARCH_LIMITER: undefined }))).status, 503, 'search fails closed too');
+  assert.equal(called, false, 'nothing reaches Geoapify without a limiter');
 });
 
 test('a route returns only a simplified line, miles, and minutes', async () => {
@@ -119,6 +132,8 @@ test('a route returns only a simplified line, miles, and minutes', async () => {
   assert.deepEqual(body.points[0], [40.015, -105.27]);
   assert.deepEqual(body.points.at(-1), [40.3772, -105.5217]);
   assert.ok(seen.url.includes('waypoints=40.015%2C-105.27%7C40.3772%2C-105.5217'), seen.url);
+  await worker.fetch(req('/api/route?from=40.01234,-105.27891&to=40.3772,-105.5217'), env());
+  assert.ok(seen.url.includes('waypoints=40.012%2C-105.279%7C40.3772%2C-105.5217'), `the start goes upstream at about 100 m: ${seen.url}`);
   assert.ok(seen.url.includes('mode=drive') && seen.url.includes('apiKey=test-key'));
   const raw = JSON.stringify(body);
   assert.ok(!raw.includes('test-key') && !raw.includes('Pearl'), 'no key, no turn-by-turn text');
