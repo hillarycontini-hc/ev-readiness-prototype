@@ -308,8 +308,10 @@ export function recommend({ zipRec, answers, meta, parks }) {
   // public charging can make it work, but it should never read as "Strong fit". The cap
   // slides from 74 (certainly no regular charging) to 99 (certainly yes).
   score = Math.min(score, Math.round(74 + 25 * inp.regularChargeOdds));
-  // "Strong fit" needs to know about home charging, not guess it from the ZIP.
-  if (inp.homeCharging === 'unknown') score = Math.min(score, 79);
+  // "Strong fit" needs a known place to charge, not a guess: an unknown answer or a
+  // landlord "maybe" caps at "Good fit with a plan" unless daytime charging is confirmed.
+  const homeUncertain = inp.homeCharging === 'unknown' || inp.homeCharging === 'ask';
+  if (homeUncertain && inp.workCharging !== 'yes') score = Math.min(score, 79);
 
   // Hard blockers cap the verdict no matter how good the rest looks.
   const blockers = [];

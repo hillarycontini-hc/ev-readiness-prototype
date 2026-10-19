@@ -163,6 +163,15 @@ test('a renter with charging at work does better than one without', () => {
   assert.ok(work.reasons.some((r) => r.id === 'work-yes'));
 });
 
+test('a landlord "maybe" without daytime charging never reads as "Strong fit"', () => {
+  const base = { dailyMiles: '20to40', homeCharging: 'ask', longTrips: 'few', outdoor: 'monthly' };
+  const maybe = recommend({ zipRec: zipRec('80302'), answers: { ...base, workCharging: 'no' }, meta, parks });
+  assert.equal(maybe.tier, 'good');
+  // Confirmed daytime charging is a known place to charge, so the cap lifts.
+  const withWork = recommend({ zipRec: zipRec('80302'), answers: { ...base, workCharging: 'yes' }, meta, parks });
+  assert.ok(withWork.score > maybe.score);
+});
+
 test('asking the landlord sits between yes and no', () => {
   const base = { dailyMiles: '20to40', workCharging: 'no', longTrips: 'few', outdoor: 'few' };
   const score = (homeCharging) => recommend({ zipRec: city, answers: { ...base, homeCharging }, meta, parks }).score;

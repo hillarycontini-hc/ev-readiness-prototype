@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=Schibsted+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#101a2b;--navy2:#1a2740;--poppy:#ff5a36;--citron:#d7f75b;--teal:#0b7f8a;--aqua:#2fd0dc;--uv:#5b3df5;--uvl:#a99bff;--fog:#eef2f5;--muted:#4a5568}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--fog);color:var(--navy);font:400 16px/1.45 "Schibsted Grotesk",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.bar{height:56px;background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:0 48px;color:#fff;font-size:14px}
+.brand{font:800 22px "Big Shoulders Display";letter-spacing:.05em;color:var(--citron)}
+.band{background:var(--teal);color:#fff;padding:28px 48px 26px;display:grid;grid-template-columns:1fr auto;align-items:end;gap:32px}
+.k{font:700 13px "Schibsted Grotesk";letter-spacing:.16em;color:var(--citron)}
+.verdict{display:flex;align-items:center;gap:22px;margin:8px 0 8px}
+.mark{width:56px;height:56px;background:var(--citron);flex:none}
+h1{font:900 96px/.88 "Big Shoulders Display";text-transform:uppercase;letter-spacing:.005em}
+.band p{font-size:19px;max-width:720px}
+.band p b{color:var(--citron)}
+.cta{background:var(--poppy);color:var(--navy);font:700 19px "Schibsted Grotesk";padding:17px 26px;border-radius:4px;white-space:nowrap}
+.meta{display:flex;justify-content:space-between;align-items:center;padding:14px 48px;font-size:14px;color:var(--muted)}
+.tiers{display:flex;gap:6px}
+.tiers span{padding:5px 10px;border-radius:3px;background:#dde3ea;font-weight:700;font-size:12px;letter-spacing:.06em;color:#3a4558}
+.tiers .on{background:var(--navy);color:var(--citron)}
+.route{position:relative;padding:4px 48px 0 48px}
+.line{position:absolute;z-index:1;left:76px;top:40px;width:14px;height:420px;border-radius:7px;background:linear-gradient(#ffffff 0 12%,var(--aqua) 12% 37%,var(--citron) 37% 62%,var(--uvl) 62% 87%,var(--poppy) 87% 100%)}
+.row{position:relative;display:grid;grid-template-columns:70px 1fr 230px 56px;align-items:center;height:92px;margin-bottom:10px;background:var(--navy);color:#fff;border-radius:6px}
+.stop{width:34px;height:34px;border-radius:50%;background:#fff;border:7px solid var(--c,#fff);margin-left:18px;position:relative;z-index:2;box-shadow:0 0 0 4px var(--navy)}
+.t{padding-left:10px}
+.t b{display:block;font-size:22px;font-weight:700}
+.t small{font-size:15px;color:#c7d0dd}
+.tone{display:inline-block;font-weight:700;font-size:12px;letter-spacing:.08em;padding:2px 8px;border-radius:3px;margin-right:8px;vertical-align:2px}
+.num{font:900 52px/1 "Big Shoulders Display";text-align:right;padding-right:22px}
+.go{height:100%;display:grid;place-items:center;border-left:1px solid #2c3a55;font-size:24px;color:#c7d0dd}
+.branch{position:absolute;left:97px;top:526px;width:70px;height:14px;background:var(--poppy);border-radius:0 7px 7px 0}
+</style></head><body>
+<div class="bar"><span class="brand">EV READINESS CHECK</span><span>ZIP 80302 · CO · renter · 5 of 5 answered · Start over</span></div>
+<section class="band">
+  <div>
+    <p class="k">YOUR RESULT</p>
+    <div class="verdict"><span class="mark" aria-hidden="true"></span><h1>Good fit with a plan</h1></div>
+    <p>An EV can work well for you with a little planning. <b>The answer that matters most: ask your landlord about charging.</b></p>
+  </div>
+  <span class="cta">Get my EV plan →</span>
+</section>
+<div class="meta"><div class="tiers"><span>● STRONG FIT</span><span class="on">■ GOOD FIT WITH A PLAN</span><span>◆ POSSIBLE</span><span>◆◆ NOT YET</span></div><span>Your route, stop by stop. Open any stop for the details and sources.</span></div>
+<div class="route">
+  <div class="line"></div>
+  <div class="row"><span class="stop" style="--c:#ffffff"></span><div class="t"><b>Home, 80302</b><small><span class="tone" style="background:var(--citron);color:var(--navy)">CHECK</span>You rent. Home charging is possible if your landlord agrees.</small></div><div class="num" style="color:var(--citron)">ASK</div><div class="go">›</div></div>
+  <div class="row"><span class="stop" style="--c:#2fd0dc"></span><div class="t"><b>Nearest fast charger</b><small><span class="tone" style="background:var(--aqua);color:var(--navy)">PLUS</span>12 within 10 mi · more than 79% of U.S. ZIP codes</small></div><div class="num" style="color:var(--aqua)">3.9 mi</div><div class="go">›</div></div>
+  <div class="row"><span class="stop" style="--c:#d7f75b"></span><div class="t"><b>Range you need</b><small><span class="tone" style="background:var(--aqua);color:var(--navy)">PLUS</span>343 of 343 electric SUVs, minivans, and pickups cover it</small></div><div class="num" style="color:var(--citron)">45 mi</div><div class="go">›</div></div>
+  <div class="row"><span class="stop" style="--c:#a99bff"></span><div class="t"><b>Fuel saved each year</b><small><span class="tone" style="background:var(--aqua);color:var(--navy)">PLUS</span>$1,360 electric vs $1,870 gas, at Colorado prices</small></div><div class="num" style="color:var(--uvl)">~$520</div><div class="go">›</div></div>
+  <div class="row"><span class="stop" style="--c:#ff5a36"></span><div class="t"><b>Rocky Mountain National Park</b><small><span class="tone" style="background:var(--aqua);color:var(--navy)">PLUS</span>Round trip on one charge · Great Sand Dunes needs a stop</small></div><div class="num" style="color:var(--poppy)">36 mi</div><div class="go">›</div></div>
+</div>
+</body></html>

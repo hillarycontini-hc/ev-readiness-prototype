@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14161a;--muted:#545b66;--orange:#ff6a13;--purple:#7a2cf0;--green:#00a86b;--blue:#0057ff;--line:#e3e6eb}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:#fff;color:var(--ink);font:400 16px/1.45 "Schibsted Grotesk",system-ui,sans-serif}
+header{height:60px;border-bottom:6px solid var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 40px}
+.brand{font-weight:800;font-size:20px}
+.wrap{display:grid;grid-template-columns:1fr 400px;gap:32px;padding:28px 40px}
+h1{font-size:60px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.sub{font-size:19px;color:var(--muted);margin:10px 0 0}
+.map{position:relative;height:600px;margin-top:10px}
+.legend{position:absolute;left:0;bottom:0;display:flex;gap:18px;font-size:14px;font-weight:600}
+.legend i{display:inline-block;width:28px;height:8px;border-radius:4px;margin-right:6px;vertical-align:middle}
+.st{position:absolute;font-weight:800;font-size:15px}
+.st small{display:block;font-weight:400;color:var(--muted);font-size:13px}
+aside{display:flex;flex-direction:column;gap:14px}
+.card{border:2px solid var(--ink);border-radius:8px;padding:14px 16px}
+.card h3{font-size:13px;letter-spacing:.12em;color:var(--muted)}
+.card p{font-size:26px;font-weight:800}
+.card small{color:var(--muted)}
+.btn{background:var(--ink);color:#fff;border-radius:8px;padding:16px;text-align:center;font-weight:800;font-size:18px}
+</style></head><body>
+<header><span class="brand">EV Readiness Check</span><span>Your week from 80302 (CO) · Start over</span></header>
+<div class="wrap">
+  <section>
+    <h1>Good fit with a plan</h1>
+    <p class="sub">An EV can work well for you with a little planning.</p>
+    <div class="map">
+      <svg width="900" height="560" viewBox="0 0 900 560" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="14">
+        <path d="M120 300 L320 300 L420 200 L760 200" stroke="#ff6a13"/>
+        <path d="M120 300 L120 120 L260 120" stroke="#7a2cf0"/>
+        <path d="M120 300 L320 300 L460 440 L820 440" stroke="#00a86b"/>
+        <path d="M120 316 L310 316 L380 386 L380 520" stroke="#0057ff"/>
+        <g fill="#fff" stroke="#14161a" stroke-width="5"><rect x="96" y="282" width="48" height="52" rx="24"/><circle cx="420" cy="200" r="11"/><circle cx="260" cy="120" r="11"/><circle cx="640" cy="440" r="11"/><circle cx="820" cy="440" r="15"/><circle cx="760" cy="200" r="11"/></g>
+      </svg>
+      <div class="st" style="left:10px;top:330px">Home<small>80302 · ask landlord</small></div>
+      <div class="st" style="left:400px;top:150px">Fast charger<small>3.9 mi · 12 within 10 mi</small></div>
+      <div class="st" style="left:230px;top:70px">School + daycare<small>daily, ~30 mi round trip</small></div>
+      <div class="st" style="left:600px;top:466px">Great Sand Dunes<small>plan a charging stop</small></div>
+      <div class="st" style="left:770px;top:380px">Rocky Mtn NP<small>36 mi · one charge</small></div>
+      <div class="st" style="left:720px;top:150px">Work<small>no charging there</small></div>
+      <div class="legend"><span><i style="background:#ff6a13"></i>Commute</span><span><i style="background:#7a2cf0"></i>School run</span><span><i style="background:#00a86b"></i>Park trips</span><span><i style="background:#0057ff"></i>Long drives</span></div>
+    </div>
+  </section>
+  <aside>
+    <div class="card"><h3>RANGE YOU NEED</h3><p>45 mi</p><small>343 of 343 SUVs, vans, pickups cover it</small></div>
+    <div class="card"><h3>FUEL SAVED</h3><p>~$520 / yr</p><small>$1,360 electric vs $1,870 gas</small></div>
+    <div class="card"><h3>WHY</h3><small>Ask your landlord first; more fast charging than 79% of ZIPs.</small></div>
+    <div class="btn">Get my EV plan</div>
+  </aside>
+</div>
+</body></html>

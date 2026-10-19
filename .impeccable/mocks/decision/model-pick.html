@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--map:#f7f8f6;--hi:#f2a03d;--red:#c8372d;--blue:#2b5ca8;--park:#4f8a4a;--ink:#20242a;--muted:#555c66;--grid:#dfe3dc}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--map);color:var(--ink);font:400 17px/1.5 Barlow,system-ui,sans-serif;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:48px 48px}
+header{height:64px;background:#fff;border-bottom:4px solid var(--red);display:flex;align-items:center;justify-content:space-between;padding:0 48px}
+.brand{font:700 22px "Barlow Condensed";letter-spacing:.06em}
+header span{color:var(--muted)}
+.wrap{display:grid;grid-template-columns:460px 120px 1fr;gap:0 32px;padding:32px 48px}
+.title{grid-column:1/2}
+.kick{font:700 14px "Barlow Condensed";letter-spacing:.14em;color:var(--red)}
+h1{font:700 64px/1 "Barlow Condensed";margin:8px 0 10px}
+.sub{font-size:20px;color:var(--muted);margin-bottom:22px}
+.conf{font-size:15px;color:var(--muted);margin-bottom:20px}
+.btn{background:var(--blue);color:#fff;border:0;border-radius:6px;font:700 19px Barlow;padding:15px 22px;width:100%}
+.why{margin-top:22px;background:#fff;border:1px solid var(--grid);border-radius:6px;padding:14px 18px}
+.why p{padding:6px 0;border-bottom:1px solid var(--grid);font-size:15px}
+.strip{grid-column:2/3;grid-row:1/3;position:relative;height:780px}
+.route{position:absolute;left:54px;top:10px;bottom:10px;width:12px;background:var(--hi);border-radius:6px;opacity:.9}
+.stop{position:absolute;left:44px;width:32px;height:32px;border-radius:50%;background:#fff;border:4px solid var(--ink)}
+.stop.home{background:var(--ink)}.stop.park{border-color:var(--park);background:var(--park)}
+.tick{position:absolute;left:0;font:700 14px "Barlow Condensed";color:var(--red)}
+.stops{grid-column:3/4;grid-row:1/3;display:flex;flex-direction:column;gap:18px;padding-top:4px}
+.card{background:#fff;border:1px solid var(--grid);border-left:6px solid var(--blue);border-radius:6px;padding:14px 18px}
+.card.park{border-left-color:var(--park)}.card.home{border-left-color:var(--ink)}
+.card h3{font:700 15px "Barlow Condensed";letter-spacing:.12em;color:var(--muted)}
+.card .big{font:700 30px/1.15 "Barlow Condensed"}
+.card p{font-size:15px;color:var(--muted)}
+</style></head><body>
+<header><span class="brand">EV READINESS CHECK</span><span>Trip strip for ZIP 80302 (CO) · Start over</span></header>
+<div class="wrap">
+  <section class="title">
+    <p class="kick">YOUR ROUTE TO AN EV</p>
+    <h1>Good fit with a plan</h1>
+    <p class="sub">An EV can work well for you with a little planning.</p>
+    <p class="conf">Based on your ZIP and all 5 of your answers.</p>
+    <button class="btn">Get my EV plan</button>
+    <div class="why">
+      <p>Ask your landlord about charging: it changes the answer most.</p>
+      <p>Every electric SUV, minivan, and pickup covers your 45 miles.</p>
+      <p>More fast charging than 79% of U.S. ZIP codes.</p>
+      <p>About $520 a year saved on fuel.</p>
+    </div>
+  </section>
+  <div class="strip">
+    <div class="route"></div>
+    <span class="stop home" style="top:6px"></span><span class="tick" style="top:12px">0</span>
+    <span class="stop" style="top:150px"></span><span class="tick" style="top:156px">3.9</span>
+    <span class="stop" style="top:300px"></span><span class="tick" style="top:306px">45</span>
+    <span class="stop" style="top:450px"></span><span class="tick" style="top:456px">$</span>
+    <span class="stop park" style="top:600px"></span><span class="tick" style="top:606px">36</span>
+  </div>
+  <div class="stops">
+    <div class="card home"><h3>START</h3><p class="big">Home, 80302</p><p>Renter · could ask the landlord about charging</p></div>
+    <div class="card"><h3>FAST CHARGER · 3.9 MI</h3><p class="big">12 stations within 10 miles</p><p>72 Level 2 stations within 5 miles</p></div>
+    <div class="card"><h3>RANGE CHECK · 45 MI</h3><p class="big">343 of 343 vehicles cover it</p><p>SUVs, minivans, and pickups on sale now</p></div>
+    <div class="card"><h3>FUEL COST</h3><p class="big">$1,360 electric vs $1,870 gas</p><p>per year, at Colorado prices</p></div>
+    <div class="card park"><h3>ROCKY MOUNTAIN NP · 36 MI</h3><p class="big">Round trip on one charge</p><p>11 fast-charging stations within 25 miles of the park</p></div>
+  </div>
+</div>
+</body></html>

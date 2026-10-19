@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Schibsted+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#101a2b;--poppy:#ff5a36;--citron:#d7f75b;--teal:#0b7f8a;--uv:#5b3df5;--fog:#eef2f5;--ink:#101a2b;--muted:#4a5568}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--fog);color:var(--ink);font:400 16px/1.45 "Schibsted Grotesk",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.bar{height:60px;background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:0 40px;color:#fff}
+.brand{font:800 24px "Big Shoulders Display";letter-spacing:.04em;color:var(--citron)}
+.bar .chip{border:1.5px solid #ffffff55;border-radius:999px;padding:5px 14px;font-size:14px}
+.top{display:grid;grid-template-columns:560px 1fr;height:590px}
+.field{background:var(--teal);color:#fff;padding:36px 40px;position:relative}
+.code{font:700 13px "Schibsted Grotesk";letter-spacing:.16em;color:var(--citron)}
+.field h1{font:900 92px/.9 "Big Shoulders Display";text-transform:uppercase;margin:14px 0 16px;letter-spacing:.005em}
+.field p{font-size:19px;max-width:440px}
+.tiers{display:flex;gap:6px;margin-top:24px}
+.tiers span{font-size:12px;font-weight:700;letter-spacing:.06em;padding:6px 10px;border-radius:3px;background:#ffffff22;color:#ffffffcc}
+.tiers .on{background:var(--citron);color:var(--navy)}
+.cta{display:flex;gap:12px;margin-top:22px}
+.cta b{background:var(--poppy);color:var(--navy);font:700 18px "Schibsted Grotesk";padding:15px 24px;border-radius:4px}
+.cta i{font-style:normal;border:2px solid #fff;padding:13px 20px;border-radius:4px;font-weight:600}
+.spec{background:var(--navy);position:relative;overflow:hidden}
+.spec svg{position:absolute;left:0;top:0}
+.callout{position:absolute;color:#fff;font-size:14px;max-width:210px}
+.callout .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;font:800 16px "Big Shoulders Display";color:var(--navy);margin-right:8px;vertical-align:middle}
+.callout b{display:block;font:800 30px/1 "Big Shoulders Display";margin:6px 0 2px;letter-spacing:.01em}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:24px 40px}
+.card{background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 1px 0 #d6dde5}
+.card .h{display:flex;align-items:center;gap:8px;padding:8px 14px;font:700 13px "Schibsted Grotesk";letter-spacing:.12em;color:var(--navy)}
+.card .b{padding:12px 14px 16px}
+.card .big{font:800 34px/1 "Big Shoulders Display"}
+.card .note{font-size:14px;color:var(--muted);margin-top:6px}
+.k{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px}
+</style></head><body>
+<div class="bar"><span class="brand">EV READINESS CHECK</span><span class="chip">ZIP 80302 · CO · renter · 5 of 5 answered</span></div>
+<div class="top">
+  <section class="field">
+    <p class="code">YOUR SPEC · 80302 · FAMILY HAULER</p>
+    <h1>Good fit<br>with a plan</h1>
+    <p>An EV can work well for you with a little planning. Ask your landlord about charging first: that one answer moves the result most.</p>
+    <div class="tiers"><span>STRONG FIT</span><span class="on">■ GOOD FIT WITH A PLAN</span><span>POSSIBLE</span><span>NOT YET</span></div>
+    <div class="cta"><b>Get my EV plan</b><i>Change an answer</i></div>
+  </section>
+  <section class="spec">
+    <svg width="880" height="470" viewBox="0 0 880 470" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <g stroke="#d7f75b" stroke-width="4">
+        <path d="M170 330 L170 250 Q172 215 210 205 L330 168 Q360 160 400 160 L600 160 Q640 160 660 190 L700 245 Q740 252 744 290 L744 330 Z"/>
+        <path d="M352 178 L396 178 L396 240 L300 240 Z"/><path d="M412 178 L520 178 L520 240 L412 240 Z"/><path d="M536 178 L598 178 Q628 180 644 212 L656 240 L536 240 Z"/>
+        <circle cx="275" cy="332" r="44" fill="#101a2b"/><circle cx="275" cy="332" r="18"/><circle cx="640" cy="332" r="44" fill="#101a2b"/><circle cx="640" cy="332" r="18"/>
+        <rect x="380" y="122" width="210" height="34" rx="10"/>
+      </g>
+      <g stroke="#ffffff" stroke-width="3">
+        <path d="M440 236 L440 206 Q440 196 452 196 L470 196 L470 236"/><path d="M548 238 Q556 214 576 216 Q590 210 594 222 L604 226 L598 238"/>
+      </g>
+      <g stroke="#ffffff88" stroke-width="1.5" stroke-dasharray="4 5">
+        <path d="M744 300 L800 300 L800 392"/><path d="M450 330 L450 420 L330 420"/><path d="M485 139 L485 60 L560 60"/><path d="M210 250 L120 250 L120 120"/>
+      </g>
+      <g><circle cx="744" cy="300" r="7" fill="#ff5a36"/><circle cx="450" cy="330" r="7" fill="#d7f75b"/><circle cx="485" cy="139" r="7" fill="#5b3df5"/><circle cx="210" cy="250" r="7" fill="#0fb5c3"/></g>
+    </svg>
+    <div class="callout" style="left:40px;top:28px"><span class="n" style="background:#0fb5c3">1</span>Charging<b>3.9 mi</b>to the nearest fast charger · 12 within 10 mi</div>
+    <div class="callout" style="left:570px;top:28px"><span class="n" style="background:#5b3df5;color:#fff">3</span>Fuel saved<b>~$520 / yr</b>$1,360 electric vs $1,870 gas</div>
+    <div class="callout" style="left:600px;top:398px"><span class="n" style="background:#ff5a36">4</span>Rocky Mountain NP<b>36 mi</b>round trip on one charge</div>
+    <div class="callout" style="left:40px;top:392px;max-width:280px"><span class="n" style="background:#d7f75b">2</span>Range you need<b>45 mi</b>343 of 343 SUVs, vans, pickups cover it</div>
+  </section>
+</div>
+<div class="cards">
+  <div class="card"><div class="h" style="background:#0fb5c3"><span class="k">1</span>CHARGING</div><div class="b"><p class="big">72 Level 2</p><p class="note">stations within 5 mi · more fast charging than 79% of ZIPs</p></div></div>
+  <div class="card"><div class="h" style="background:var(--citron)"><span class="k">2</span>RANGE</div><div class="b"><p class="big">45 / 300 mi</p><p class="note">your need vs the median SUV, van, or pickup</p></div></div>
+  <div class="card"><div class="h" style="background:var(--uv);color:#fff"><span class="k" style="background:#fff;color:var(--navy)">3</span>FUEL COST</div><div class="b"><p class="big">44 / 27 / 30%</p><p class="note">home if approved / Level 2 / fast charging</p></div></div>
+  <div class="card"><div class="h" style="background:var(--poppy)"><span class="k">4</span>OUTDOORS</div><div class="b"><p class="big">3 parks</p><p class="note">Great Sand Dunes: plan a fast-charge stop</p></div></div>
+</div>
+</body></html>
