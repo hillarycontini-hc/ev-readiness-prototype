@@ -1,4 +1,4 @@
-# HTTP security headers for hosts that read a _headers file (Cloudflare Pages, Netlify).
+# HTTP security headers for hosts that read a _headers file (Cloudflare Workers static assets, Cloudflare Pages, Netlify).
 # GitHub Pages ignores this file; the page's <meta> CSP still applies there,
 # but frame-ancestors (clickjacking protection) only works as a real header.
 /*

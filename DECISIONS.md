@@ -81,3 +81,9 @@ Full write-up: [`docs/product-brief.md`](docs/product-brief.md).
 | 45 | **Authentication: none for visitors.** Admin via GitHub, Cloudflare, and PostHog accounts with 2FA; Cloudflare Access for any future internal page | A login wall contradicts the privacy promise and costs upper-funnel conversion. |
 | 46 | **Testing in CI:** GitHub Actions runs unit and browser tests on every push and pull request; the data build fails on out-of-range values; a test fails if the vendored PostHog file drifts from the pinned package | Privacy and accessibility stay tested as the code changes. |
 | 47 | **Version control:** Dependabot (npm weekly, Actions monthly). Branch protection, secret scanning, and push protection are GitHub settings for Hillary to turn on | Settings require the repo owner's account. |
+
+## Hosting
+
+| # | Decision | Why |
+|---|---|---|
+| 48 | **Hosted on Cloudflare Workers static assets** (supersedes #31's Pages recommendation), deployed by Workers Builds on every push to `main` | Cloudflare's dashboard now creates Workers by default, and Workers static assets also apply `site/_headers`. `wrangler.jsonc` serves only `site/`, so docs, tests, and scripts are never published. No Worker script runs. |

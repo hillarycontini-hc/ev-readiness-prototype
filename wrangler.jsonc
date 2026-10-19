@@ -1,0 +1,9 @@
+// Cloudflare Workers static-assets deploy. Serves only the site/ folder;
+// site/_headers supplies the security headers. No Worker script runs.
+{
+  "name": "ev-readiness-prototype",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./site"
+  }
+}
