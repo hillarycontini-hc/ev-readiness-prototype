@@ -20,7 +20,7 @@ done and tested; the remaining items are account settings only you can change.
   was done instead (below). Run the skill on future changes before pushing them.
 
 ### Should
-- [ ] **Host on Cloudflare Pages** (free) rather than GitHub Pages, so `site/_headers` applies
+- [x] **Host on Cloudflare** (Workers static assets, free; configured in `wrangler.jsonc`) rather than GitHub Pages, so `site/_headers` applies
   real security headers, including clickjacking protection (`frame-ancestors`), which a
   `<meta>` CSP cannot do. GitHub Pages is acceptable: the risk is someone framing the page
   in their own site, and the page has no logins or actions to hijack.
@@ -55,7 +55,7 @@ diff-based `security-review` skill could not run). Findings and what was done:
 | 2 | On-page privacy text overstated ("answers stay in your browser", "nothing is stored"); footer did not list browser type, screen size, referrer | Medium | **Fixed:** wording now matches exactly what is sent |
 | 3 | "No IP kept" depends on a PostHog project setting; the client cannot enforce it | Low | **Documented:** must-do item above, plus a live check |
 | 4 | Public key means anyone can send fake events (skews results, could use quota) | Low | **Mitigated:** billing limit, filter insights to production `$host`, treat A/B as directional |
-| 5 | GitHub Pages ignores `_headers`; no clickjacking header there | Low | **Mitigated:** recommend Cloudflare Pages |
+| 5 | GitHub Pages ignores `_headers`; no clickjacking header there | Low | **Mitigated:** hosted on Cloudflare, which applies `_headers` |
 | 6 | Dev server listened on all network interfaces | Low | **Fixed:** binds to 127.0.0.1 |
 | - | Build-time map keyed by upstream text could hit `__proto__` | Info | **Fixed:** `Object.create(null)` |
 
