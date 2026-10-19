@@ -3,56 +3,95 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Scripts and styles load only from this site. The one outside connection allowed is the analytics endpoint. -->
+  <!-- Scripts, styles, and fonts load only from this site. The one outside connection allowed is the analytics endpoint. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://us.i.posthog.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
   <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="theme-color" content="#101a2b">
   <title>EV Readiness Check</title>
-  <meta name="description" content="Is an EV right for you? Enter a ZIP code and answer a few quick questions for a personalized answer on charging, range, cost, and road trips. Built on public data. No sign-up.">
+  <meta name="description" content="Is an EV right for you, even if you rent? Enter a ZIP code and answer a few quick questions for a personal answer on charging, range, cost, and park trips. Built on public data. No sign-up.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/big-shoulders-display.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.css">
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
 
-  <header class="site-header">
-    <div class="wrap">
-      <p class="brand"><span class="brand-mark" aria-hidden="true"></span>EV Readiness Check</p>
+  <header class="topbar">
+    <div class="wrap topbar-row">
+      <p class="brand">EV Readiness Check</p>
+      <p class="topbar-context" id="topbar-context" hidden></p>
     </div>
   </header>
 
   <main id="main" tabindex="-1">
-    <div class="wrap">
 
-      <!-- Landing -->
-      <section id="view-landing" class="view" aria-labelledby="landing-title">
-        <h1 id="landing-title" tabindex="-1" data-variant-text="headline">Is an EV right for you?</h1>
-        <p class="lede" data-variant-text="subhead">Enter your ZIP code for a one-minute, personalized check on charging, range, and cost.</p>
+    <!-- Landing -->
+    <section id="view-landing" class="view view-landing" aria-labelledby="landing-title">
+      <div class="wrap hero">
+        <div class="hero-copy">
+          <h1 id="landing-title" tabindex="-1" data-variant-text="headline">Is an EV right for you?</h1>
+          <p class="lede" data-variant-text="subhead">Enter your ZIP code for a one-minute, personalized check on charging, range, and cost.</p>
 
-        <form id="zip-form" class="zip-form" novalidate>
-          <label for="zip">ZIP code</label>
-          <p id="zip-hint" class="hint">5 digits. We use it only to look up public data for your area.</p>
-          <div class="zip-row">
-            <input id="zip" name="zip" type="text" inputmode="numeric" autocomplete="postal-code"
-                   maxlength="5" pattern="[0-9]{5}" required spellcheck="false"
-                   aria-describedby="zip-hint zip-error">
-            <button type="submit" class="btn btn-primary">Check my ZIP</button>
-          </div>
-          <p id="zip-error" class="error" role="alert" hidden></p>
-        </form>
+          <form id="zip-form" class="zip-form" novalidate>
+            <label for="zip">Your ZIP code</label>
+            <p id="zip-hint" class="hint">Five digits. We use it only to look up public data for your area.</p>
+            <div class="zip-row">
+              <input id="zip" name="zip" type="text" inputmode="numeric" autocomplete="postal-code"
+                     maxlength="5" pattern="[0-9]{5}" required spellcheck="false"
+                     aria-describedby="zip-hint zip-error">
+              <button type="submit" class="btn btn-go">Check my ZIP</button>
+            </div>
+            <p id="zip-error" class="error" role="alert" hidden></p>
+          </form>
 
-        <p class="privacy-line">
-          <strong>Private by design:</strong> no sign-up, no name, no email. Your ZIP stays in your browser. We count answers anonymously, never with your ZIP.
-          <a href="#privacy">What we collect</a>
-        </p>
-      </section>
+          <p class="privacy-line">
+            No sign-up, no name, no email. Your ZIP stays in your browser.
+            <a href="#privacy">What we collect</a>
+          </p>
+        </div>
 
-      <!-- Questions (rendered from js/copy.js) -->
-      <!-- No region label here: the fieldset's legend already names the question once. -->
-      <section id="view-question" class="view" hidden>
-        <!-- Visual progress; screen readers hear the same words at the start of the heading. -->
-        <p id="question-progress" class="progress" aria-hidden="true"></p>
-        <div class="progress-bar" aria-hidden="true"><span id="progress-fill"></span></div>
+        <!-- Decorative: a loaded family EV on the route to a park. The same facts are in the text. -->
+        <svg class="hero-art" viewBox="0 0 640 440" aria-hidden="true" focusable="false" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="520" cy="96" r="44" fill="#d7f75b"/>
+          <path d="M360 300 L470 150 L560 300 Z" fill="#0b7f8a"/>
+          <path d="M450 300 L540 176 L640 300 Z" fill="#5b3df5"/>
+          <path d="M470 150 L492 180 L478 176 L462 188 L451 176 Z" fill="#eef2f5"/>
+          <path d="M540 176 L560 204 L546 198 L533 208 L524 198 Z" fill="#eef2f5"/>
+          <g stroke-width="16">
+            <path d="M8 404 C 80 404, 110 380, 150 372" stroke="#ffffff"/>
+            <path d="M150 372 C 200 362, 240 360, 290 356" stroke="#2fd0dc"/>
+            <path d="M290 356 C 340 352, 380 344, 420 334" stroke="#d7f75b"/>
+            <path d="M420 334 C 470 322, 520 318, 560 316" stroke="#a99bff"/>
+            <path d="M560 316 C 590 315, 612 314, 632 314" stroke="#ff5a36"/>
+          </g>
+          <g fill="#ffffff" stroke="#101a2b" stroke-width="6">
+            <circle cx="150" cy="372" r="12"/><circle cx="290" cy="356" r="12"/><circle cx="420" cy="334" r="12"/><circle cx="560" cy="316" r="12"/>
+          </g>
+          <g transform="translate(118 196) scale(0.62)" stroke="#d7f75b" stroke-width="7">
+            <path d="M20 200 L20 130 Q22 95 60 85 L180 48 Q210 40 250 40 L450 40 Q490 40 510 70 L550 125 Q590 132 594 170 L594 200 Z" fill="#101a2b"/>
+            <path d="M202 58 L246 58 L246 120 L150 120 Z"/>
+            <path d="M262 58 L370 58 L370 120 L262 120 Z"/>
+            <path d="M386 58 L448 58 Q478 60 494 92 L506 120 L386 120 Z"/>
+            <rect x="230" y="2" width="210" height="34" rx="10" fill="#101a2b"/>
+            <circle cx="125" cy="204" r="44" fill="#101a2b"/><circle cx="125" cy="204" r="16"/>
+            <circle cx="490" cy="204" r="44" fill="#101a2b"/><circle cx="490" cy="204" r="16"/>
+          </g>
+          <g transform="translate(118 196) scale(0.62)" stroke="#ffffff" stroke-width="5">
+            <path d="M290 116 L290 86 Q290 76 302 76 L320 76 L320 116"/>
+            <path d="M398 118 Q406 94 426 96 Q440 90 444 102 L454 106 L448 118"/>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <!-- Questions (rendered from js/copy.js) -->
+    <section id="view-question" class="view view-question" hidden>
+      <div class="wrap narrow">
+        <!-- Visual progress along the route; screen readers hear "Question 2 of 5" at the start of the heading. -->
+        <p id="question-progress" class="progress-text" aria-hidden="true"></p>
+        <ol id="question-route" class="q-route" aria-hidden="true"></ol>
         <form id="question-form" novalidate>
           <fieldset id="question-fieldset" aria-describedby="question-hint question-error">
             <legend><h1 id="question-legend" tabindex="-1"><span class="sr-only" id="question-step-sr"></span><span id="question-text"></span></h1></legend>
@@ -61,49 +100,56 @@
           </fieldset>
           <p id="question-error" class="error" role="alert" hidden></p>
           <div class="actions">
-            <button type="submit" class="btn btn-primary" id="question-next">Next</button>
-            <button type="button" class="btn btn-secondary" id="question-back">Back</button>
-            <button type="button" class="btn btn-link" id="question-skip">Skip this question</button>
+            <button type="submit" class="btn btn-go" id="question-next">Next</button>
+            <button type="button" class="btn btn-quiet" id="question-back">Back</button>
+            <button type="button" class="btn-link" id="question-skip">Skip this question</button>
           </div>
         </form>
-        <p class="skip-all"><button type="button" class="btn btn-link" id="question-skip-all">Skip the rest and see my results</button></p>
-      </section>
+        <p class="skip-all"><button type="button" class="btn-link" id="question-skip-all">Skip the rest and see my results</button></p>
+      </div>
+    </section>
 
-      <!-- Loading -->
-      <section id="view-loading" class="view" hidden>
-        <p class="loading" role="status">Looking up your area&hellip;</p>
-      </section>
+    <!-- Loading -->
+    <section id="view-loading" class="view" hidden>
+      <div class="wrap narrow"><p class="loading" role="status">Looking up your area&hellip;</p></div>
+    </section>
 
-      <!-- Results -->
-      <section id="view-results" class="view" aria-labelledby="results-title" hidden>
-        <p class="eyebrow" id="results-where"></p>
-        <h1 id="results-title" tabindex="-1"></h1>
-        <p class="lede" id="results-summary"></p>
-        <div class="tier-scale" id="tier-scale"></div>
-        <p class="confidence" id="results-confidence"></p>
+    <!-- Results -->
+    <section id="view-results" class="view view-results" aria-labelledby="results-title" hidden>
+      <div class="verdict-band">
+        <div class="wrap band-row">
+          <div class="band-copy">
+            <div class="verdict">
+              <span class="tier-mark" id="tier-mark" aria-hidden="true"></span>
+              <h1 id="results-title" tabindex="-1"></h1>
+            </div>
+            <p class="band-summary"><span id="results-summary"></span> <strong id="results-focus"></strong></p>
+          </div>
+          <button type="button" class="btn btn-go btn-plan" id="plan-cta"></button>
+        </div>
+      </div>
 
-        <h2>Why</h2>
-        <ul class="reasons" id="results-reasons"></ul>
-
-        <div id="assumed" class="callout" hidden>
-          <h2 id="assumed-title">What we assumed</h2>
-          <ul id="assumed-list"></ul>
-          <button type="button" class="btn btn-secondary" id="answer-more">Answer these to sharpen your result</button>
+      <div class="wrap">
+        <div class="results-meta">
+          <ol class="tier-scale" id="tier-scale"></ol>
+          <p class="confidence" id="results-confidence"></p>
         </div>
 
-        <div id="cards" class="cards"></div>
+        <div id="assumed" class="assumed" hidden>
+          <p class="assumed-lead">We filled in some answers with typical values for your ZIP:</p>
+          <ul id="assumed-list"></ul>
+          <button type="button" class="btn btn-quiet" id="answer-more">Answer these to sharpen your result</button>
+        </div>
 
-        <!-- Fake-door test: measures interest in a plan follow-up, collects nothing, then gives a real checklist. -->
-        <section class="plan card" aria-labelledby="plan-title">
-          <h2 id="plan-title"></h2>
-          <p id="plan-body"></p>
-          <button type="button" class="btn btn-primary" id="plan-cta"></button>
-          <div id="plan-result" tabindex="-1" aria-labelledby="plan-result-title" hidden>
-            <h3 id="plan-result-title"></h3>
-            <p id="plan-thanks"></p>
-            <ol id="plan-steps" class="plan-steps"></ol>
-            <button type="button" class="btn btn-secondary" id="plan-print"></button>
-          </div>
+        <h2 class="sr-only" id="route-title">Your route, stop by stop</h2>
+        <p class="route-hint" aria-hidden="true">Your route, stop by stop. Open any stop for details and sources.</p>
+        <ol class="route" id="route" aria-labelledby="route-title"></ol>
+
+        <section class="plan" id="plan-result" tabindex="-1" aria-labelledby="plan-result-title" hidden>
+          <h2 id="plan-result-title"></h2>
+          <p id="plan-thanks"></p>
+          <ol id="plan-steps" class="plan-steps"></ol>
+          <button type="button" class="btn btn-quiet" id="plan-print"></button>
         </section>
 
         <section class="next-steps" aria-labelledby="next-title">
@@ -116,16 +162,18 @@
           <div id="method-body"></div>
         </details>
 
-        <p><button type="button" class="btn btn-secondary" id="start-over">Start over with a new ZIP</button></p>
-      </section>
+        <p class="start-over"><button type="button" class="btn btn-quiet" id="start-over">Start over with a new ZIP</button></p>
+      </div>
+    </section>
 
-      <!-- Data load failure -->
-      <section id="view-error" class="view" aria-labelledby="error-title" hidden>
+    <!-- Data load failure -->
+    <section id="view-error" class="view" aria-labelledby="error-title" hidden>
+      <div class="wrap narrow">
         <h1 id="error-title" tabindex="-1">Something went wrong</h1>
         <p>We couldn&rsquo;t load the data for this check. Please try again in a moment.</p>
-        <p><button type="button" class="btn btn-primary" id="error-retry">Try again</button></p>
-      </section>
-    </div>
+        <p><button type="button" class="btn btn-go" id="error-retry">Try again</button></p>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -140,7 +188,7 @@
           <li>&ldquo;Get my EV plan&rdquo; asks for nothing: no email, no contact details. It just builds your checklist on the page.</li>
           <li>If your browser sends a Global Privacy Control or Do Not Track signal, we do not load analytics at all.</li>
         </ul>
-        <p><button type="button" class="btn btn-link" id="analytics-toggle" hidden></button></p>
+        <p><button type="button" class="btn-link" id="analytics-toggle" hidden></button></p>
       </section>
       <p class="footnote">
         An independent prototype by Hillary Contini, built on public data from NREL, EPA, the U.S. Census Bureau, EIA, and the National Park Service.

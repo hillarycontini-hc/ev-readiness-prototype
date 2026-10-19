@@ -1,9 +1,12 @@
-// UI controller: one question per screen, then a personalized result.
+// UI controller: one question per screen, then the results route.
 // Rendering uses createElement + textContent only. Nothing typed by the visitor
 // is ever inserted as HTML, and the ZIP is validated before it is used in a path.
 
 import { ASSUMPTIONS, FLEET_KEY, QUESTIONS, TIERS, normalizeZip, planFor, questionsFor, recommend } from './logic.js';
-import { ASSUMED_COPY, CHARGING_AT_PARK, LEARN_MORE, PLAN_COPY, PLAN_CTA, QUESTION_COPY, REASON_COPY, TIER_COPY, VARIANTS } from './copy.js';
+import {
+  ASSUMED_COPY, CHARGING_AT_PARK, FOCUS_COPY, HOME_STOP, LEARN_MORE, PLAN_COPY, PLAN_CTA,
+  QUESTION_COPY, REASON_COPY, TIER_COPY, TONE_COPY, VARIANTS,
+} from './copy.js';
 import * as analytics from './analytics.js';
 
 const $ = (id) => document.getElementById(id);
@@ -45,6 +48,25 @@ function el(tag, props = {}, ...children) {
   return node;
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function chevron() {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 16 16');
+  svg.setAttribute('width', '18');
+  svg.setAttribute('height', '18');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', 'M6 3 L11 8 L6 13');
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', 'currentColor');
+  path.setAttribute('stroke-width', '2.5');
+  path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('stroke-linejoin', 'round');
+  svg.append(path);
+  return svg;
+}
+
 function srOnly(text) {
   return el('span', { class: 'sr-only', text });
 }
@@ -67,6 +89,9 @@ function externalLink(text, url, linkId, extra = {}) {
 
 function show(viewId, focusId) {
   for (const v of document.querySelectorAll('.view')) v.hidden = v.id !== viewId;
+  const ctx = $('topbar-context');
+  ctx.hidden = !state.zipRec || viewId === 'view-landing';
+  if (state.zipRec) ctx.textContent = `ZIP ${state.zip} · ${state.zipRec.s}`;
   window.scrollTo(0, 0);
   if (focusId) $(focusId).focus();
 }
@@ -152,6 +177,17 @@ function currentQueue() {
   return state.refineSet ? q.filter((k) => state.refineSet.has(k)) : q;
 }
 
+// Progress drawn as the route: one station per question, colored as it is passed.
+const ROUTE_COLORS = ['var(--teal)', 'var(--uv)', 'var(--poppy)', 'var(--teal)', 'var(--uv)'];
+function renderQuestionRoute(step, total) {
+  const stations = Array.from({ length: total }, (_, i) => {
+    const li = el('li', { class: [i < step ? 'done' : '', i === step ? 'current' : '', i === total - 1 ? 'end' : ''].join(' ').trim() });
+    li.style.setProperty('--seg', ROUTE_COLORS[i % ROUTE_COLORS.length]);
+    return li;
+  });
+  $('question-route').replaceChildren(...stations);
+}
+
 function renderQuestion(step) {
   state.queue = currentQueue();
   state.step = step;
@@ -161,7 +197,7 @@ function renderQuestion(step) {
 
   $('question-progress').textContent = `Question ${step + 1} of ${total}`;
   $('question-step-sr').textContent = `Question ${step + 1} of ${total}: `;
-  $('progress-fill').style.width = `${Math.round((100 * step) / total)}%`;
+  renderQuestionRoute(step, total);
   $('question-text').textContent = copy.legend;
   $('question-hint').textContent = copy.hint;
   $('question-error').hidden = true;
@@ -237,122 +273,226 @@ function finish() {
   renderResults();
 }
 
-// ---------- results ----------
+// ---------- results: verdict ----------
+
+const TIER_SHAPE = { strong: 's-strong', good: 's-good', maybe: 's-maybe', notyet: 's-notyet' };
 
 function tierScale(currentId) {
-  const ordered = [...TIERS].reverse(); // Not yet ... Strong fit
-  return el('ol', { class: 'tier-scale', 'aria-label': 'Verdict scale, from Not yet to Strong fit' },
-    ordered.map((t) => el('li', {
-      class: `seg${t.id === currentId ? ' current' : ''}`,
-      'aria-current': t.id === currentId ? 'true' : null,
-    }, t.label, t.id === currentId ? srOnly(' (your result)') : null)));
+  const ordered = [...TIERS].reverse(); // Not yet ... Strong fit, left to right
+  return ordered.map((t) => el('li', { 'aria-current': t.id === currentId ? 'true' : null },
+    el('span', { class: `shape ${TIER_SHAPE[t.id]}`, 'aria-hidden': 'true' }),
+    t.label, t.id === currentId ? srOnly(' (your result)') : null));
 }
 
-const TONE = {
-  plus: { symbol: '+', label: 'Works in your favor: ' },
-  minus: { symbol: '−', label: 'Works against you: ' },
-  check: { symbol: '!', label: 'Worth checking: ' },
-};
-
-function reasonItem(r) {
-  const tone = TONE[r.tone];
-  return el('li', {},
-    el('span', { class: `tone tone-${r.tone}`, 'aria-hidden': 'true', text: tone.symbol }),
-    el('span', {}, srOnly(tone.label), REASON_COPY[r.id](r.value)));
+/** The one line under the verdict: the answer or step that would change the result most. */
+function focusLine(rec) {
+  if (rec.blockers.length) return FOCUS_COPY[`blocker-${rec.blockers[0]}`];
+  const inp = rec.inputs;
+  if (inp.homeCharging === 'yes') return FOCUS_COPY.yes;
+  if (inp.homeCharging === 'install' || inp.homeCharging === 'ask' || inp.homeCharging === 'unknown') return FOCUS_COPY[inp.homeCharging];
+  return inp.workCharging === 'yes' ? FOCUS_COPY.work : FOCUS_COPY.public;
 }
 
-function chargingCard(rec) {
-  const c = rec.charging;
-  const nearest = c.nearestDc == null ? 'None within 100 miles' : `${c.nearestDc} miles (straight line)`;
-  return el('section', { class: 'card', 'aria-labelledby': 'card-charging' },
-    el('h2', { id: 'card-charging', text: 'Public charging near you' }),
-    el('p', { class: 'big', text: c.dcWithin10 ? `${num.format(c.dcWithin10)} fast-charging stations within 10 miles` : 'No fast-charging stations within 10 miles' }),
+// ---------- results: the route ----------
+
+const reasonOf = (rec, prefix) => rec.reasons.find((r) => r.id.startsWith(prefix));
+const assumedAny = (rec, ...keys) => keys.some((k) => rec.inputs.assumed.includes(k));
+
+function homeStop(rec) {
+  const inp = rec.inputs;
+  const z = state.zipRec;
+  const r = reasonOf(rec, 'home-');
+  let key = inp.homeCharging;
+  if (key === 'no' && inp.workCharging === 'yes') key = 'no-work';
+  const pct = Math.round(inp.homeChargeOdds * 100);
+  const copy = HOME_STOP[key];
+  const tone = inp.workCharging === 'yes' && r.tone === 'minus' ? 'check' : r.tone;
+  const panel = [
+    el('p', { text: REASON_COPY[r.id](r.value) }),
+    inp.workCharging === 'yes' ? el('p', { text: REASON_COPY['work-yes']() }) : null,
     el('dl', {},
-      el('dt', { text: 'Level 2 stations within 5 miles' }), el('dd', { text: num.format(c.l2Within5) }),
-      el('dt', { text: 'Level 2 stations within 10 miles' }), el('dd', { text: num.format(c.l2Within10) }),
-      el('dt', { text: 'Fast-charging stations within 25 miles' }), el('dd', { text: num.format(c.dcWithin25) }),
-      el('dt', { text: 'Nearest fast charger' }), el('dd', { text: nearest })),
-    el('p', { text: `That is more fast charging nearby than ${c.dcPercentile}% of U.S. ZIP codes, and more Level 2 charging than ${c.l2Percentile}%.` }),
-    el('p', { class: 'small', text: 'Public stations open today, from the NREL Alternative Fuels Data Center. Level 2 adds about 20 to 30 miles of range per hour; fast chargers can add 150+ miles in about 30 minutes, depending on the car.' }));
+      el('dt', { text: 'Single-family homes in your ZIP' }), el('dd', { text: z.sf == null ? 'Not available' : `${z.sf}%` }),
+      el('dt', { text: 'Owner-occupied homes in your ZIP' }), el('dd', { text: z.own == null ? 'Not available' : `${z.own}%` })),
+    el('p', { class: 'src', text: 'Source: U.S. Census Bureau, American Community Survey 2024 5-year estimates.' }),
+  ];
+  return {
+    key: 'home', label: `Home, ${state.zip}`, tone,
+    figure: typeof copy.figure === 'function' ? copy.figure(pct) : copy.figure,
+    detail: typeof copy.detail === 'function' ? copy.detail(pct) : copy.detail,
+    assumed: assumedAny(rec, 'homeCharging', 'workCharging'), panel,
+  };
 }
 
-function rangeCard(rec) {
-  const f = state.meta.fleet[FLEET_KEY];
-  const [y1, y2] = state.meta.fleet.modelYears;
-  const need = rec.range.need;
+function chargerStop(rec) {
+  const c = rec.charging;
+  const local = reasonOf(rec, 'local-');
+  const trips = reasonOf(rec, 'trips-');
+  const tone = trips && trips.tone === 'minus' ? 'minus' : local.tone;
+  const nearest = c.nearestDc == null ? 'None within 100 miles' : `${c.nearestDc} miles (straight line)`;
+  return {
+    key: 'charger', label: 'Nearest fast charger', tone,
+    figure: c.nearestDc == null ? 'None' : `${c.nearestDc} mi`,
+    detail: `${c.dcWithin10 ? `${num.format(c.dcWithin10)} fast-charging stations` : 'No fast-charging stations'} within 10 mi · ${c.dcPercentile >= 10 ? `more than ${c.dcPercentile}% of U.S. ZIP codes` : 'fewer than most U.S. ZIP codes'}`,
+    assumed: assumedAny(rec, 'longTrips'),
+    panel: [
+      el('p', { text: REASON_COPY[local.id](local.value) }),
+      trips ? el('p', { text: REASON_COPY[trips.id](trips.value) }) : null,
+      el('dl', {},
+        el('dt', { text: 'Nearest fast charger' }), el('dd', { text: nearest }),
+        el('dt', { text: 'Fast-charging stations within 25 miles' }), el('dd', { text: num.format(c.dcWithin25) }),
+        el('dt', { text: 'Level 2 stations within 5 miles' }), el('dd', { text: num.format(c.l2Within5) }),
+        el('dt', { text: 'Level 2 stations within 10 miles' }), el('dd', { text: num.format(c.l2Within10) })),
+      el('p', { text: `${c.l2Percentile >= 10 ? `More Level 2 charging than ${c.l2Percentile}% of U.S. ZIP codes.` : 'Less Level 2 charging than most U.S. ZIP codes.'} Level 2 adds about 20 to 30 miles of range per hour; fast chargers can add 150+ miles in about 30 minutes, depending on the car.` }),
+      el('p', { class: 'src', text: 'Source: NREL Alternative Fuels Data Center, public stations open today.' }),
+    ],
+  };
+}
+
+function milesScale(need, f) {
   const max = Math.max(f.rangeMax, need) * 1.05;
-  const pctOf = (x) => `${Math.min(100, (100 * x) / max).toFixed(1)}%`;
-  const ruler = el('div', { class: 'ruler', 'aria-hidden': 'true' },
-    el('div', { class: 'track' }),
-    el('div', { class: 'band' }),
-    el('div', { class: 'need' }),
-    el('div', { class: 'need-label', text: `You: ${need} mi` }));
-  const band = ruler.querySelector('.band');
-  band.style.left = pctOf(f.rangeP25);
-  band.style.width = `calc(${pctOf(f.rangeP75)} - ${pctOf(f.rangeP25)})`;
-  ruler.querySelector('.need').style.left = pctOf(need);
-  const label = ruler.querySelector('.need-label');
-  label.style.left = pctOf(need);
-  // Keep the label inside the ruler near either end.
+  const at = (x) => `${Math.min(100, (100 * x) / max).toFixed(1)}%`;
+  const scale = el('div', { class: 'miles', 'aria-hidden': 'true' },
+    el('div', { class: 'track' }), el('div', { class: 'band' }), el('div', { class: 'need' }),
+    el('div', { class: 'need-label', text: `You: ${need} mi` }),
+    el('div', { class: 'tick', text: '0' }), el('div', { class: 'tick', text: `${f.rangeMax} mi` }));
+  const band = scale.querySelector('.band');
+  band.style.left = at(f.rangeP25);
+  band.style.width = `calc(${at(f.rangeP75)} - ${at(f.rangeP25)})`;
+  scale.querySelector('.need').style.left = at(need);
+  const label = scale.querySelector('.need-label');
+  label.style.left = at(need);
   const pos = need / max;
   label.style.transform = pos < 0.15 ? 'none' : pos > 0.85 ? 'translateX(-100%)' : 'translateX(-50%)';
+  const ticks = scale.querySelectorAll('.tick');
+  ticks[0].style.left = '0';
+  ticks[1].style.left = at(f.rangeMax);
+  ticks[1].style.transform = 'translateX(-100%)';
+  return scale;
+}
 
+function rangeStop(rec) {
+  const f = state.meta.fleet[FLEET_KEY];
+  const [y1, y2] = state.meta.fleet.modelYears;
+  const r = reasonOf(rec, 'range-');
   const why = rec.range.daysPerCharge > 1
     ? `Your daily miles × ${ASSUMPTIONS.rangeBuffer} (winter, a reserve, battery aging) × ${ASSUMPTIONS.daysBetweenPublicCharges} days, since public charging usually means charging less often.`
     : `Your daily miles × ${ASSUMPTIONS.rangeBuffer}, a buffer for winter range loss, a reserve so you never run to empty, and battery aging.`;
-
-  return el('section', { class: 'card', 'aria-labelledby': 'card-range' },
-    el('h2', { id: 'card-range', text: 'Range you need vs. what EVs offer' }),
-    el('p', { class: 'big', text: `About ${num.format(need)} miles between charges` }),
-    el('p', { text: `${num.format(rec.range.covered)} of ${num.format(rec.range.total)} electric SUV, minivan, and pickup configurations (model years ${y1}–${y2}) are rated for at least that. Those are the classes with room for car seats, a dog, and gear. Their rated ranges run from ${f.rangeMin} to ${f.rangeMax} miles; the median is ${f.rangeMedian}.` }),
-    ruler,
-    el('p', { class: 'small', text: `The shaded band shows the middle half of those vehicles (${f.rangeP25} to ${f.rangeP75} miles). ${why}` }));
+  return {
+    key: 'range', label: 'Range you need', tone: r.tone,
+    figure: `${num.format(rec.range.need)} mi`,
+    detail: `${num.format(rec.range.covered)} of ${num.format(rec.range.total)} electric SUVs, minivans, and pickups cover it`,
+    assumed: assumedAny(rec, 'dailyMiles'),
+    panel: [
+      el('p', { text: REASON_COPY[r.id](r.value) }),
+      milesScale(rec.range.need, f),
+      el('p', { text: `The shaded band is the middle half of electric SUVs, minivans, and pickups on sale (model years ${y1}–${y2}): ${f.rangeP25} to ${f.rangeP75} miles. They range from ${f.rangeMin} to ${f.rangeMax} miles; the median is ${f.rangeMedian}.` }),
+      el('p', { text: why }),
+      el('p', { class: 'src', text: 'Source: fueleconomy.gov (EPA) rated range.' }),
+    ],
+  };
 }
 
-function costsCard(rec) {
+function fuelStop(rec) {
   const c = rec.costs;
-  const st = state.zipRec.s;
-  let headline;
-  if (c.savings == null) headline = 'Cost comparison unavailable for your state';
-  else if (c.savings >= 0) headline = `About ${money(c.savings)} a year saved`;
-  else headline = `About ${money(c.savings)} a year more than gas`;
+  const r = reasonOf(rec, 'savings-');
   const pct = (x) => `${Math.round(x * 100)}%`;
-  return el('section', { class: 'card', 'aria-labelledby': 'card-costs' },
-    el('h2', { id: 'card-costs', text: 'Fuel cost: gas vs. electric' }),
-    el('p', { class: 'big', text: headline }),
-    c.savings != null && c.savings >= 0 ? el('p', { text: `That is roughly ${money(c.savings / 12)} a month.` }) : null,
-    el('dl', {},
-      el('dt', { text: `Gas car (${ASSUMPTIONS.gasMpg} mpg)` }), el('dd', { text: c.gasCost == null ? 'n/a' : `${money(c.gasCost)} a year` }),
-      el('dt', { text: 'EV' }), el('dd', { text: `${money(c.evCost)} a year` }),
-      el('dt', { text: 'Miles a year' }), el('dd', { text: num.format(c.miles) }),
-      el('dt', { text: 'Gas price' }), el('dd', { text: c.gasPrice ? `$${c.gasPrice.toFixed(2)}/gal (${c.gasArea})` : 'n/a' }),
-      el('dt', { text: 'Home electricity' }), el('dd', { text: `${c.electricityCents.toFixed(1)}¢/kWh (${st})` }),
-      el('dt', { text: 'Where you would charge' }), el('dd', { text: `${pct(c.mix.home)} home, ${pct(c.mix.l2)} public Level 2, ${pct(c.mix.dc)} fast charging` })),
-    el('p', { class: 'small', text: 'Fuel only. Purchase price, insurance, maintenance, and incentives are not included. Public charging prices are national averages and vary by network.' }));
+  let figure = '—';
+  let label = 'Fuel saved each year';
+  if (c.savings != null && c.savings >= 0) figure = `~${money(c.savings)}`;
+  else if (c.savings != null) { figure = `+${money(c.savings)}`; label = 'Fuel cost vs. gas, each year'; }
+  return {
+    key: 'fuel', label, tone: r ? r.tone : 'check', figure,
+    detail: c.gasCost == null ? 'Gas prices are not available for your state' : `${money(c.evCost)} electric vs ${money(c.gasCost)} gas, at ${state.zipRec.s} prices`,
+    assumed: assumedAny(rec, 'dailyMiles', 'homeCharging', 'longTrips'),
+    panel: [
+      r ? el('p', { text: REASON_COPY[r.id](r.value) }) : null,
+      el('dl', {},
+        el('dt', { text: `Gas car (${ASSUMPTIONS.gasMpg} mpg)` }), el('dd', { text: c.gasCost == null ? 'Not available' : `${money(c.gasCost)} a year` }),
+        el('dt', { text: 'EV' }), el('dd', { text: `${money(c.evCost)} a year` }),
+        el('dt', { text: 'Miles a year' }), el('dd', { text: num.format(c.miles) }),
+        el('dt', { text: 'Gas price' }), el('dd', { text: c.gasPrice ? `$${c.gasPrice.toFixed(2)}/gal (${c.gasArea})` : 'Not available' }),
+        el('dt', { text: 'Home electricity' }), el('dd', { text: `${c.electricityCents.toFixed(1)}¢/kWh (${state.zipRec.s})` }),
+        el('dt', { text: 'Where you would charge' }), el('dd', { text: `${pct(c.mix.home)} home, ${pct(c.mix.l2)} Level 2 away from home, ${pct(c.mix.dc)} fast charging` })),
+      el('p', { class: 'src', text: 'Fuel only: purchase price, insurance, maintenance, and incentives are not included. Sources: EIA prices; public charging prices are national averages and vary by network.' }),
+    ],
+  };
 }
 
-function outdoorCard(rec) {
-  if (!rec.destinations.length) return null;
-  return el('section', { class: 'card', 'aria-labelledby': 'card-outdoor' },
-    el('h2', { id: 'card-outdoor', text: 'Charging on the way to the outdoors' }),
-    el('ul', { class: 'dest' }, rec.destinations.map((d) => el('li', {},
-      el('p', { class: 'name' }, externalLink(d.name, d.url, 'park', { park: d.code })),
-      el('p', { text: `About ${num.format(d.oneWayMiles)} miles away by road (${num.format(d.roundTripMiles)} round trip, estimated).` }),
-      el('p', { text: d.noStopNeeded ? 'A typical EV can make the round trip on one charge.' : 'Plan at least one fast-charging stop for the round trip.' }),
-      el('p', { text: `${CHARGING_AT_PARK[d.chargingAtPark]}: ${num.format(d.fastChargersNearPark)} fast-charging stations within 25 miles${d.nearestFastToPark != null ? `, nearest ${d.nearestFastToPark} miles` : ''}.` })))),
-    el('p', { class: 'small', text: 'Destinations are National Park Service parks, preserves, recreation areas, seashores, lakeshores, and rivers. Charging is measured from the single point the Park Service publishes for each park, which for big parks may be far from the entrance. Road miles are estimated as straight-line distance × 1.25.' }));
+function parksStop(rec) {
+  const dests = rec.destinations;
+  if (!dests.length) return null;
+  const d = dests[0];
+  let tone = 'minus';
+  if (d.noStopNeeded || d.chargingAtPark === 'good') tone = 'plus';
+  else if (d.chargingAtPark === 'some') tone = 'check';
+  const more = dests.length - 1;
+  return {
+    key: 'parks', label: d.name, tone,
+    figure: `${num.format(d.oneWayMiles)} mi`,
+    detail: `${d.noStopNeeded ? 'Round trip on one charge' : 'Plan a fast-charging stop'}${more ? ` · ${more} more park${more > 1 ? 's' : ''} nearby` : ''}`,
+    assumed: assumedAny(rec, 'outdoor'),
+    panel: [
+      el('ul', { class: 'park-list' }, dests.map((p) => el('li', {},
+        el('p', {}, externalLink(p.name, p.url, 'park', { park: p.code })),
+        el('p', { text: `About ${num.format(p.oneWayMiles)} miles away by road (${num.format(p.roundTripMiles)} round trip, estimated). ${p.noStopNeeded ? 'A typical EV can make the round trip on one charge.' : 'Plan at least one fast-charging stop for the round trip.'}` }),
+        el('p', { text: `${CHARGING_AT_PARK[p.chargingAtPark]}: ${num.format(p.fastChargersNearPark)} fast-charging stations within 25 miles${p.nearestFastToPark != null ? `, nearest ${p.nearestFastToPark} miles` : ''}.` })))),
+      el('p', { class: 'src', text: 'National Park Service parks, preserves, recreation areas, seashores, lakeshores, and rivers. Charging is measured from the single point the Park Service publishes for each park, which for big parks may be far from the entrance. Road miles are estimated as straight-line distance × 1.25.' }),
+    ],
+  };
+}
+
+function stopOrder() {
+  const promoted = VARIANTS[state.variant].firstStop;
+  return ['home', promoted, ...['charger', 'range', 'fuel', 'parks'].filter((k) => k !== promoted)];
+}
+
+function renderStop(stop, i, nextKey) {
+  const panelId = `stop-panel-${stop.key}`;
+  const tone = TONE_COPY[stop.tone];
+  const panel = el('div', { class: 'stop-panel', id: panelId, hidden: true }, stop.panel);
+  const btn = el('button', {
+    type: 'button', class: 'stop-btn', 'aria-expanded': 'false', 'aria-controls': panelId,
+    onclick: () => {
+      const open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!open));
+      panel.hidden = open;
+    },
+  },
+  el('span', { class: 'station', 'aria-hidden': 'true' }),
+  el('span', { class: 'stop-main' },
+    el('span', { class: 'stop-label', text: stop.label }),
+    el('span', { class: 'stop-detail' },
+      el('span', { class: `chip t-${stop.tone}`, 'aria-hidden': 'true', text: tone.chip }),
+      stop.assumed ? el('span', { class: 'chip assumed-chip', text: 'Assumed' }) : null,
+      srOnly(`${tone.sr} `), stop.detail)),
+  el('span', { class: 'stop-figure', text: stop.figure }),
+  el('span', { class: 'stop-chev' }, chevron()));
+  const li = el('li', { class: `stop s-${stop.key}` }, btn, panel);
+  li.style.setProperty('--i', String(i));
+  if (nextKey) li.style.setProperty('--seg', `var(--stop-${nextKey})`);
+  return li;
+}
+
+function renderRoute(rec) {
+  const builders = { home: homeStop, charger: chargerStop, range: rangeStop, fuel: fuelStop, parks: parksStop };
+  const stops = stopOrder().map((k) => builders[k](rec)).filter(Boolean);
+  const route = $('route');
+  route.classList.remove('drawing');
+  route.replaceChildren(...stops.map((s, i) => renderStop(s, i, stops[i + 1]?.key)));
+  void route.offsetWidth; // restart the draw animation on re-render
+  route.classList.add('drawing');
 }
 
 function methodBody() {
   const m = state.meta;
   const fetched = new Date(m.fetchedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   return [
-    el('p', { text: 'Your verdict combines five factors: home charging (40%), range fit (20%), public charging nearby (15%), road-trip charging (15%), and charging near outdoor destinations (up to 15%, only if you take those trips). Without home charging the verdict cannot be “Strong fit”. Skipped questions use typical values for your ZIP.' }),
+    el('p', { text: 'Your verdict combines five factors: a regular place to charge, at home or during the day (40%), range fit (20%), public charging nearby (15%), road-trip charging (15%), and charging near outdoor destinations (up to 15%, only if you take those trips). Without a known place to charge, the verdict cannot be “Strong fit”. Skipped questions use typical values for your ZIP.' }),
     el('h3', { text: 'Assumptions' }),
     el('ul', {},
       el('li', { text: `Gas car: ${ASSUMPTIONS.gasMpg} mpg, the recent new-vehicle average (EPA).` }),
       el('li', { text: `EV efficiency: ${m.fleet[FLEET_KEY].kwhPer100Median} kWh per 100 miles, the median of current electric SUVs, minivans, and pickups (EPA, measured at the wall).` }),
-      el('li', { text: `Public fast charging: $${ASSUMPTIONS.dcFastPricePerKwh.toFixed(2)}/kWh (Paren U.S. average, Q1 2026). Public Level 2: about $${ASSUMPTIONS.publicL2PricePerKwh.toFixed(2)}/kWh.` }),
+      el('li', { text: `Public fast charging: $${ASSUMPTIONS.dcFastPricePerKwh.toFixed(2)}/kWh (Paren U.S. average, Q1 2026). Public Level 2 and daytime charging: about $${ASSUMPTIONS.publicL2PricePerKwh.toFixed(2)}/kWh.` }),
       el('li', { text: `Each long drive adds about ${ASSUMPTIONS.extraMilesPerLongTrip} miles to your year.` }),
       el('li', { text: 'Distances are straight-line; road miles are estimated at 1.25 times that.' })),
     el('h3', { text: 'Sources' }),
@@ -364,26 +504,23 @@ function methodBody() {
 function renderResults() {
   const rec = recommend({ zipRec: state.zipRec, answers: state.answers, meta: state.meta, parks: state.parks });
   const answered = answeredCount();
-
-  $('results-where').textContent = `Results for ZIP ${state.zip} (${state.zipRec.s})`;
-  $('results-title').textContent = rec.tierLabel;
-  $('results-summary').textContent = TIER_COPY[rec.tier];
-  $('tier-scale').replaceWith(Object.assign(tierScale(rec.tier), { id: 'tier-scale' }));
   const total = applicable().length;
+
+  $('results-title').textContent = rec.tierLabel;
+  $('tier-mark').className = `tier-mark t-${rec.tier}`;
+  $('results-summary').textContent = TIER_COPY[rec.tier];
+  $('results-focus').textContent = focusLine(rec);
+  $('tier-scale').replaceChildren(...tierScale(rec.tier));
+  $('tier-scale').setAttribute('aria-label', 'Verdict scale, from Not yet to Strong fit');
   $('results-confidence').textContent = answered === total
     ? 'Based on your ZIP and all of your answers.'
-    : `Based on your ZIP and ${answered} of ${total} answers. We filled in the rest with typical values for your area, so this is a ${rec.confidence}-confidence result.`;
-
-  $('results-reasons').replaceChildren(...rec.reasons.map(reasonItem));
+    : `Based on your ZIP and ${answered} of ${total} answers, so this is a ${rec.confidence}-confidence result.`;
 
   const assumed = rec.inputs.assumed;
   $('assumed').hidden = assumed.length === 0;
   $('assumed-list').replaceChildren(...assumed.map((k) => el('li', { text: ASSUMED_COPY[k](rec.inputs) })));
 
-  const cards = { charging: chargingCard(rec), range: rangeCard(rec), costs: costsCard(rec), outdoor: outdoorCard(rec) };
-  const first = VARIANTS[state.variant].firstCard;
-  const order = [first, ...['charging', 'range', 'costs', 'outdoor'].filter((k) => k !== first)];
-  $('cards').replaceChildren(...order.map((k) => cards[k]).filter(Boolean));
+  renderRoute(rec);
 
   $('learn-more').replaceChildren(...LEARN_MORE.map((l) => el('li', {}, externalLink(l.label, l.url, l.id), el('span', { class: 'src', text: ` (${l.source})` }))));
   $('method-body').replaceChildren(...methodBody());
@@ -419,7 +556,6 @@ function markNextStep(type) {
 }
 
 function resetPlan() {
-  $('plan-cta').hidden = false;
   $('plan-result').hidden = true;
   $('plan-steps').replaceChildren();
 }
@@ -428,9 +564,9 @@ function onPlanCta() {
   analytics.track('plan_cta_clicked', { tier: state.lastRec.tier });
   markNextStep('plan');
   $('plan-steps').replaceChildren(...planFor(state.lastRec).map((step) => el('li', { text: PLAN_COPY[step.id](step.value) })));
-  $('plan-cta').hidden = true;
   $('plan-result').hidden = false;
-  $('plan-result').focus();
+  $('plan-result').scrollIntoView({ block: 'start' });
+  $('plan-result').focus({ preventScroll: true });
 }
 
 function onStartOver() {
@@ -470,8 +606,6 @@ function boot() {
   $('answer-more').addEventListener('click', onAnswerMore);
   $('start-over').addEventListener('click', onStartOver);
   $('error-retry').addEventListener('click', () => show('view-landing', 'zip'));
-  $('plan-title').textContent = PLAN_CTA.title;
-  $('plan-body').textContent = PLAN_CTA.body;
   $('plan-cta').textContent = PLAN_CTA.button;
   $('plan-result-title').textContent = PLAN_CTA.thanksTitle;
   $('plan-thanks').textContent = PLAN_CTA.thanksBody;
