@@ -50,7 +50,7 @@ Every event also carries `messaging_variant`, `$feature/landing-messaging`, and 
 | `start_over_clicked` | "Start over with a new ZIP" | none |
 | `data_load_error` | A data file failed to load | `stage` |
 
-**Never sent:** the ZIP code, latitude/longitude, IP address, full user agent, timezone,
+**Never sent:** the ZIP code (the browser only requests the public data file named for its first three digits, from this same site), latitude/longitude, IP address, full user agent, timezone,
 URL query strings or fragments, ad click ids (fbclid, gclid, and similar). This is enforced
 twice: `track()` only accepts simple values under allowlisted names, and `before_send`
 strips everything not on the allowlist from each event. `tests/e2e/privacy.e2e.mjs` checks
@@ -66,6 +66,7 @@ the real network payloads.
 | `advanced_disable_flags` | `true` | No feature-flag or remote-config calls |
 | `disable_external_dependency_loading` + the vendored `no-external` build | | PostHog cannot load any further scripts |
 | `before_send` | `sanitizeEvent` | Allowlist filter on every event |
+| `$geoip_disable: true` on every event | | PostHog does not look up city, postal code, or coordinates from the IP |
 | Global Privacy Control / Do Not Track | | Analytics never loads |
 
 ## Setting up PostHog (Hillary, about 15 minutes)
@@ -79,13 +80,19 @@ the real network payloads.
    IP property, but PostHog's server sees the request's IP; this setting tells it not to
    keep it. This is required before sharing publicly.
 4. Also in project settings, turn off session replay, autocapture, heatmaps, and web
-   vitals. The client already disables them; this is belt and braces.
-5. Create the funnel insight above and save it to a dashboard.
-6. Create the experiment: **Experiments > New experiment**, feature flag key
+   vitals, and under **Data pipelines** turn off the **GeoIP** transformation. The client
+   already disables all of these (GeoIP via `$geoip_disable`); this is belt and braces.
+5. **Billing safety:** stay on the free plan without a card, or set a billing limit. The
+   project key is public by design, so anyone could send junk events; a limit caps the cost.
+6. Create the funnel insight above and save it to a dashboard.
+7. Create the experiment: **Experiments > New experiment**, feature flag key
    `landing-messaging`, variants `control` and `adventure` at 50/50. In the experiment's
    exposure settings choose a **custom exposure event: `landing_viewed`**. Primary metric:
    funnel `landing_viewed` -> `recommendation_viewed`. Secondary: funnel
    `recommendation_viewed` -> `learn_more_clicked`. The site assigns variants itself and
    sends `$feature/landing-messaging` on every event, so the flag is never called.
-7. Add an internal-traffic filter for `utm_source = internal`, and use that tag when
-   testing the live site yourself.
+8. Add an internal-traffic filter for `utm_source = internal`, and use that tag when
+   testing the live site yourself. Also filter insights to `$host` = your production
+   domain so events sent from anywhere else are ignored.
+9. **Verify before sharing:** run the check once on the live site, open the event in
+   PostHog's activity view, and confirm there is no `$ip` value and no `$geoip_*` properties.
