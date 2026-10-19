@@ -36,13 +36,28 @@ done and tested; the remaining items are account settings only you can change.
 
 ## What the site does and does not do
 
-- Static files only. No server code, no database, no logins, no forms that send data.
-- No API keys at runtime. All data is precomputed at build time. Build scripts read
-  optional `NREL_API_KEY` / `NPS_API_KEY` from the environment only, redact them from logs,
-  and never write them to disk.
+- Static files plus one small Worker endpoint, `/api/geocode`, for address search in the plan
+  tools. No database, no logins, no forms that send data anywhere else.
+- **The geocoding proxy** ([`worker/index.js`](../worker/index.js)) holds the only runtime key
+  (`GEOAPIFY_KEY`, a Cloudflare secret, never in the repo). It answers only same-origin `GET`
+  requests, checks the query (3-120 printable characters) and the bias point (U.S. bounds),
+  limits each visitor to 30 searches a minute by a SHA-256 hash of the IP, times out after 5
+  seconds, and returns only name, short address, coordinates, and type. Responses are
+  `no-store`. Worker logs and observability are off, so searches are not kept. With no key
+  set, it returns "search unavailable" and the page falls back to ZIP. Spend cap: Geoapify's
+  free plan with no card on file refuses requests past its quota instead of billing.
+- Build scripts read optional `NREL_API_KEY` / `NPS_API_KEY` from the environment only, redact
+  them from logs, and never write them to disk.
 - The PostHog project key (`phc_...`) is public by design: it can send events, not read them.
 - The visitor's ZIP is used only to request `data/zip/{first 3 digits}.json` from the same
-  site. A host's access logs would see those three digits, not the full ZIP.
+  site. A host's access logs would see those three digits, not the full ZIP. A brand
+  test-drive link includes the ZIP only where it says so ("near 80302"), and only when the
+  visitor clicks it.
+- **Saved plans** stay in the visitor's browser (`localStorage`, `evrc-plan-v1`), written only
+  after they save something. **Share links** carry the plan after `#`, which browsers don't
+  send to servers. Saved places are left out unless the visitor includes them. Every field of
+  a saved or shared plan is validated on load (ids, slots, U.S. coordinates, counts, number
+  ranges) and rendered as text.
 
 ## Review (October 2026)
 
@@ -76,3 +91,13 @@ git history; `npm audit` reports 0 vulnerabilities; dev server path traversal bl
   Control on.
 - `tests/analytics.test.mjs` unit-tests the allowlist filter.
 - `tests/logic.test.mjs` includes rejection of malformed ZIPs and unknown answer values.
+- `tests/worker.test.mjs` checks the proxy: cross-site and non-GET requests refused, bad
+  queries and out-of-bounds points rejected, rate limit returns 429, missing key returns 503,
+  and the key never appears in a response.
+- `tests/plan.test.mjs` checks that saved and shared plans are sanitized and that share links
+  round-trip with and without places.
+- `tests/e2e/plan-tools.e2e.mjs` runs search, save, shortlist, and share in a browser and
+  checks that analytics never receives an address, coordinate, ZIP, or station name, and
+  that brand links are https, open in a new tab with `noopener`, and include the ZIP only
+  where labeled.
+- `npm run data:vehicles` rejects any brand link that isn't `https://`.

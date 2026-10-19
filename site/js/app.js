@@ -9,6 +9,8 @@ import {
 } from './copy.js';
 import * as analytics from './analytics.js';
 import { chevron, el, externalLink as linkTo, num, srOnly, usd10 as money } from './dom.js';
+import { createPlanTools } from './plan-tools.js';
+import { clearSaved, decodeShare, emptyPlan, encodeShare, loadSaved, savePlan, sharePayload } from './plan-store.js';
 
 const $ = (id) => document.getElementById(id);
 // Questions that apply to this visitor (work charging only when home charging is uncertain).
@@ -24,6 +26,7 @@ const state = {
   refineSet: null, // when refining: only the questions skipped the first time
   nextStepSent: false, // north star: one next_step_taken per visit
   lastRec: null,
+  plan: null, // the visitor's EV plan (saved on this device once they act)
   meta: null,
   parks: null,
   variant: 'control',
@@ -91,6 +94,30 @@ function setZipError(message) {
   }
 }
 
+async function loadZip(zip) {
+  const [, shard] = await Promise.all([loadStatic(), fetchJson(`data/zip/${zip.slice(0, 3)}.json`)]);
+  return shard && Object.hasOwn(shard, zip) ? shard[zip] : null;
+}
+
+/** Open a plan (from this device or a share link): its ZIP, its answers, its results, and the plan itself. */
+async function openPlan(saved, { shared }) {
+  show('view-loading');
+  try {
+    const rec = await loadZip(saved.zip);
+    if (!rec) { show('view-landing', 'zip'); return; }
+    state.zip = saved.zip;
+    state.zipRec = rec;
+    state.answers = { ...saved.answers };
+    state.refineSet = null;
+    state.plan = saved;
+    renderResults();
+    $('shared-banner').hidden = !shared;
+    onPlanCta({ resumed: true });
+  } catch {
+    show('view-error', 'error-title');
+  }
+}
+
 async function onZipSubmit(event) {
   event.preventDefault();
   const zip = normalizeZip($('zip').value);
@@ -102,8 +129,7 @@ async function onZipSubmit(event) {
   setZipError(null);
   show('view-loading');
   try {
-    const [, shard] = await Promise.all([loadStatic(), fetchJson(`data/zip/${zip.slice(0, 3)}.json`)]);
-    const rec = shard && Object.hasOwn(shard, zip) ? shard[zip] : null;
+    const rec = await loadZip(zip);
     if (!rec) {
       analytics.track('zip_error', { reason: 'not_found' });
       show('view-landing');
@@ -114,6 +140,7 @@ async function onZipSubmit(event) {
     state.zipRec = rec;
     state.answers = {};
     state.refineSet = null;
+    state.plan = null;
     analytics.track('zip_submitted', { state: rec.s });
     renderQuestion(0);
   } catch {
@@ -514,6 +541,36 @@ function resetPlan() {
 
 // The plan is the route's last leg: one station per step, colored by what the step is about,
 // a short action to scan, the detail under it, and a "Done" box (nothing is saved).
+// ---------- the plan: saved on this device once the visitor acts ----------
+
+function plan() {
+  if (!state.plan) state.plan = emptyPlan();
+  return state.plan;
+}
+
+/** Change the plan, then save it on this device and refresh the summary. */
+function updatePlan(fn) {
+  const p = plan();
+  fn(p);
+  p.zip = state.zip;
+  p.answers = { ...state.answers };
+  savePlan(p);
+  renderSummary();
+}
+
+let tools = null;
+function planTools() {
+  tools ??= createPlanTools({
+    plan,
+    update: updatePlan,
+    track: analytics.track,
+    get rec() { return state.lastRec; },
+    get zip() { return state.zip; },
+    get zipRec() { return state.zipRec; },
+  });
+  return tools;
+}
+
 function renderPlan(rec) {
   const steps = planFor(rec);
   $('plan-thanks').textContent = PLAN_CTA.thanksBody(steps.length);
@@ -522,22 +579,123 @@ function renderPlan(rec) {
     const title = def.title(step.value);
     const next = steps[i + 1] ? PLAN_STEPS[steps[i + 1].id].stop : null;
     const id = `plan-done-${i}`;
+    const tool = planTools().toolFor(step.id);
+    let toolNodes = [];
+    if (tool) {
+      const panelId = `tool-${step.id}`;
+      const panel = el('div', { class: 'tool-panel', id: panelId, hidden: true });
+      let loaded = false;
+      const btn = el('button', {
+        type: 'button', class: 'tool-btn', 'aria-expanded': 'false', 'aria-controls': panelId,
+        onclick: async () => {
+          const open = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', String(!open));
+          panel.hidden = open;
+          if (!open && !loaded) { loaded = true; await planTools().renderTool(step.id, panel); }
+        },
+      }, tool.label, chevron());
+      toolNodes = [btn, panel];
+    }
     const li = el('li', { class: `plan-step p-${def.stop}` },
       el('span', { class: 'plan-station', 'aria-hidden': 'true', text: String(i + 1) }),
       el('div', { class: 'plan-main' },
         el('h3', { class: 'plan-title', text: title }),
-        el('p', { class: 'plan-detail' }, el('span', { class: 'chip', text: PLAN_CATEGORY[def.stop] }), def.detail(step.value))),
+        el('p', { class: 'plan-detail' }, el('span', { class: 'chip', text: PLAN_CATEGORY[def.stop] }), def.detail(step.value)),
+        toolNodes),
       el('label', { class: 'plan-done', for: id },
-        el('input', { type: 'checkbox', id }),
+        el('input', {
+          type: 'checkbox', id, checked: plan().done.includes(step.id),
+          onchange: (e) => {
+            updatePlan((p) => { p.done = p.done.filter((s) => s !== step.id); if (e.target.checked) p.done.push(step.id); });
+            if (e.target.checked) analytics.track('plan_step_done', { step: step.id.replace('plan-', '') });
+          },
+        }),
         PLAN_CTA.done, srOnly(`: ${title}`)));
     if (next) li.style.setProperty('--seg', next === 'finish' ? 'var(--poppy)' : `var(--stop-${next})`);
     return li;
   }));
+  renderSummary();
 }
 
-function onPlanCta() {
-  analytics.track('plan_cta_clicked', { tier: state.lastRec.tier });
-  markNextStep('plan');
+// ---------- partner summary: print, save as PDF, or share by link ----------
+
+async function renderSummary() {
+  const box = $('plan-summary');
+  const rec = state.lastRec;
+  if (!box || !rec) return;
+  const p = plan();
+  const steps = planFor(rec);
+  const doneCount = steps.filter((s) => p.done.includes(s.id)).length;
+  const c = rec.costs;
+  const nodes = [
+    el('h3', { id: 'summary-title', text: 'Your plan at a glance' }),
+    el('p', { class: 'summary-verdict' },
+      el('strong', { text: `${rec.tierLabel} for ZIP ${state.zip}. ` }), focusLine(rec)),
+    el('dl', { class: 'summary-facts' },
+      el('dt', { text: 'Fuel vs. gas' }), el('dd', { text: c.savings == null ? 'Not available' : c.savings >= 0 ? `About ${money(c.savings)} a year saved` : `About ${money(c.savings)} a year more` }),
+      el('dt', { text: 'Charging, per month' }), el('dd', { text: `About ${money(c.evCost / 12)} (vs. about ${c.gasCost == null ? 'n/a' : money(c.gasCost / 12)} on gas)` }),
+      el('dt', { text: 'Range you need' }), el('dd', { text: `${num.format(rec.range.need)} miles between charges` }),
+      el('dt', { text: 'Steps done' }), el('dd', { text: `${doneCount} of ${steps.length}` })),
+  ];
+
+  if (p.shortlist.length) {
+    const data = await planTools().loadVehicles().catch(() => null);
+    const f = p.finance;
+    const label = f.mode === 'lease' ? 'Lease est. /mo' : f.mode === 'loan' ? 'Loan est. /mo' : 'Starting price';
+    const cars = (data?.vehicles || []).filter((v) => p.shortlist.includes(v.id));
+    if (cars.length) {
+      nodes.push(el('h4', { text: 'Cars on your shortlist' }),
+        el('div', { class: 'table-scroll', role: 'region', 'aria-label': 'Shortlisted cars', tabindex: '0' }, el('table', { class: 'summary-table' },
+          el('thead', {}, el('tr', {}, ['Car', 'Starting price', label, 'EPA range', 'Seats'].map((h) => el('th', { scope: 'col', text: h })))),
+          el('tbody', {}, cars.map((v) => {
+            const m = planTools().monthlyFor(v, f);
+            return el('tr', {},
+              el('th', { scope: 'row', text: `${v.make} ${v.model}` }),
+              el('td', { text: money(v.msrp) }),
+              el('td', { text: m == null ? money(v.msrp) : `~${money(m)}` }),
+              el('td', { text: `${v.rangeMin}–${v.rangeMax} mi` }),
+              el('td', { text: String(v.seats) }));
+          })))),
+        el('p', { class: 'small', text: `Estimates before taxes, fees, and incentives. Add charging (about ${money(c.evCost / 12)} a month) for the full monthly picture.` }));
+    }
+  }
+
+  const placesWithSaves = p.places.filter((pl) => (p.saved[pl.id] || []).length);
+  if (placesWithSaves.length) {
+    nodes.push(el('h4', { text: 'Chargers you saved' }),
+      el('ul', { class: 'summary-places' }, placesWithSaves.map((pl) => el('li', {},
+        el('strong', { text: `${pl.name}: ` }),
+        p.saved[pl.id].map((s) => `${s.name} (${s.miles} mi)`).join('; ')))));
+  }
+
+  const shareStatus = el('p', { class: 'tool-status', role: 'status' });
+  const linkOut = el('input', { type: 'text', class: 'share-link', readonly: true, 'aria-label': 'Share link', hidden: true });
+  const includeId = 'share-include-places';
+  nodes.push(
+    el('div', { class: 'summary-actions' },
+      el('button', { type: 'button', class: 'btn btn-go', onclick: () => { analytics.track('plan_printed'); window.print(); } }, PLAN_CTA.print),
+      el('label', { class: 'check', for: includeId }, el('input', { type: 'checkbox', id: includeId }), 'Include my saved places and the chargers near them'),
+      el('button', {
+        type: 'button', class: 'btn btn-quiet',
+        onclick: async () => {
+          const includePlaces = $(includeId).checked;
+          const url = `${location.origin}${location.pathname}#plan=${await encodeShare(sharePayload({ ...plan(), zip: state.zip, answers: state.answers }, { includePlaces }))}`;
+          linkOut.value = url;
+          linkOut.hidden = false;
+          try { await navigator.clipboard.writeText(url); shareStatus.textContent = 'Link copied. Anyone with it can see this plan.'; } catch { linkOut.select(); shareStatus.textContent = 'Copy the link below. Anyone with it can see this plan.'; }
+          analytics.track('share_link_copied', { places: includePlaces });
+        },
+      }, 'Copy a share link')),
+    linkOut, shareStatus,
+    el('p', { class: 'small', text: 'Your plan is saved on this device only. A share link carries the plan inside the link itself; nothing is stored on our servers. Saved places are left out unless you include them.' }));
+  box.replaceChildren(...nodes);
+}
+
+function onPlanCta(opts = {}) {
+  if (!opts.resumed) {
+    analytics.track('plan_cta_clicked', { tier: state.lastRec.tier });
+    markNextStep('plan');
+  }
   renderPlan(state.lastRec);
   $('plan-result').hidden = false;
   $('plan-result').scrollIntoView({ block: 'start' });
@@ -551,6 +709,8 @@ function onStartOver() {
   state.answers = {};
   state.refineSet = null;
   state.lastRec = null;
+  state.plan = null;
+  $('shared-banner').hidden = true;
   $('zip').value = '';
   show('view-landing', 'zip');
 }
@@ -583,9 +743,7 @@ function boot() {
   $('error-retry').addEventListener('click', () => show('view-landing', 'zip'));
   $('plan-cta').textContent = PLAN_CTA.button;
   $('plan-result-title').textContent = PLAN_CTA.thanksTitle;
-  $('plan-print').textContent = PLAN_CTA.print;
-  $('plan-cta').addEventListener('click', onPlanCta);
-  $('plan-print').addEventListener('click', () => { analytics.track('plan_printed'); window.print(); });
+  $('plan-cta').addEventListener('click', () => onPlanCta());
   $('analytics-toggle').addEventListener('click', () => { analytics.optOut(); renderAnalyticsToggle(); });
 
   loadStatic().then(() => {
@@ -594,6 +752,24 @@ function boot() {
   }).catch(() => {});
 
   analytics.track('landing_viewed');
+
+  // A share link opens straight into that plan; the fragment is cleared so it is not re-shared by accident.
+  const m = /^#plan=([A-Za-z0-9_-]+)$/.exec(location.hash);
+  if (m) {
+    history.replaceState(null, '', location.pathname + location.search);
+    decodeShare(m[1]).then((shared) => {
+      if (shared?.zip) { analytics.track('shared_plan_opened'); openPlan(shared, { shared: true }); }
+    });
+    return;
+  }
+  // A plan saved on this device can be picked up again from the landing page.
+  const saved = loadSaved();
+  if (saved?.zip) {
+    $('resume-text').textContent = `You have a saved EV plan for ZIP ${saved.zip}.`;
+    $('resume').hidden = false;
+    $('resume-btn').addEventListener('click', () => { analytics.track('plan_resumed'); openPlan(saved, { shared: false }); });
+    $('resume-clear').addEventListener('click', () => { clearSaved(); $('resume').hidden = true; $('zip').focus(); });
+  }
 }
 
 boot();

@@ -77,14 +77,15 @@ browser tests (accessibility, privacy payloads), and a design review.
 - Create a free **Geoapify** account and keep the API key ready (it goes into the Worker as a
   secret, never into the repo).
 - Approve deploying the **Worker** on the existing Cloudflare account.
-- Decide who refreshes vehicle prices monthly (default: a short scripted checklist in the repo).
+- ~~Decide who refreshes vehicle prices monthly~~ Decided: monthly, Tesla mid-month, every model
+  August to October. Checklist: [`price-refresh.md`](price-refresh.md).
 
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
 | Prices and lease deals change monthly | Show "starting MSRP as of <date>" with source links; lease shown as an editable estimate, never a quote |
-| Free-tier limits or a traffic spike | Per-visitor rate limits and a daily cap in the Worker; graceful "search unavailable, try a ZIP" fallback |
+| Free-tier limits or a traffic spike | 30 searches a minute per visitor in the Worker; Geoapify's free plan with no card refuses requests past its quota instead of billing; graceful "search unavailable, try a ZIP" fallback |
 | Station data goes stale | Monthly data rebuild already planned; show "stations as of <date>" |
 | Scope creep into a full trip app | Phase B is limited to one destination per trip with fast-charging stops |
 | Appearing to favor a brand | Neutral list, no featured placement, sorting by visitor filters only |

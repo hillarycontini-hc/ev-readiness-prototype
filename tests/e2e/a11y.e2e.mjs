@@ -51,6 +51,21 @@ const VIEWS = {
     await page.click('#plan-cta');
     await page.waitForSelector('#plan-result:not([hidden])');
   },
+  'plan tools open': async (page) => {
+    await completeFlow(page, '80302');
+    await page.click('#plan-cta');
+    await page.click('.tool-btn:has-text("Find chargers near work")');
+    await page.click('#tool-plan-work .tool-note .btn-link');
+    await page.fill('#zip-work', '80302');
+    await page.click('#tool-plan-work button:has-text("Use this ZIP")');
+    await page.waitForSelector('#tool-plan-work .station-item');
+    await page.locator('#tool-plan-work .btn-save').first().click();
+    await page.click('.tool-btn:has-text("Compare cars that fit")');
+    await page.waitForSelector('.car-item');
+    await page.locator('.car-item .btn-save').first().click();
+    await page.click('.tool-btn:has-text("Book a test drive")');
+    await page.waitForSelector('#tool-plan-test-drive .drive-list, #tool-plan-test-drive .tool-note');
+  },
   'results (ZIP only)': async (page) => {
     await page.fill('#zip', '10001');
     await page.click('#zip-form button[type=submit]');
