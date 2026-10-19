@@ -9,7 +9,7 @@ parks near you. Then get a printable plan for what to sort out before you buy.
 A working prototype built on free public data. No sign-up, no API keys at runtime, and
 nothing personal is stored.
 
-> Live demo: _not deployed yet_ · Run it locally in two commands (below).
+> **Live demo: https://ev-readiness-prototype.hillarycontini.workers.dev** · Or run it locally in two commands (below).
 > One-page product brief (user, problem, solution, north star, platform decisions):
 > [`docs/product-brief.md`](docs/product-brief.md)
 
