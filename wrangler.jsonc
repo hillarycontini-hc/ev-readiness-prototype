@@ -5,5 +5,7 @@
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./site"
-  }
+  },
+  // Pull-request branches deploy with `wrangler preview`, which needs this block (it can be empty).
+  "previews": {}
 }
