@@ -31,6 +31,12 @@ function plugNote(s) {
   return 'NACS plug only. Cars with a CCS port need an adapter, and not every NACS-only site is open to them, so check the network’s app first.';
 }
 
+/** What's left of the planned miles on arrival, in words that don't alarm when it's close to none. */
+function spareText(left, planned) {
+  if (left < 5) return `This leg uses nearly all of your ${num.format(planned)} planned miles, so there’s little to spare.`;
+  return `You’d arrive with about ${num.format(left)} of your ${num.format(planned)} planned miles left.`;
+}
+
 /** "20–45 min" or "1–2.5 h": the charging time for a trip's stops, short enough for a figure. */
 function chargeTimeShort(stops) {
   const [lo, hi] = CHARGE_MINUTES.map((m) => m * stops);
@@ -118,7 +124,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       el('p', { class: 'leg-key trip-gap-why' }, el('strong', { text: 'This trip doesn’t work yet. ' }), why, ' It can be saved once every leg fits.'),
       actions.length ? el('div', { class: 'tool-row trip-fixes' }, actions) : null,
       fixes.minLegMiles
-        ? el('p', { class: 'tool-note', text: `${fixes.minLegMiles} miles between charges suits a car with about ${num.format(fixes.epaNeeded)} miles of EPA range or more.${fixes.plugHelps ? ' Either plug works at your current miles, if your car can use both (most can with an adapter).' : ''}` })
+        ? el('p', { class: 'tool-note', text: `${fixes.minLegMiles} miles between charges suits a car with about ${num.format(fixes.epaNeeded)} miles of EPA range or more. It’s the least that works, so the longest leg has little to spare; more range is more comfortable.${fixes.plugHelps ? ' Either plug works at your current miles, if your car can use both (most can with an adapter).' : ''}` })
         : fixes.plugHelps ? null : el('p', { class: 'tool-note', text: 'No setting fixes this route. Try a closer destination, or a town along the way.' }));
   }
 
@@ -151,8 +157,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       // hours, and price sit together behind one disclosure.
       const detail = el('div', { class: 'trip-leg-detail', hidden: true },
         s ? el('p', { class: 'leg-key', text: `Road mile ${num.format(s.atMile)}${s.detourMiles >= 0.5 ? `, about ${s.detourMiles} mi off the route` : ', on the route'}.` }) : null,
-        s ? el('p', { class: 'leg-key', text: `You’d arrive with about ${num.format(Math.max(0, trip.legMiles - s.legMiles))} of your ${num.format(trip.legMiles)} planned miles left.` }) : null,
-        !s ? el('p', { class: 'leg-key', text: `You’d arrive with about ${num.format(trip.arriveWithMiles)} of your ${num.format(trip.legMiles)} planned miles to spare.` }) : null,
+        el('p', { class: 'leg-key', text: spareText(s ? trip.legMiles - s.legMiles : trip.arriveWithMiles, trip.legMiles) }),
         s && [s.street, s.city].some(Boolean) ? el('p', { class: 'leg-address', text: [s.street, s.city].filter(Boolean).join(', ') }) : null,
         s ? el('details', { class: 'leg-more' },
           el('summary', {}, `Plug: ${fastPlugs(s.connectors).join(' and ') || 'not listed'}`, el('span', { class: 'leg-more-hint', text: ' · hours and price' })),
