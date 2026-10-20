@@ -128,19 +128,27 @@ export function routeCandidates({ route, stations, plug = 'any', corridor = CORR
 /**
  * Choose stops from route candidates so no leg is longer than `legMiles`. Greedy: from each stop,
  * go to the farthest reachable charger, preferring, among those within the last 10% of the reach,
- * one that can reach the destination, then more fast ports.
- * Returns { ok: true, stops, finalLegMiles, arriveWithMiles }, or { ok: false, reason, stops,
- * stuckAtMile, nextAtMile } where nextAtMile is the next charger past the gap (null: none before
- * the destination).
+ * one that can reach the destination, then (with preferCcs) one with a CCS plug, then more fast
+ * ports. preferCcs is for "Either plug": a visitor who isn't sure should land where most cars can
+ * charge without an adapter, whenever that costs no extra stop.
+ * Returns { ok: true, stops, finalLegMiles, arriveWithMiles, returnMiles, returnTo }, or
+ * { ok: false, reason, stops, stuckAtMile, nextAtMile } where nextAtMile is the next charger past
+ * the gap (null: none before the destination). returnMiles is how far the drive home goes before
+ * its first fast charger (returnTo 'charger'), or the whole way home when the route has none
+ * (returnTo 'home').
  */
-export function chooseStops({ candidates, totalMiles, legMiles, maxStops = MAX_TRIP_STOPS }) {
+export function chooseStops({ candidates, totalMiles, legMiles, maxStops = MAX_TRIP_STOPS, preferCcs = false }) {
   const total = totalMiles;
   const stops = [];
   let pos = { atMile: 0, detour: 0 };
   for (;;) {
     const remaining = total - pos.atMile + pos.detour;
     if (remaining <= legMiles) {
-      return { ok: true, stops, finalLegMiles: Math.round(remaining), arriveWithMiles: Math.max(0, Math.round(legMiles - remaining)) };
+      const last = candidates[candidates.length - 1];
+      return {
+        ok: true, stops, finalLegMiles: Math.round(remaining), arriveWithMiles: Math.max(0, Math.round(legMiles - remaining)),
+        ...(last ? { returnMiles: Math.round(total - last.atMile + last.detour), returnTo: 'charger' } : { returnMiles: Math.round(total), returnTo: 'home' }),
+      };
     }
     if (stops.length >= maxStops) return { ok: false, reason: 'too_many_stops', stops, stuckAtMile: Math.round(pos.atMile), nextAtMile: null };
     const ahead = candidates.filter((c) => c.atMile > pos.atMile + 1);
@@ -152,7 +160,8 @@ export function chooseStops({ candidates, totalMiles, legMiles, maxStops = MAX_T
     const window = reach.filter((c) => c.atMile >= farthest - legMiles * 0.1);
     // A stop that reaches the destination beats one with more ports that would need another stop.
     const finishes = (c) => (total - c.atMile + c.detour <= legMiles ? 1 : 0);
-    window.sort((a, b) => (finishes(b) - finishes(a)) || (b.station.fast - a.station.fast) || (a.detour - b.detour) || (b.atMile - a.atMile));
+    const ccs = (c) => (preferCcs && (c.station.connectors || '').includes('C') ? 1 : 0);
+    window.sort((a, b) => (finishes(b) - finishes(a)) || (ccs(b) - ccs(a)) || (b.station.fast - a.station.fast) || (a.detour - b.detour) || (b.atMile - a.atMile));
     const pick = window[0];
     stops.push({
       ...pick.station,
@@ -172,7 +181,7 @@ export function chooseStops({ candidates, totalMiles, legMiles, maxStops = MAX_T
  */
 export function planStops({ route, stations, legMiles, plug = 'any', corridor = CORRIDOR_MILES, maxStops = MAX_TRIP_STOPS }) {
   const candidates = routeCandidates({ route, stations, plug, corridor });
-  return chooseStops({ candidates, totalMiles: route.miles, legMiles, maxStops });
+  return chooseStops({ candidates, totalMiles: route.miles, legMiles, maxStops, preferCcs: plug === 'any' });
 }
 
 /**
@@ -184,11 +193,14 @@ export function suggestFixes({ route, stations, legMiles, plug = 'any' }) {
   const candidates = routeCandidates({ route, stations, plug });
   let minLegMiles = null;
   for (let m = Math.floor(legMiles / 5) * 5 + 5; m <= LEG_MAX; m += 5) {
-    if (chooseStops({ candidates, totalMiles: route.miles, legMiles: m }).ok) { minLegMiles = m; break; }
+    if (chooseStops({ candidates, totalMiles: route.miles, legMiles: m, preferCcs: plug === 'any' }).ok) { minLegMiles = m; break; }
   }
-  const plugHelps = plug !== 'any' && chooseStops({ candidates: routeCandidates({ route, stations, plug: 'any' }), totalMiles: route.miles, legMiles }).ok;
+  const plugHelps = plug !== 'any' && chooseStops({ candidates: routeCandidates({ route, stations, plug: 'any' }), totalMiles: route.miles, legMiles, preferCcs: true }).ok;
   return { minLegMiles, plugHelps, epaNeeded: minLegMiles ? Math.ceil(minLegMiles / ROAD_TRIP_SHARE / 5) * 5 : null };
 }
+
+/** A NACS-only station: cars with a CCS port need an adapter, and not every such site is open to them. */
+export const nacsOnly = (s) => (s.connectors || '').includes('N') && !(s.connectors || '').includes('C');
 
 /** "6 h 50 min" style drive time. */
 export function durationText(minutes) {

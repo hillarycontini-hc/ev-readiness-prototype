@@ -574,6 +574,16 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .trip-cost .trip-cost-line { margin: 0; }
 .trip-cost .trip-help { margin-top: 0; }
 .field-note { margin: 0; color: var(--row-sub); font-size: var(--t-small); }
+/* The answer leads the result: one sentence in the row-label voice. */
+.trip-answer { margin: 0 0 0.9rem; max-width: 40ch; font: 700 1.25rem/1.3 var(--text); color: #fff; }
+.plug-chip {
+  display: inline-block; margin-right: 0.5rem; padding: 0.05rem 0.45rem; border-radius: 3px; vertical-align: 0.1em;
+  box-shadow: inset 0 0 0 1.5px #fff; color: #fff; font: 700 0.75rem/1.4 var(--text); letter-spacing: 0.04em; text-transform: uppercase;
+}
+.trip-warn { margin: 0 0 0.75rem; }
+.trip-warn .tool-row { margin: 0.5rem 0 0; }
+.trip-warn strong, .trip-home strong { color: #fff; }
+.trip-result .tool-note, .trip-fields .tool-note, .trip-gap, .trip-cost, .trip-warn, .trip-leg-detail { max-width: 68ch; }
 .trip-gap { margin: 0 0 0.5rem; max-width: 46rem; }
 .trip-gap .trip-gap-why { margin: 0; }
 .trip-gap .trip-gap-why strong { color: var(--fig); }

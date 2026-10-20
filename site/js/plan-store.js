@@ -86,6 +86,8 @@ export function cleanTrip(t) {
     kwh100: num(t.kwh100, 10, 80, null), // the planned car's efficiency, for the cost estimate
     finalLegMiles: num(t.finalLegMiles, 0, LEG_MAX, 0),
     arriveWithMiles: num(t.arriveWithMiles, 0, LEG_MAX, 0),
+    returnMiles: num(t.returnMiles, 0, 3000, null), // first fast charger on the way back, or home
+    returnTo: ['charger', 'home'].includes(t.returnTo) ? t.returnTo : null,
     stops,
   };
 }

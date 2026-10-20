@@ -186,3 +186,24 @@ test('suggested fixes: the fewest miles between charges that work, and whether e
   assert.equal(plugFix.plugHelps, true, 'the NACS stop at 160 bridges the gap');
   assert.equal(suggestFixes({ route: straightRoute(900), stations: [], legMiles: 200 }).minLegMiles, null, 'no setting fixes a route with no chargers beyond 500 miles');
 });
+
+test('with "Either plug", a CCS stop wins over a NACS-only one nearby, but never at the cost of a stop', () => {
+  const route = straightRoute(300);
+  const nacs = station(195, { fast: 20, connectors: 'N' });
+  const ccs = station(185, { fast: 4, connectors: 'C' });
+  assert.equal(planStops({ route, stations: [nacs, ccs], legMiles: 200 }).stops[0].id, ccs.id, 'both finish the trip; the CCS one is chosen');
+  assert.equal(planStops({ route, stations: [nacs, ccs], legMiles: 200, plug: 'nacs' }).stops[0].id, nacs.id, 'a NACS car keeps the bigger site');
+  // Only the NACS stop lets the trip finish in one stop: it wins.
+  const late = station(110, { fast: 4, connectors: 'C' });
+  const finisher = station(120, { fast: 20, connectors: 'N' });
+  const plan = planStops({ route: straightRoute(310), stations: [late, finisher], legMiles: 200 });
+  assert.deepEqual(plan.stops.map((x) => x.id), [finisher.id]);
+});
+
+test('the drive home: how far back to the last fast charger on the route, or all the way home', () => {
+  const plan = planStops({ route: straightRoute(300), stations: [station(150), station(260)], legMiles: 200 });
+  assert.equal(plan.returnTo, 'charger');
+  assert.equal(plan.returnMiles, 40, 'the charger at mile 260 is 40 miles back from the destination');
+  const none = planStops({ route: straightRoute(150), stations: [], legMiles: 200 });
+  assert.deepEqual([none.returnTo, none.returnMiles], ['home', 150]);
+});

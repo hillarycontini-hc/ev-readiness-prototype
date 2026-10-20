@@ -11,8 +11,8 @@ import * as analytics from './analytics.js';
 import { chevron, el, externalLink as linkTo, num, srOnly, usd, usd10 as money } from './dom.js';
 import { createPlanTools } from './plan-tools.js';
 import { clearSaved, decodeShare, emptyPlan, encodeShare, loadSaved, savePlan, sharePayload } from './plan-store.js';
-import { chargeTimeText, durationText } from './trip.js';
-import { stopFacts, stopsText, tripCostFor } from './trip-tool.js';
+import { durationText } from './trip.js';
+import { chargeTimeShort, homeText, stopFacts, stopsText, tripCostFor } from './trip-tool.js';
 
 const $ = (id) => document.getElementById(id);
 // Questions that apply to this visitor (work charging only when home charging is uncertain).
@@ -689,10 +689,11 @@ async function renderSummary() {
     nodes.push(el('h4', { text: 'Trips you planned' }),
       el('ul', { class: 'summary-places summary-trips' }, p.trips.map((t) => el('li', {},
         el('strong', { text: `${t.from.name} to ${t.to.name}` }),
-        el('span', { class: 'small summary-trip-facts', text: `${num.format(Math.round(t.miles))} road miles one way, about ${durationText(t.minutes)} of driving${t.stops.length ? ` plus ${chargeTimeText(t.stops.length)} of charging (est.)` : ''}. ${stopsText(t.stops.length)}, planning up to ${t.legMiles} miles between charges.` }),
+        el('span', { class: 'small summary-trip-facts', text: `${num.format(Math.round(t.miles))} road miles one way, about ${durationText(t.minutes)} of driving${t.stops.length ? ` plus about ${chargeTimeShort(t.stops.length)} of charging` : ''}. ${stopsText(t.stops.length)}, planning up to ${t.legMiles} miles between charges.` }),
         ((cost) => (cost ? el('span', { class: 'small summary-trip-facts', text: `Electricity, est.: ${cost.figure}${cost.gas ? `; the same drive on gas: about $${cost.gas}` : ''}.` }) : null))(tripCostFor(t, { rec, meta: state.meta, stateName: state.zipRec?.s })),
+        ((home) => (home ? el('span', { class: 'small summary-trip-facts', text: `Getting home: ${home}` }) : null))(homeText(t, t.to.park ? rec.destinations.find((d) => d.code === t.to.park)?.nearestFastToPark ?? null : null)),
         t.stops.length ? el('ol', { class: 'summary-chargers' }, t.stops.map((s) => el('li', {},
-          el('span', { class: 'summary-charger-name', text: `Mile ${num.format(s.atMile)}: ${s.name}` }),
+          el('span', { class: 'summary-charger-name', text: `Road mile ${num.format(s.atMile)}: ${s.name}` }),
           el('span', { class: 'small', text: [[s.street, s.city].filter(Boolean).join(', '), stopFacts(s)].filter(Boolean).join(' · ') })))) : null))),
       el('p', { class: 'small', text: 'Fast chargers from the U.S. Department of Energy station list. Check that each one is working on its network’s app before you go.' }));
   }

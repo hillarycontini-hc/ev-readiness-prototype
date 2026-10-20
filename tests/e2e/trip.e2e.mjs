@@ -75,9 +75,13 @@ test('plan a trip to the park, step through it by keyboard, and save it', async 
   await open.locator('.leg-more summary').click();
   assert.match(await open.locator('.leg-more').innerText(), /Hours:[\s\S]*Price:/);
   // Time and cost estimates, labeled.
-  const totals = await page.locator('#tool-plan-park .trip-totals').innerText();
-  assert.match(totals, /Charging time, est\.[\s\S]*Electricity, est\./);
-  assert.match(await page.locator('#tool-plan-park .trip-cost-line').innerText(), /^About \$\d+[–\d]* of electricity, vs about \$\d+ of gas/);
+  // The answer leads; two figures frame it; time and money share one line.
+  assert.match(await page.locator('#tool-plan-park .trip-answer').innerText(), /^1 fast-charging stop: Pueblo \(road mile \d+\)\.$/);
+  assert.equal(await page.locator('#tool-plan-park .trip-totals dd').count(), 2);
+  assert.match(await page.locator('#tool-plan-park .trip-cost-line').innerText(), /^Plus about 20–45 min of charging\. About \$\d+[–\d]* of electricity, vs about \$\d+ of gas/);
+  // With "Either plug", the planner picks a CCS stop here rather than the NACS-only site nearby.
+  assert.equal(await page.locator('#tool-plan-park .plug-chip').count(), 0);
+  assert.equal(await page.locator('#tool-plan-park .trip-warn').count(), 0);
   await page.click('#tool-plan-park .trip-cost-note summary');
   assert.match(await page.locator('#tool-plan-park .trip-cost-note').innerText(), /Electricity for this drive: about \$\d+[–\d]*[\s\S]*gas car: about \$\d+/);
   assert.match(await legs.last().innerText(), /Arrive: Great Sand Dunes/);
@@ -88,6 +92,7 @@ test('plan a trip to the park, step through it by keyboard, and save it', async 
   await next.focus();
   for (let i = 1; i < n; i++) await page.keyboard.press('Enter');
   assert.equal(await legs.last().getAttribute('aria-current'), 'step');
+  assert.match(await legs.last().locator('.trip-home').innerText(), /^Getting home: The first fast charger on the way back is about \d+ miles away, more than the \d+ planned miles you’d have left\. Charge near Great Sand Dunes/);
   assert.equal(await next.isDisabled(), true);
   assert.equal(await page.evaluate(() => document.activeElement.textContent), 'Previous leg');
   assert.match(await page.locator('#tool-plan-park .trip-step-status').innerText(), new RegExp(`Leg ${n} of ${n}`));
@@ -108,7 +113,8 @@ test('plan a trip to the park, step through it by keyboard, and save it', async 
   const summary = await page.locator('#plan-summary').innerText();
   assert.match(summary, /Trips you planned/);
   assert.match(summary, /ZIP 80302 to Great Sand Dunes/);
-  assert.match(summary, /Mile \d+: /);
+  assert.match(summary, /Road mile \d+: /);
+  assert.match(summary, /Getting home: /);
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('evrc-plan-v1')));
   assert.equal(stored.trips.length, 1);
   assert.equal(stored.trips[0].step, 'plan-park');
@@ -192,6 +198,26 @@ test('a trip that does not work explains why and offers a one-tap fix', async ()
   assert.equal(await page.inputValue('#trip-plan-park-leg'), '110', 'the fix sets the field it changed');
   assert.equal(await page.locator('#tool-plan-park .trip-gap').count(), 0);
   assert.equal(await page.evaluate(() => document.activeElement.className), 'trip-title', 'focus moves to the working trip');
+  await context.close();
+});
+
+test('a NACS-only stop is tagged and flagged, with a one-tap CCS-only plan', async () => {
+  const context = await browser.newContext();
+  // The only fast charger on the way: a NACS-only site in Pueblo.
+  await context.route('**/data/stations/*.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(r.request().url().endsWith('/76_-210.json') ? [[900001, 'Pueblo NACS Site', '1 Main St', 'Pueblo', 38.26, -104.61, 0, 8, 'Network X', 'N', '24 hours daily', '']] : []) }));
+  const { page, calls } = await openPlan(context);
+  await page.click('.tool-btn:has-text("Plan the trip")');
+  await page.click('#tool-plan-park .trip-plan-btn');
+  await page.waitForSelector('#tool-plan-park .trip-warn');
+  assert.equal((await page.locator('#tool-plan-park .trip-leg .plug-chip').textContent()), 'NACS only');
+  assert.match(await page.locator('#tool-plan-park .trip-warn').innerText(), /^Check your car’s plug\. 1 stop has only a NACS plug/);
+  const before = calls.length;
+  await page.click('#tool-plan-park .trip-warn button:has-text("Plan with CCS only")');
+  await page.waitForSelector('#tool-plan-park .trip-gap');
+  assert.equal(calls.length, before, 'replanning reuses the route');
+  assert.equal(await page.inputValue('#trip-plan-park-plug'), 'ccs', 'the plug field shows what changed');
+  assert.match(await page.locator('#tool-plan-park .trip-gap-why').innerText(), /no CCS fast charger along the 262-mile route/);
+  assert.ok(await page.locator('#tool-plan-park .trip-fix:has-text("Plan with either plug")').count(), 'and the way back is one tap too');
   await context.close();
 });
 
