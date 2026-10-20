@@ -110,7 +110,8 @@ async function geocode(request, url, env) {
 
   if (!env.GEOAPIFY_KEY) return json({ error: 'search_unavailable' }, 503);
   // Fail closed: with the key set, a missing limiter (a preview, a renamed binding) refuses.
-  if (!env.SEARCH_LIMITER) return json({ error: 'search_unavailable' }, 503);
+  // Its own code, so a deploy check can tell it apart from a missing key.
+  if (!env.SEARCH_LIMITER) return json({ error: 'limiter_missing' }, 503);
   const { success } = await env.SEARCH_LIMITER.limit({ key: await visitorKey(request) });
   if (!success) return json({ error: 'rate_limited' }, 429);
 
@@ -163,7 +164,7 @@ async function route(request, url, env) {
   // Routing costs more than search, so it has its own, tighter per-visitor limit, plus a
   // site-wide one: the same-origin check stops other sites' pages, not scripts, so a few
   // addresses must not be able to drain the shared quota. Both fail closed if missing.
-  if (!env.ROUTE_LIMITER || !env.ROUTE_GLOBAL_LIMITER) return json({ error: 'route_unavailable' }, 503);
+  if (!env.ROUTE_LIMITER || !env.ROUTE_GLOBAL_LIMITER) return json({ error: 'limiter_missing' }, 503);
   const { success } = await env.ROUTE_LIMITER.limit({ key: await visitorKey(request) });
   if (!success) return json({ error: 'rate_limited' }, 429);
   const site = await env.ROUTE_GLOBAL_LIMITER.limit({ key: 'all-visitors' });
