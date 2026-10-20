@@ -190,9 +190,18 @@ test('analytics gets trip events with coarse values only', async () => {
   assert.equal(planned.dest, 'park');
   assert.equal(planned.result, 'ok');
   assert.equal(trip.find((e) => e.event === 'trip_step').properties.direction, 'next');
+  // Names can be searched for anywhere in the payload. Numbers are checked against what our code
+  // sends (non-$ properties): PostHog's own timestamps and random ids can contain any digits.
   const raw = JSON.stringify(events);
-  for (const secret of ['Great Sand Dunes', '37.73', '-105.51', '40.01', '80302', '262', stopName.replace(/^Stop 1: /, '')]) {
+  for (const secret of ['Great Sand Dunes', '80302', stopName.replace(/^Stop 1: /, '')]) {
     assert.ok(!raw.includes(secret), `analytics leaked ${secret}`);
+  }
+  const ours = JSON.stringify(events.map((e) => Object.fromEntries(Object.entries(e.properties || {}).filter(([k]) => !k.startsWith('$')))));
+  for (const secret of ['37.73', '-105.51', '40.01', '-105.27', '262', '245']) {
+    assert.ok(!ours.includes(secret), `analytics leaked ${secret}`);
+  }
+  for (const e of trip) {
+    for (const [k, v] of Object.entries(e.properties)) if (!k.startsWith('$')) assert.ok(typeof v !== 'number' || v <= 3, `only small counts go out: ${e.event} ${k}=${v}`);
   }
   await context.close();
 });
