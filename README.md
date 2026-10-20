@@ -67,7 +67,9 @@ reasoning shown might.
      a place; the road route comes from Geoapify through the site's Worker, and fast-charging
      stops come from the same static NREL station files, chosen so no leg is longer than your
      miles between charges (70% of a shortlisted car's lowest EPA range, editable). Each trip
-     shows estimated charging time and electricity cost next to the same drive on gas. Step
+     leads with its answer (how many stops, and where), shows estimated charging time and
+     electricity cost next to the same drive on gas, flags any stop with only a NACS plug, and
+     says whether you'd have enough charge to reach a fast charger on the way home. Step
      through the legs with Previous and Next, then save up to three trips.
    - **Test drives.** Links to each brand's own booking page or dealer locator.
    - **A partner summary** to print, save as a PDF, or share by link, with your shortlist,

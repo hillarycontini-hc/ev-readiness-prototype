@@ -69,7 +69,7 @@ const trip = (over = {}) => ({
   id: 'trip-abc123', step: 'plan-park',
   from: { name: 'Center of ZIP 80302', lat: 40.0, lon: -105.3 },
   to: { name: 'Rocky Mountain National Park', detail: 'CO', lat: 40.35, lon: -105.68, park: 'romo' },
-  miles: 180.4, minutes: 200, legMiles: 165, plug: 'ccs', kwh100: 31, finalLegMiles: 120, arriveWithMiles: 45,
+  miles: 180.4, minutes: 200, legMiles: 165, plug: 'ccs', kwh100: 31, finalLegMiles: 120, arriveWithMiles: 45, returnMiles: 60, returnTo: 'charger',
   stops: [tripStop(1001, 60)],
   ...over,
 });
@@ -106,5 +106,7 @@ test('trips are validated field by field: at most 3, at most 12 stops, stops in 
   assert.equal(p.trips[0].to.name.length, 120);
   assert.equal(p.trips[0].to.park, null);
   assert.equal(sanitizePlan({ v: 1, trips: [trip({ kwh100: 999 })] }).trips[0].kwh100, null, 'an impossible efficiency is dropped');
+  const odd = sanitizePlan({ v: 1, trips: [trip({ returnMiles: -5, returnTo: 'moon' })] }).trips[0];
+  assert.deepEqual([odd.returnMiles, odd.returnTo], [null, null], 'a bad drive-home value is dropped, not trusted');
   assert.ok(!('extra' in p.trips[0].to));
 });

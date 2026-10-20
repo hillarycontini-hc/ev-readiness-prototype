@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chargeTimeText, cleanRoute, corridorCells, durationText, legMilesFromRange, milesBetween, planStops, stopsBucket, suggestFixes, tripCost } from '../site/js/trip.js';
+import { cleanRoute, corridorCells, durationText, legMilesFromRange, milesBetween, planStops, stopsBucket, suggestFixes, tripCost } from '../site/js/trip.js';
 
 // A straight east-west road along latitude 40 starting near Denver: one point every ~1.06 miles.
 const MI_PER_DEG_LON = milesBetween(40, -105, 40, -104);
@@ -136,10 +136,18 @@ test('drive time and stop buckets', () => {
   assert.deepEqual([0, 1, 2, 3, 4, 12].map(stopsBucket), ['0', '1', '2-3', '2-3', '4+', '4+']);
 });
 
-test('charging time is a stated range per stop', () => {
-  assert.equal(chargeTimeText(0), null);
-  assert.equal(chargeTimeText(1), '20 min to 45 min');
-  assert.equal(chargeTimeText(2), '40 min to 1 h 30 min');
+test('the answer names the stops, and the drive home is judged against the miles left', async () => {
+  const { answerText, homeText } = await import('../site/js/trip-tool.js');
+  const stop = (city, atMile) => ({ name: `Site in ${city}`, city, atMile });
+  const base = { to: { name: 'The Park' }, legMiles: 210, arriveWithMiles: 98 };
+  assert.equal(answerText({ ...base, stops: [] }), 'No charging stop needed: you’d arrive with about 98 of your 210 planned miles to spare.');
+  assert.equal(answerText({ ...base, stops: [stop('Pueblo', 152)] }), '1 fast-charging stop: Pueblo (road mile 152).');
+  assert.equal(answerText({ ...base, stops: [stop('Denver', 40), stop('Pueblo', 152)] }), '2 fast-charging stops: Denver (road mile 40) and Pueblo (road mile 152).');
+  assert.equal(answerText({ ...base, stops: [1, 2, 3, 4].map((i) => stop(`Town ${i}`, i * 100)) }), '4 fast-charging stops, the first at Town 1 (road mile 100).');
+  assert.match(homeText({ ...base, stops: [], returnMiles: 107, returnTo: 'charger' }, 25), /about 107 miles away, more than the 98 planned miles you’d have left\. Charge near The Park before heading back\. The nearest fast charger to the park is about 25 miles/);
+  assert.match(homeText({ ...base, stops: [], returnMiles: 60, returnTo: 'charger' }), /about 60 miles from The Park, and the 98 planned miles you’d have left reach it\.$/);
+  assert.match(homeText({ ...base, stops: [], returnMiles: 90, returnTo: 'home' }), /no fast charger on this route, but the 98 planned miles you’d have left cover the 90 miles home/);
+  assert.equal(homeText({ ...base, stops: [], returnMiles: null }), null, 'an older saved trip without it says nothing');
 });
 
 test('trip cost: first leg at the home rate, the rest at fast chargers, EPA to +30%', () => {

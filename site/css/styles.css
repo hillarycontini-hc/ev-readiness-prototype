@@ -606,7 +606,11 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   .station-item, .car-item { grid-template-columns: minmax(0, 1fr) auto; }
   .trip-leg { grid-template-columns: 2.5rem minmax(0, 1fr); }
   .trip-leg .row-figure { grid-column: 2; text-align: left; padding: 0.35rem 0 0; }
-  .trip-position { min-width: 0; }
+  /* Previous and Next share a row, the counter sits above them, Skip below: no stacked mis-taps. */
+  .trip-stepper { display: grid; grid-template-columns: 1fr 1fr; }
+  .trip-position { min-width: 0; grid-column: 1 / -1; order: -1; text-align: left; }
+  .trip-stepper .btn-link { grid-column: 1 / -1; justify-self: start; }
+  .trip-stepper .btn { padding-inline: 0.6rem; font-size: var(--t-small); }
   .trip-totals { gap: 0.4rem 1.25rem; }
   .trip-totals dd { font-size: 1.75rem; }
   .row-figure { white-space: normal; }

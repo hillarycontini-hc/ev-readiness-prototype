@@ -60,7 +60,9 @@ it flagged both.
   form. The car choice's EPA range is tied to the select with `aria-describedby`. When a trip
   doesn't work, focus still moves to the trip heading, the reason is the first line under the
   totals, the fixes are real buttons, and the partial list is a `<details>` disclosure; axe scans
-  this state too.
+  this state too. The "NACS only" tag is a word, not a color, and the "Check your car's plug" line
+  and "Getting home" sentence are plain text in reading order. On phones the step-through counter
+  is above Previous and Next, which share a row.
   Leg figures carry "on leg N" in screen-reader text. The current leg is shown by a ring, the
   open details, and the counter as well as the filled station, so color isn't the only signal.
   On phones an open tool widens toward the plan's line (fixed: at 320 px the trip form was

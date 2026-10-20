@@ -48,13 +48,6 @@ export function legMilesFromRange(epaMiles) {
 // 20 to 45 minutes. A stated assumption, shown as a range; it depends on the car and the charger.
 export const CHARGE_MINUTES = [20, 45];
 
-/** "About 40 min to 1 h 30 min" of charging for `stops` stops, or null with none. */
-export function chargeTimeText(stops) {
-  if (!stops) return null;
-  const [lo, hi] = CHARGE_MINUTES.map((m) => m * stops);
-  return `${durationText(lo)} to ${durationText(hi)}`;
-}
-
 // Cold weather and highway speeds can use 20-30% more energy than the EPA rating.
 export const EXTRA_USE = 0.3;
 const round5 = (x) => Math.max(5, Math.round(x / 5) * 5);
