@@ -4,7 +4,7 @@
 // Rendering uses textContent only.
 
 import { el, num, srOnly } from './dom.js';
-import { SearchUnavailable, connectorNames, fastStationsAlong, fetchRoute } from './places.js';
+import { SearchUnavailable, connectorNames, fastStationsAlong, fetchRoute, milesBetween, searchPlaces } from './places.js';
 import { ASSUMPTIONS, FLEET_KEY } from './logic.js';
 import { MAX_SAVED_TRIPS } from './plan-store.js';
 import { CHARGE_MINUTES, EXTRA_USE, LEG_MAX, LEG_MIN, MAX_TRIP_STOPS, PLUGS, durationText, legMilesFromRange, nacsOnly, planStops, stopsBucket, suggestFixes, tripCost } from './trip.js';
@@ -131,6 +131,21 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       const p = parks.find((x) => x.code === d.code);
       return p && Number.isFinite(p.lat) ? { name: d.name, detail: `About ${num.format(d.oneWayMiles)} miles away (estimated)`, where: [p.states, 'National Park Service'].filter(Boolean).join(' · '), lat: p.lat, lon: p.lon, park: d.code } : null;
     }).filter(Boolean);
+  }
+
+  // The Park Service publishes one point per park, and for some parks it is far from any road
+  // (Great Sand Dunes' sits in the dunes). When that point can't be routed to, aim for the park's
+  // visitor center, found through our own search, if it is within 30 miles of the point.
+  async function routeTo(from, to) {
+    try {
+      return { route: await fetchRoute(from, to), dest: to };
+    } catch (err) {
+      if (!(err instanceof SearchUnavailable) || err.code !== 'no_route' || !to.park) throw err;
+      const found = await searchPlaces(`${to.name} visitor center`, { lat: to.lat, lon: to.lon }).catch(() => []);
+      const center = found.find((p) => milesBetween(to.lat, to.lon, p.lat, p.lon) <= 30);
+      if (!center) throw err;
+      return { route: await fetchRoute(from, center), dest: { ...to, lat: center.lat, lon: center.lon, viaVisitorCenter: true } };
+    }
   }
 
   const asOf = () => (ctx.meta?.fetchedAt ? new Date(ctx.meta.fetchedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : null);
@@ -415,14 +430,17 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       const key = `${ui.from.lat},${ui.from.lon}|${ui.to.lat},${ui.to.lon}`;
       let route;
       let stations;
-      if (cache?.key === key) ({ route, stations } = cache);
+      let dest = ui.to;
+      if (cache?.key === key) ({ route, stations, dest } = cache);
       else try {
-        route = await fetchRoute(ui.from, ui.to);
+        ({ route, dest } = await routeTo(ui.from, ui.to));
       } catch (err) {
         const code = err instanceof SearchUnavailable ? err.code : 'unavailable';
         status.textContent = {
           rate_limited: 'Too many trips planned at once. Wait a minute and try again.',
-          no_route: 'We couldn’t find a road route there. Try a nearby town instead.',
+          no_route: ui.to.park
+            ? 'We couldn’t find a road to this park’s map point or its visitor center. Search for the park entrance or a nearby town instead.'
+            : 'We couldn’t find a road route there. Try a nearby town instead.',
           too_far: 'That’s more than about 1,000 miles away. The planner handles one destination within a long day or two of driving.',
           too_close: 'The start and destination are right next to each other, so no charging stop is needed.',
         }[code] || 'Route planning isn’t available right now. Please try again later.';
@@ -430,13 +448,17 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       }
       if (!stations) {
         try { stations = await fastStationsAlong(route.points); } catch { status.textContent = 'We couldn’t load charger data. Please try again.'; return; }
-        cache = { key, route, stations };
+        cache = { key, route, stations, dest };
       }
       const plan = planStops({ route, stations, legMiles: ui.legMiles, plug: ui.plug });
       lastTrip = {
         id: tripId(), step: stepId,
         from: { name: ui.from.name, lat: ui.from.lat, lon: ui.from.lon },
-        to: { name: ui.to.name, detail: ui.to.where ?? ui.to.detail ?? '', lat: ui.to.lat, lon: ui.to.lon, park: ui.to.park || null },
+        to: {
+          name: ui.to.name,
+          detail: [ui.to.where ?? ui.to.detail ?? '', dest.viaVisitorCenter ? 'to the visitor center' : ''].filter(Boolean).join(' · '),
+          lat: dest.lat, lon: dest.lon, park: ui.to.park || null,
+        },
         miles: route.miles, minutes: route.minutes, legMiles: ui.legMiles, plug: ui.plug,
         kwh100: Number.isFinite(ui.basis?.kwh100) ? ui.basis.kwh100 : null,
         finalLegMiles: plan.finalLegMiles || 0, arriveWithMiles: plan.arriveWithMiles || 0,
