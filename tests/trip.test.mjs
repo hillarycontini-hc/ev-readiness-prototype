@@ -152,3 +152,13 @@ test('trip cost: first leg at the home rate, the rest at fast chargers, EPA to +
   assert.equal(noStop.gas, null, 'no gas price, no comparison');
   assert.equal(noStop.low, 5, 'never shown as $0');
 });
+
+test('a stop that can finish the trip beats a bigger one that would need another stop', () => {
+  // 262 miles, 110 per leg. From mile 108, both 152 (12 ports) and 157 (2 ports) are in reach.
+  // Only 157 leaves 105 miles, inside one leg; 152 would leave 110 plus the detour.
+  const route = straightRoute(262);
+  const stations = [station(108), station(152, { fast: 12, off: 0.5 }), station(157, { fast: 2 })];
+  const plan = planStops({ route, stations, legMiles: 110 });
+  assert.equal(plan.ok, true);
+  assert.deepEqual(plan.stops.map((s) => s.atMile), [108, 157]);
+});
