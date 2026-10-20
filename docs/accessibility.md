@@ -57,7 +57,10 @@ it flagged both.
   NACS"), as are "What are CCS and NACS?" and "How we estimated this": each opens and closes by
   tap, click, Enter, or Space, with a visible focus ring and a 44 px target. "Change start" is a
   button with `aria-expanded` that opens a labelled "Start from" radio group and its own search
-  form. The car choice's EPA range is tied to the select with `aria-describedby`.
+  form. The car choice's EPA range is tied to the select with `aria-describedby`. When a trip
+  doesn't work, focus still moves to the trip heading, the reason is the first line under the
+  totals, the fixes are real buttons, and the partial list is a `<details>` disclosure; axe scans
+  this state too.
   Leg figures carry "on leg N" in screen-reader text. The current leg is shown by a ring, the
   open details, and the counter as well as the filled station, so color isn't the only signal.
   On phones an open tool widens toward the plan's line (fixed: at 320 px the trip form was

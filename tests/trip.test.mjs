@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chargeTimeText, cleanRoute, corridorCells, durationText, legMilesFromRange, milesBetween, planStops, stopsBucket, tripCost } from '../site/js/trip.js';
+import { chargeTimeText, cleanRoute, corridorCells, durationText, legMilesFromRange, milesBetween, planStops, stopsBucket, suggestFixes, tripCost } from '../site/js/trip.js';
 
 // A straight east-west road along latitude 40 starting near Denver: one point every ~1.06 miles.
 const MI_PER_DEG_LON = milesBetween(40, -105, 40, -104);
@@ -161,4 +161,28 @@ test('a stop that can finish the trip beats a bigger one that would need another
   const plan = planStops({ route, stations, legMiles: 110 });
   assert.equal(plan.ok, true);
   assert.deepEqual(plan.stops.map((s) => s.atMile), [108, 157]);
+});
+
+test('a gap says where the next charger is, or that there is none before the destination', () => {
+  const some = planStops({ route: straightRoute(600), stations: [station(150), station(450)], legMiles: 200 });
+  assert.equal(some.nextAtMile, 450);
+  const none = planStops({ route: straightRoute(300), stations: [station(100)], legMiles: 120 });
+  assert.equal(none.stuckAtMile, 100);
+  assert.equal(none.nextAtMile, null);
+});
+
+test('suggested fixes: the fewest miles between charges that work, and whether either plug would', () => {
+  const route = straightRoute(400);
+  // CCS stations every 90 miles; a NACS-only one at 160.
+  const stations = [station(90, { connectors: 'C' }), station(160, { connectors: 'N' }), station(180, { connectors: 'C' }), station(270, { connectors: 'C' }), station(330, { connectors: 'C' })];
+  const fixes = suggestFixes({ route, stations, legMiles: 80, plug: 'ccs' });
+  // Stops sit about 90 road miles apart (a little over, from the drawn line), so 95 is the fewest that works.
+  assert.equal(fixes.minLegMiles, 95);
+  assert.ok(planStops({ route, stations, legMiles: 95, plug: 'ccs' }).ok);
+  assert.ok(!planStops({ route, stations, legMiles: 90, plug: 'ccs' }).ok, 'and 5 fewer does not');
+  assert.equal(fixes.epaNeeded, 140, '95 / 0.7 = 135.7, up to the next 5');
+  assert.equal(fixes.plugHelps, false, 'at 80 miles even either plug leaves a gap');
+  const plugFix = suggestFixes({ route: straightRoute(240), stations: [station(80, { connectors: 'C' }), station(160, { connectors: 'N' })], legMiles: 90, plug: 'ccs' });
+  assert.equal(plugFix.plugHelps, true, 'the NACS stop at 160 bridges the gap');
+  assert.equal(suggestFixes({ route: straightRoute(900), stations: [], legMiles: 200 }).minLegMiles, null, 'no setting fixes a route with no chargers beyond 500 miles');
 });

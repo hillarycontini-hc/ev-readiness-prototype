@@ -167,6 +167,34 @@ test('saved trips are capped at three and can be viewed offline and removed', as
   await context.close();
 });
 
+test('a trip that does not work explains why and offers a one-tap fix', async () => {
+  const context = await browser.newContext();
+  const { page, calls } = await openPlan(context);
+  await page.click('.tool-btn:has-text("Plan the trip")');
+  await page.waitForSelector('#tool-plan-park .trip-plan-btn');
+  await page.fill('#trip-plan-park-leg', '60');
+  await page.locator('#trip-plan-park-leg').dispatchEvent('change');
+  await page.selectOption('#trip-plan-park-plug', 'ccs');
+  await page.click('#tool-plan-park .trip-plan-btn');
+  await page.waitForSelector('#tool-plan-park .trip-gap');
+  const why = await page.locator('#tool-plan-park .trip-gap-why').innerText();
+  assert.match(why, /^This trip doesn’t work yet\. There’s no CCS fast charger for the last \d+ miles, from road mile \d+ near Pueblo to Great Sand Dunes[\s\S]*can be saved once every leg fits/);
+  assert.equal(await page.locator('#tool-plan-park .trip-save').count(), 0, 'a trip that does not work cannot be saved');
+  assert.equal(await page.locator('#tool-plan-park .trip-partial').getAttribute('open'), null, 'the partial list starts folded');
+  const fix = page.locator('#tool-plan-park .trip-fix');
+  assert.equal(await fix.count(), 1, 'no plug button when a plug change would not help');
+  assert.equal(await fix.innerText(), 'Plan with 110 miles between charges');
+  assert.match(await page.locator('#tool-plan-park .trip-gap .tool-note').innerText(), /about 160 miles of EPA range/);
+  const before = calls.length;
+  await fix.click();
+  await page.waitForSelector('#tool-plan-park .trip-save');
+  assert.equal(calls.length, before, 'the fix reuses the route: no new routing call');
+  assert.equal(await page.inputValue('#trip-plan-park-leg'), '110', 'the fix sets the field it changed');
+  assert.equal(await page.locator('#tool-plan-park .trip-gap').count(), 0);
+  assert.equal(await page.evaluate(() => document.activeElement.className), 'trip-title', 'focus moves to the working trip');
+  await context.close();
+});
+
 test('the start can be changed to a searched place', async () => {
   const context = await browser.newContext();
   await context.route('**/api/geocode*', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ results: [{ name: 'Longmont', detail: 'Longmont, CO, United States', lat: 40.1672, lon: -105.1019, type: 'city' }] }) }));

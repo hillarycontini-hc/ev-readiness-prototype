@@ -63,7 +63,7 @@ const ALLOWED_CUSTOM = new Set([
   'state', 'question', 'step', 'answer', 'from_question', 'answered', 'skipped',
   'tier', 'score_band', 'confidence', 'blockers', 'link_id', 'park', 'reason', 'stage', 'type',
   'tool', 'slot', 'method', 'class', 'mode', 'make', 'places', 'count',
-  'stops', 'dest', 'result', 'direction',
+  'stops', 'dest', 'result', 'direction', 'fix',
   'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term',
 ]);
 // PostHog defaults we do not need: full user agent string and timezone (fingerprinting, coarse location).

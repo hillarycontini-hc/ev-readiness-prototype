@@ -95,25 +95,17 @@ export const PLUGS = {
 };
 
 /**
- * Choose fast-charging stops along a route.
- * - route: { miles, points } (points from cleanRoute; road miles scale the line's own length)
- * - stations: [{ id, lat, lon, fast, connectors, ... }] from the station cells
- * - legMiles: the most the visitor will drive between charges
- * Each leg counts road miles along the route plus the detour off the road and back (straight
- * line x the site's 1.25 road factor). Greedy: from each stop, go to the farthest reachable charger,
- * preferring, among those within the last 10% of the reach, one that can reach the destination,
- * then more fast ports.
- * Returns { ok: true, stops, finalLegMiles, arriveWithMiles } or { ok: false, reason, stops, stuckAtMile }.
+ * Every usable fast charger within `corridor` miles of the route, with its road mile and the
+ * detour off the road and back (straight line x the site's 1.25 road factor), sorted by road mile.
+ * The slow part of planning, so it runs once per route and plug.
  */
-export function planStops({ route, stations, legMiles, plug = 'any', corridor = CORRIDOR_MILES, maxStops = MAX_TRIP_STOPS }) {
+export function routeCandidates({ route, stations, plug = 'any', corridor = CORRIDOR_MILES }) {
   const pts = route.points;
   const along = [0];
   for (let i = 1; i < pts.length; i++) along.push(along[i - 1] + milesBetween(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1]));
   const lineMiles = along[along.length - 1] || 1;
   const scale = Math.min(3, Math.max(0.5, route.miles / lineMiles));
-  const total = route.miles;
   const usable = PLUGS[plug] || PLUGS.any;
-
   const dLat = corridor / 69;
   const seen = new Set();
   const candidates = [];
@@ -130,8 +122,19 @@ export function planStops({ route, stations, legMiles, plug = 'any', corridor = 
     seen.add(s.id);
     candidates.push({ station: s, atMile: along[at] * scale, detour: best * ASSUMPTIONS.roadFactor });
   }
-  candidates.sort((a, b) => a.atMile - b.atMile);
+  return candidates.sort((a, b) => a.atMile - b.atMile);
+}
 
+/**
+ * Choose stops from route candidates so no leg is longer than `legMiles`. Greedy: from each stop,
+ * go to the farthest reachable charger, preferring, among those within the last 10% of the reach,
+ * one that can reach the destination, then more fast ports.
+ * Returns { ok: true, stops, finalLegMiles, arriveWithMiles }, or { ok: false, reason, stops,
+ * stuckAtMile, nextAtMile } where nextAtMile is the next charger past the gap (null: none before
+ * the destination).
+ */
+export function chooseStops({ candidates, totalMiles, legMiles, maxStops = MAX_TRIP_STOPS }) {
+  const total = totalMiles;
   const stops = [];
   let pos = { atMile: 0, detour: 0 };
   for (;;) {
@@ -139,9 +142,12 @@ export function planStops({ route, stations, legMiles, plug = 'any', corridor = 
     if (remaining <= legMiles) {
       return { ok: true, stops, finalLegMiles: Math.round(remaining), arriveWithMiles: Math.max(0, Math.round(legMiles - remaining)) };
     }
-    if (stops.length >= maxStops) return { ok: false, reason: 'too_many_stops', stops, stuckAtMile: Math.round(pos.atMile) };
-    const reach = candidates.filter((c) => c.atMile > pos.atMile + 1 && c.atMile - pos.atMile + pos.detour + c.detour <= legMiles);
-    if (!reach.length) return { ok: false, reason: 'gap', stops, stuckAtMile: Math.round(pos.atMile) };
+    if (stops.length >= maxStops) return { ok: false, reason: 'too_many_stops', stops, stuckAtMile: Math.round(pos.atMile), nextAtMile: null };
+    const ahead = candidates.filter((c) => c.atMile > pos.atMile + 1);
+    const reach = ahead.filter((c) => c.atMile - pos.atMile + pos.detour + c.detour <= legMiles);
+    if (!reach.length) {
+      return { ok: false, reason: 'gap', stops, stuckAtMile: Math.round(pos.atMile), nextAtMile: ahead.length ? Math.round(ahead[0].atMile) : null };
+    }
     const farthest = reach[reach.length - 1].atMile;
     const window = reach.filter((c) => c.atMile >= farthest - legMiles * 0.1);
     // A stop that reaches the destination beats one with more ports that would need another stop.
@@ -156,6 +162,32 @@ export function planStops({ route, stations, legMiles, plug = 'any', corridor = 
     });
     pos = pick;
   }
+}
+
+/**
+ * Choose fast-charging stops along a route.
+ * - route: { miles, points } (points from cleanRoute; road miles scale the line's own length)
+ * - stations: [{ id, lat, lon, fast, connectors, ... }] from the station cells
+ * - legMiles: the most the visitor will drive between charges
+ */
+export function planStops({ route, stations, legMiles, plug = 'any', corridor = CORRIDOR_MILES, maxStops = MAX_TRIP_STOPS }) {
+  const candidates = routeCandidates({ route, stations, plug, corridor });
+  return chooseStops({ candidates, totalMiles: route.miles, legMiles, maxStops });
+}
+
+/**
+ * When a trip doesn't work, what would: the fewest miles between charges (in steps of 5, up to
+ * LEG_MAX) that works with the same plug, and whether "Either plug" works at the same miles.
+ * epaNeeded is the EPA range that gives those miles under the road-trip rule.
+ */
+export function suggestFixes({ route, stations, legMiles, plug = 'any' }) {
+  const candidates = routeCandidates({ route, stations, plug });
+  let minLegMiles = null;
+  for (let m = Math.floor(legMiles / 5) * 5 + 5; m <= LEG_MAX; m += 5) {
+    if (chooseStops({ candidates, totalMiles: route.miles, legMiles: m }).ok) { minLegMiles = m; break; }
+  }
+  const plugHelps = plug !== 'any' && chooseStops({ candidates: routeCandidates({ route, stations, plug: 'any' }), totalMiles: route.miles, legMiles }).ok;
+  return { minLegMiles, plugHelps, epaNeeded: minLegMiles ? Math.ceil(minLegMiles / ROAD_TRIP_SHARE / 5) * 5 : null };
 }
 
 /** "6 h 50 min" style drive time. */

@@ -81,6 +81,18 @@ const VIEWS = {
     await page.click('.tool-btn:has-text("Plan a trip")');
     await page.waitForSelector('#tool-plan-route .trip-saved-list');
   },
+  'trip planner, a trip that does not work yet': async (page) => {
+    await page.route('**/api/route*', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(tripRouteBody()) }));
+    await completeFlow(page, '80302', RENTER_TRIPS);
+    await page.click('#plan-cta');
+    await page.click('.tool-btn:has-text("Plan the trip")');
+    await page.fill('#trip-plan-park-leg', '60');
+    await page.locator('#trip-plan-park-leg').dispatchEvent('change');
+    await page.selectOption('#trip-plan-park-plug', 'ccs');
+    await page.click('#tool-plan-park .trip-plan-btn');
+    await page.waitForSelector('#tool-plan-park .trip-gap');
+    await page.click('#tool-plan-park .trip-partial summary');
+  },
   'results (ZIP only)': async (page) => {
     await page.fill('#zip', '10001');
     await page.click('#zip-form button[type=submit]');
