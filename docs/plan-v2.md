@@ -1,6 +1,6 @@
 # Plan v2: from "Is an EV right for me?" to a plan you can act on
 
-Status: **proposed, not started.** Decisions below were made with Hillary on 2026-10-19.
+Status: **phase A shipped (PR #8); phase B, the trip planner, built.** Decisions below were made with Hillary on 2026-10-19.
 
 ## Why
 

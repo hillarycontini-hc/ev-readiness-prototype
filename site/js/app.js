@@ -11,6 +11,8 @@ import * as analytics from './analytics.js';
 import { chevron, el, externalLink as linkTo, num, srOnly, usd, usd10 as money } from './dom.js';
 import { createPlanTools } from './plan-tools.js';
 import { clearSaved, decodeShare, emptyPlan, encodeShare, loadSaved, savePlan, sharePayload } from './plan-store.js';
+import { durationText } from './trip.js';
+import { chargeTimeShort, homeText, stopFacts, stopsText, tripCostFor } from './trip-tool.js';
 
 const $ = (id) => document.getElementById(id);
 // Questions that apply to this visitor (work charging only when home charging is uncertain).
@@ -572,6 +574,8 @@ function planTools() {
     get rec() { return state.lastRec; },
     get zip() { return state.zip; },
     get zipRec() { return state.zipRec; },
+    get parks() { return state.parks; },
+    get meta() { return state.meta; },
   });
   return tools;
 }
@@ -596,7 +600,7 @@ function renderPlan(rec) {
           const open = btn.getAttribute('aria-expanded') === 'true';
           btn.setAttribute('aria-expanded', String(!open));
           panel.hidden = open;
-          if (!open && !loaded) { loaded = true; await planTools().renderTool(step.id, panel); }
+          if (!open && !loaded) { loaded = true; await planTools().renderTool(step.id, panel, step.value); }
         },
       }, tool.label, chevron());
       toolNodes = [btn, panel];
@@ -681,6 +685,19 @@ async function renderSummary() {
       asOf ? el('p', { class: 'small', text: `Stations as of ${asOf}, from the U.S. Department of Energy. Check hours and prices before you go.` }) : null);
   }
 
+  if (p.trips.length) {
+    nodes.push(el('h4', { text: 'Trips you planned' }),
+      el('ul', { class: 'summary-places summary-trips' }, p.trips.map((t) => el('li', {},
+        el('strong', { text: `${t.from.name} to ${t.to.name}` }),
+        el('span', { class: 'small summary-trip-facts', text: `${num.format(Math.round(t.miles))} road miles one way, about ${durationText(t.minutes)} of driving${t.stops.length ? ` plus about ${chargeTimeShort(t.stops.length)} of charging` : ''}. ${stopsText(t.stops.length)}, planning up to ${t.legMiles} miles between charges.` }),
+        ((cost) => (cost ? el('span', { class: 'small summary-trip-facts', text: `Electricity, est.: ${cost.figure}${cost.gas ? `; the same drive on gas: about $${cost.gas}` : ''}.` }) : null))(tripCostFor(t, { rec, meta: state.meta, stateName: state.zipRec?.s })),
+        ((home) => (home ? el('span', { class: 'small summary-trip-facts', text: `Getting home: ${home}` }) : null))(homeText(t, t.to.park ? rec.destinations.find((d) => d.code === t.to.park)?.nearestFastToPark ?? null : null)),
+        t.stops.length ? el('ol', { class: 'summary-chargers' }, t.stops.map((s) => el('li', {},
+          el('span', { class: 'summary-charger-name', text: `Road mile ${num.format(s.atMile)}: ${s.name}` }),
+          el('span', { class: 'small', text: [[s.street, s.city].filter(Boolean).join(', '), stopFacts(s)].filter(Boolean).join(' · ') })))) : null))),
+      el('p', { class: 'small', text: 'Fast chargers from the U.S. Department of Energy station list. Check that each one is working on its network’s app before you go.' }));
+  }
+
   nodes.push(el('p', { class: 'small print-only', text: `Made ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} with EV Readiness Check · ${location.origin}` }));
 
   const shareStatus = el('p', { class: 'tool-status', role: 'status' });
@@ -689,7 +706,7 @@ async function renderSummary() {
   nodes.push(
     el('div', { class: 'summary-actions' },
       el('button', { type: 'button', class: 'btn btn-go', onclick: () => { analytics.track('plan_printed'); window.print(); } }, PLAN_CTA.print),
-      el('label', { class: 'check', for: includeId }, el('input', { type: 'checkbox', id: includeId }), 'Include my saved places and the chargers near them'),
+      el('label', { class: 'check', for: includeId }, el('input', { type: 'checkbox', id: includeId }), 'Include my saved places, the chargers near them, and my trips'),
       el('button', {
         type: 'button', class: 'btn btn-quiet',
         onclick: async () => {
@@ -702,7 +719,7 @@ async function renderSummary() {
         },
       }, 'Copy a share link')),
     linkOut, shareStatus,
-    el('p', { class: 'small screen-only', text: 'Your plan is saved on this device only. A share link carries the plan inside the link itself; nothing is stored on our servers. Saved places are left out unless you include them.' }));
+    el('p', { class: 'small screen-only', text: 'Your plan is saved on this device only. A share link carries the plan inside the link itself; nothing is stored on our servers. Saved places and trips are left out unless you include them.' }));
   box.replaceChildren(...nodes);
 }
 

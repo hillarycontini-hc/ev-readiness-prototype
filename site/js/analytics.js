@@ -23,6 +23,8 @@ const EVENTS = new Set([
   // Plan v2 tools. Never addresses, coordinates, station ids, or typed prices.
   'plan_tool_opened', 'place_set', 'charger_saved', 'car_shortlisted', 'finance_mode', 'test_drive_clicked',
   'plan_step_done', 'share_link_copied', 'shared_plan_opened', 'plan_resumed',
+  // Trip planner (phase B). Never coordinates, place or station names, or exact miles.
+  'trip_planned', 'trip_saved', 'trip_step',
 ]);
 
 // Property names that must never leave the browser, even by mistake.
@@ -61,6 +63,7 @@ const ALLOWED_CUSTOM = new Set([
   'state', 'question', 'step', 'answer', 'from_question', 'answered', 'skipped',
   'tier', 'score_band', 'confidence', 'blockers', 'link_id', 'park', 'reason', 'stage', 'type',
   'tool', 'slot', 'method', 'class', 'mode', 'make', 'places', 'count',
+  'stops', 'dest', 'result', 'direction', 'fix',
   'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term',
 ]);
 // PostHog defaults we do not need: full user agent string and timezone (fingerprinting, coarse location).

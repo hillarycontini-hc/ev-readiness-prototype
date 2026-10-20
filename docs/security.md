@@ -36,16 +36,28 @@ done and tested; the remaining items are account settings only you can change.
 
 ## What the site does and does not do
 
-- Static files plus one small Worker endpoint, `/api/geocode`, for address search in the plan
-  tools. No database, no logins, no forms that send data anywhere else.
+- Static files plus two small Worker endpoints, `/api/geocode` for address search and
+  `/api/route` for the trip planner. No database, no logins, no forms that send data anywhere else.
 - **The geocoding proxy** ([`worker/index.js`](../worker/index.js)) holds the only runtime key
   (`GEOAPIFY_KEY`, a Cloudflare secret, never in the repo). It answers only same-origin `GET`
-  requests, checks the query (3-120 printable characters) and the bias point (U.S. bounds),
+  requests (a header check that stops other sites' pages, not scripts; the rate limits cover
+  scripted use), checks the query (3-120 printable characters) and the bias point (U.S. bounds),
   limits each visitor to 30 searches a minute by a SHA-256 hash of the IP, times out after 5
   seconds, and returns only name, short address, coordinates, and type. Responses are
   `no-store`. Worker logs and observability are off, so searches are not kept. With no key
   set, it returns "search unavailable" and the page falls back to ZIP. Spend cap: Geoapify's
   free plan with no card on file refuses requests past its quota instead of billing.
+- **The routing proxy** (`/api/route`, same Worker, same key) takes two points (`from`,
+  `to`), accepts only plain decimal U.S. coordinates between 0.5 and 750 straight-line miles
+  apart (about 1,000 road miles, which also bounds Geoapify's per-distance credits), and has its
+  own tighter limit: 6 routes a minute per hashed IP (`ROUTE_LIMITER`), plus 30 a minute for
+  all visitors together (`ROUTE_GLOBAL_LIMITER`). The start point is rounded to about 100 m
+  before it goes to Geoapify. It times out after 8
+  seconds and returns only road miles, drive minutes, and the route line thinned to at most 600
+  points rounded to about 10 m: no turn-by-turn text, place names, or anything from the
+  provider's response besides those. A route the provider can't find is `no_route`; any other
+  failure is `route_unavailable`. The start point is the visitor's saved home or their ZIP
+  center; it goes to Geoapify through the proxy only when they press "Plan the trip".
 - Build scripts read optional `NREL_API_KEY` / `NPS_API_KEY` from the environment only, redact
   them from logs, and never write them to disk.
 - The PostHog project key (`phc_...`) is public by design: it can send events, not read them.
@@ -55,7 +67,8 @@ done and tested; the remaining items are account settings only you can change.
   visitor clicks it.
 - **Saved plans** stay in the visitor's browser (`localStorage`, `evrc-plan-v1`), written only
   after they save something. **Share links** carry the plan after `#`, which browsers don't
-  send to servers. Saved places are left out unless the visitor includes them. Every field of
+  send to servers. Saved places and planned trips (which start from home) are left out unless the visitor
+  includes them. Every field of
   a saved or shared plan is validated on load (ids, slots, U.S. coordinates, counts, number
   ranges) and rendered as text.
 
@@ -109,6 +122,21 @@ Lower-confidence notes, and what was done:
 | Share-link size is checked after decompression | Accepted: a crafted link can only slow the visitor's own tab |
 | `Sec-Fetch-Site` can be forged outside a browser | Accepted: the per-visitor rate limit and the no-card free plan cap the cost |
 
+## Review: plan v2 phase B, trip planner (October 2026)
+
+A diff-based review of `/api/route`, the stop planner, saved and shared trips, the trip UI, and
+the new analytics events found **no injection, share-link, prototype-pollution, analytics, key, or
+IP leak**: trip text reaches the page only through `textContent`, `cleanTrip` rebuilds every
+field from patterns and ranges, the Worker returns fixed error codes and a whitelisted body, and
+the outgoing request carries only `Accept`.
+
+| Finding | Status |
+|---|---|
+| Medium: `Sec-Fetch-Site` stops other sites' pages, not scripts, so a few addresses could use up the free Geoapify quota that search shares, taking both offline for the day | **Fixed:** a site-wide limiter (`ROUTE_GLOBAL_LIMITER`, one shared key, 30 routes a minute per Cloudflare location) on top of the per-visitor one. **For Hillary (optional):** a second Geoapify key just for routing would keep search up even if routing is drained |
+| Low: with no limiter binding (a preview, a renamed binding), search and routing ran unlimited | **Fixed:** both fail closed with 503 when the key is set but a limiter is missing; tested |
+| Low: the start point (often the saved home) went to Geoapify at about 10 m | **Fixed:** the Worker rounds the start to 3 decimals (about 100 m) before calling Geoapify; tested |
+| Low: "U.S. coordinates" is a bounding box that also covers southern Canada and northern Mexico | Accepted: cost per request stays capped by the 750-mile limit and both rate limits |
+
 ## Automated guards
 
 - `tests/e2e/privacy.e2e.mjs` intercepts real analytics traffic (nothing reaches PostHog) and
@@ -122,7 +150,16 @@ Lower-confidence notes, and what was done:
   queries and out-of-bounds points rejected, rate limit returns 429, missing key returns 503,
   and the key never appears in a response.
 - `tests/plan.test.mjs` checks that saved and shared plans are sanitized and that share links
-  round-trip with and without places.
+  round-trip with and without places and trips; tampered trips (bad ids, steps, non-U.S. points,
+  out-of-range numbers, stops out of order, slow chargers, more than 3 trips or 12 stops) are
+  dropped or trimmed.
+- `tests/worker.test.mjs` also checks `/api/route`: same-origin GET only, two U.S. points
+  within the distance cap, a hashed rate-limit key, 429/503/422/502 paths, and a response
+  holding only miles, minutes, and the thinned line (no key, no turn-by-turn text).
+- `tests/trip.test.mjs` unit-tests route validation and the stop planner.
+- `tests/e2e/trip.e2e.mjs` plans, steps through, saves, and shares a trip with `/api/route`
+  mocked, and checks analytics gets only coarse trip values (no destination, coordinates,
+  ZIP, miles, or station names).
 - `tests/e2e/plan-tools.e2e.mjs` runs search, save, shortlist, and share in a browser and
   checks that analytics never receives an address, coordinate, ZIP, or station name, and
   that brand links are https, open in a new tab with `noopener`, and include the ZIP only

@@ -75,3 +75,18 @@ export async function completeFlow(page, zip = '80302', answers = RENTER) {
   }
   throw new Error('flow did not reach results');
 }
+
+// Renter in Boulder, long drives monthly, outdoors monthly: the plan has both trip steps.
+export const RENTER_TRIPS = { dailyMiles: 1, homeCharging: 2, workCharging: 0, longTrips: 2, outdoor: 2 };
+
+// Boulder down I-25 to Great Sand Dunes, as /api/route would return it: about 260 road miles.
+const TRIP_WAYPOINTS = [[40.0150, -105.2700], [39.7400, -104.9900], [38.8300, -104.8200], [38.2500, -104.6100], [37.6200, -104.7800], [37.7300, -105.5100]];
+export function tripRouteBody() {
+  const points = [];
+  for (let w = 0; w < TRIP_WAYPOINTS.length - 1; w++) {
+    const [a, b] = [TRIP_WAYPOINTS[w], TRIP_WAYPOINTS[w + 1]];
+    for (let i = 0; i < 60; i++) points.push([+(a[0] + ((b[0] - a[0]) * i) / 60).toFixed(4), +(a[1] + ((b[1] - a[1]) * i) / 60).toFixed(4)]);
+  }
+  points.push(TRIP_WAYPOINTS.at(-1));
+  return { miles: 262.4, minutes: 245, points, attribution: 'Geoapify, © OpenStreetMap contributors' };
+}

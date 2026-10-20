@@ -59,7 +59,7 @@ Every event also carries `messaging_variant`, `$feature/landing-messaging`, and 
 | `refine_clicked` | "Answer these to sharpen your result" | `skipped` |
 | `start_over_clicked` | "Start over with a new ZIP" | none |
 | `data_load_error` | A data file failed to load | `stage` |
-| `plan_tool_opened` | A plan tool is opened (chargers, cars, test drives) | `tool`: `places`, `cars`, or `testdrive` |
+| `plan_tool_opened` | A plan tool is opened (chargers, cars, trips, test drives) | `tool`: `places`, `cars`, `trip`, or `testdrive` |
 | `place_set` | A place is chosen for a charger search | `slot` (`work`, `lunch`, `home`, `gym`), `method` (`search`, `zip`) |
 | `charger_saved` | A charger is saved to the plan | `slot`, `count` (saved for that place) |
 | `car_shortlisted` | A car is added to the shortlist | `class` (`suv`, `pickup`), `make`, `count` |
@@ -69,8 +69,12 @@ Every event also carries `messaging_variant`, `$feature/landing-messaging`, and 
 | `share_link_copied` | "Copy a share link" | `places` (whether saved places were included) |
 | `shared_plan_opened` | Someone opens a share link | none |
 | `plan_resumed` | A plan saved on this device is reopened | none |
+| `trip_planned` | The trip planner finishes a route with charging stops | `stops` (bucket: `0`, `1`, `2-3`, `4+`), `dest` (`park` or `place`), `result` (`ok`, `gap`, `too_many_stops`), `fix` (`miles` or `plug`, only when a one-tap fix was used) |
+| `trip_saved` | A planned trip is saved to the plan | `count` (trips saved, at most 3) |
+| `trip_step` | Previous, Next, or Skip in a trip's step-through | `direction` (`previous`, `next`, `skip`) |
 
-**Never sent:** the ZIP code (the browser only requests the public data file named for its first three digits, from this same site), searched addresses or place names, latitude/longitude, saved station names or ids, prices or payments the visitor typed, IP address, full user agent, timezone,
+**Never sent:** the ZIP code (the browser only requests the public data file named for its first three digits, from this same site), searched addresses or place names, latitude/longitude, saved station names or ids, trip
+destinations, routes, road miles, or the exact number of charging stops, prices or payments the visitor typed, IP address, full user agent, timezone,
 URL query strings or fragments, ad click ids (fbclid, gclid, and similar). This is enforced
 twice: `track()` only accepts simple values under allowlisted names, and `before_send`
 strips everything not on the allowlist from each event. `tests/e2e/privacy.e2e.mjs` checks

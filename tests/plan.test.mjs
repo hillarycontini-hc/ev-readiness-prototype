@@ -61,5 +61,52 @@ test('a tampered share link is sanitized, never trusted', async () => {
 
 test('distance and connector helpers', () => {
   assert.ok(Math.abs(milesBetween(40.015, -105.2705, 39.7392, -104.9903) - 24.5) < 1, 'Boulder to Denver is about 24.5 miles');
-  assert.deepEqual(connectorNames('JCN'), ['J1772', 'CCS', 'NACS (Tesla)']);
+  assert.deepEqual(connectorNames('JCN'), ['J1772', 'CCS', 'NACS']);
+});
+
+const tripStop = (id, atMile) => ({ id, name: `Fast ${id}`, street: '1 Main St', city: 'Loveland', lat: 40.4, lon: -105.0, level2: 0, fast: 4, network: 'Electrify America', connectors: 'C', hours: '24 hours daily', price: '', atMile, legMiles: 60, detourMiles: 0.5 });
+const trip = (over = {}) => ({
+  id: 'trip-abc123', step: 'plan-park',
+  from: { name: 'Center of ZIP 80302', lat: 40.0, lon: -105.3 },
+  to: { name: 'Rocky Mountain National Park', detail: 'CO', lat: 40.35, lon: -105.68, park: 'romo' },
+  miles: 180.4, minutes: 200, legMiles: 165, plug: 'ccs', kwh100: 31, finalLegMiles: 120, arriveWithMiles: 45, returnMiles: 60, returnTo: 'charger',
+  stops: [tripStop(1001, 60)],
+  ...over,
+});
+
+test('saved trips travel in a share link only when places are included', async () => {
+  const plan = emptyPlan();
+  plan.zip = '80302';
+  plan.trips = [trip()];
+  const without = await decodeShare(await encodeShare(sharePayload(plan, { includePlaces: false })));
+  assert.deepEqual(without.trips, [], 'trips start from home, so they are private by default');
+  const withTrips = await decodeShare(await encodeShare(sharePayload(plan, { includePlaces: true })));
+  assert.deepEqual(withTrips.trips, [{ ...trip(), stops: [tripStop(1001, 60)] }]);
+});
+
+test('trips are validated field by field: at most 3, at most 12 stops, stops in order', () => {
+  const many = Array.from({ length: 5 }, (_, i) => trip({ id: `trip-${i}` }));
+  assert.equal(sanitizePlan({ v: 1, trips: many }).trips.length, 3);
+  const longTrip = trip({ stops: Array.from({ length: 20 }, (_, i) => tripStop(2000 + i, i * 10)) });
+  assert.equal(sanitizePlan({ v: 1, trips: [longTrip] }).trips[0].stops.length, 12);
+  const bad = [
+    trip({ id: '<img>' }),
+    trip({ id: 'trip-x', step: 'plan-work' }),
+    trip({ id: 'trip-y', to: { name: 'London', lat: 51.5, lon: -0.1 } }),
+    trip({ id: 'trip-z', miles: 'far' }),
+    trip({ id: 'trip-q', legMiles: 5 }),
+    trip({ id: 'trip-o', stops: [tripStop(1, 100), tripStop(2, 50)] }),
+    trip({ id: 'trip-s', stops: [{ ...tripStop(3, 50), fast: 0 }] }),
+    trip({ id: 'trip-n', stops: [{ ...tripStop(4, 50), atMile: 'x' }] }),
+  ];
+  assert.deepEqual(sanitizePlan({ v: 1, trips: bad }).trips, []);
+  const p = sanitizePlan({ v: 1, trips: [trip({ plug: 'steal', to: { name: 'x'.repeat(500), lat: 40.3, lon: -105.6, park: '../x', extra: 1 } }), trip()] });
+  assert.equal(p.trips.length, 1, 'duplicate ids are dropped');
+  assert.equal(p.trips[0].plug, 'any');
+  assert.equal(p.trips[0].to.name.length, 120);
+  assert.equal(p.trips[0].to.park, null);
+  assert.equal(sanitizePlan({ v: 1, trips: [trip({ kwh100: 999 })] }).trips[0].kwh100, null, 'an impossible efficiency is dropped');
+  const odd = sanitizePlan({ v: 1, trips: [trip({ returnMiles: -5, returnTo: 'moon' })] }).trips[0];
+  assert.deepEqual([odd.returnMiles, odd.returnTo], [null, null], 'a bad drive-home value is dropped, not trusted');
+  assert.ok(!('extra' in p.trips[0].to));
 });

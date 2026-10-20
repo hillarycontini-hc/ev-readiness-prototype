@@ -3,8 +3,11 @@
 //   so the provider never sees the visitor and our key never reaches the browser.
 // - zipCenter(): a ZIP's center from our static data (works with no search service at all).
 // - chargersNear(): public stations around a point, from static per-cell files built from NREL data.
+// - fetchRoute(): a driving route through our proxy (/api/route); fastStationsAlong(): the fast
+//   chargers in the station cells along it.
 
 import { normalizeZip } from './logic.js';
+import { cleanRoute, corridorCells } from './trip.js';
 
 const R_MILES = 3958.8;
 const toRad = (d) => (d * Math.PI) / 180;
@@ -89,5 +92,34 @@ export function stationFromRow(r, miles) {
   };
 }
 
-const CONNECTOR_NAMES = { J: 'J1772', C: 'CCS', N: 'NACS (Tesla)', D: 'CHAdeMO' };
+/** A driving route between two points: { miles, minutes, points } or a SearchUnavailable error. */
+export async function fetchRoute(from, to) {
+  const params = new URLSearchParams({ from: `${from.lat},${from.lon}`, to: `${to.lat},${to.lon}` });
+  let res;
+  try {
+    res = await fetch(`/api/route?${params}`, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+  } catch {
+    throw new SearchUnavailable('network');
+  }
+  if (res.status === 429) throw new SearchUnavailable('rate_limited');
+  if (res.status === 422) throw new SearchUnavailable('no_route');
+  if (res.status === 400) {
+    const body = await res.json().catch(() => null);
+    throw new SearchUnavailable(body?.error === 'too_far' || body?.error === 'too_close' ? body.error : 'bad_query');
+  }
+  if (!res.ok) throw new SearchUnavailable('unavailable');
+  const route = cleanRoute(await res.json().catch(() => null));
+  if (!route) throw new SearchUnavailable('unavailable');
+  return route;
+}
+
+/** Every fast-charging station in the map cells within a few miles of a route. */
+export async function fastStationsAlong(points) {
+  const shards = await Promise.all(corridorCells(points).map((k) => fetchJson(`data/stations/${k}.json`).catch(() => null)));
+  const found = [];
+  for (const rows of shards) for (const r of rows || []) if (r[7] > 0) found.push(stationFromRow(r, 0));
+  return found;
+}
+
+const CONNECTOR_NAMES = { J: 'J1772', C: 'CCS', N: 'NACS', D: 'CHAdeMO' };
 export const connectorNames = (codes) => [...(codes || '')].map((c) => CONNECTOR_NAMES[c]).filter(Boolean);

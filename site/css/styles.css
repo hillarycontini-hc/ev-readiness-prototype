@@ -400,6 +400,8 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   .plan-station { width: 3rem; height: 3rem; font-size: 1.25rem; }
   .plan-step::before { left: calc(1.5rem - 7px); top: 1.5rem; bottom: -1.5rem; }
   .plan-done { grid-column: 2; justify-self: start; margin-top: 0.6rem; }
+  /* On phones an open tool widens toward the line, stopping just short of it. */
+  .plan-main .tool-panel { margin-left: -1.75rem; padding: 0.9rem 0.8rem 1rem; }
 }
 
 /* ---------- plan tools (inside the navy plan) ---------- */
@@ -419,7 +421,7 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .tool-panel label, .tool-panel legend { color: #fff; font-weight: 600; }
 .tool-panel input[type="search"], .tool-panel input[type="text"], .tool-panel input[type="number"], .tool-panel select {
   font: 600 var(--t-body) var(--text); color: #fff; background: var(--navy);
-  border: 2px solid #4a5d80; border-radius: var(--radius); padding: 0.45rem 0.6rem; min-height: 2.75rem; min-width: 0;
+  border: 2px solid #8593a8; border-radius: var(--radius); padding: 0.45rem 0.6rem; min-height: 2.75rem; min-width: 0;
 }
 .tool-panel input[type="search"] { flex: 1 1 14rem; }
 .tool-panel input:focus-visible, .tool-panel select:focus-visible { outline: 3px solid var(--citron); outline-offset: 2px; border-color: var(--citron); }
@@ -477,7 +479,7 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .car-controls { display: grid; gap: 0.9rem; }
 .seg { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .seg legend { width: 100%; margin-bottom: 0.35rem; }
-.seg-option { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.75rem; padding: 0.35rem 0.8rem; border-radius: var(--radius); box-shadow: inset 0 0 0 1.5px #4a5d80; cursor: pointer; }
+.seg-option { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.75rem; padding: 0.35rem 0.8rem; border-radius: var(--radius); box-shadow: inset 0 0 0 1.5px #8593a8; cursor: pointer; }
 .seg-option:has(input:checked) { background: var(--c); box-shadow: none; }
 .seg-option:has(input:checked) span { color: var(--navy); }
 .seg-option:has(input:focus-visible) { outline: 3px solid var(--citron); outline-offset: 2px; }
@@ -493,8 +495,124 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .drive-links { display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; }
 .field-wide { grid-column: 1 / -1; margin: 0; }
 
+/* Trip planner: each leg is drawn as the stretch of route line above its station. Legs already
+   stepped through fill in the step's color; the rest wait on the unlit rail. */
+.trip-from { margin: 0 0 0.75rem; color: #fff; }
+.trip-from-label { color: var(--row-sub); }
+.trip-to, .trip-start { margin-bottom: 0.25rem; }
+.trip-dests { display: grid; gap: 0.4rem; width: 100%; }
+.trip-dest { align-items: flex-start; padding: 0.55rem 0.8rem; }
+.trip-dest input { margin-top: 0.25rem; }
+.trip-dest > span { display: grid; }
+.trip-dest-detail { font-size: var(--t-small); font-weight: 400; color: var(--row-sub); }
+/* A chosen destination gets a ring in the stop color, not a fill: the fill is for actions. */
+.trip-dest:has(input:checked) { background: var(--navy); box-shadow: inset 0 0 0 3px var(--c); }
+.trip-dest:has(input:checked) span { color: #fff; }
+.trip-dest:has(input:checked) .trip-dest-detail { color: var(--row-sub); }
+.trip-dest input { accent-color: var(--c); }
+.trip-fields { margin-top: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(13rem, 100%), 1fr)); }
+.trip-fields select { width: 100%; }
+.trip-fields .field-basis { grid-column: 1 / -1; }
+.trip-result:not(:empty) { margin-top: 1.1rem; padding-top: 1.1rem; border-top: 1px solid #2c3a55; }
+.trip-title { margin: 0 0 0.75rem; font: 900 clamp(1.5rem, 3vw, 1.875rem)/1 var(--display); text-transform: uppercase; color: #fff; overflow-wrap: anywhere; }
+.trip-title:focus-visible, .trip-saved-title:focus-visible { outline: 3px solid var(--citron); outline-offset: 3px; }
+.trip-totals { display: flex; flex-wrap: wrap; gap: 0.5rem 2.25rem; margin: 0 0 0.9rem; }
+.trip-totals div { display: grid; }
+.trip-totals dt { order: 2; color: var(--row-sub); font-size: var(--t-small); }
+.trip-totals dd { margin: 0; font: 900 2.25rem/1 var(--display); color: var(--fig); font-variant-numeric: tabular-nums; }
+.trip-legs { list-style: none; padding: 0; margin: 0; }
+.trip-leg {
+  position: relative; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; gap: 0 0.9rem; align-items: start;
+  padding: 0.75rem 0.75rem 0.75rem 0.5rem; border-radius: 6px;
+}
+/* The route's own anatomy: a 14px line through white-ringed stations. ::before is the leg into
+   this station; ::after starts the next leg. */
+.trip-leg::before, .trip-leg:not(:last-child)::after {
+  content: ""; position: absolute; z-index: 0; left: calc(1.75rem - 7px); width: 14px; background: #4a5d80;
+}
+.trip-leg::before { top: 0; height: 2rem; }
+.trip-leg:not(:last-child)::after { top: 2rem; bottom: 0; }
+.trip-leg.is-passed::before, .trip-leg[aria-current="step"]::before,
+.trip-leg:has(+ .is-passed)::after, .trip-leg:has(+ [aria-current="step"])::after { background: var(--c); }
+.trip-leg:not(:last-child) { border-bottom: 1px solid #2c3a55; }
+.trip-leg[aria-current="step"] { background: var(--navy); box-shadow: inset 0 0 0 1px #4a5d80; }
+.trip-mark {
+  position: relative; z-index: 1; box-sizing: border-box; width: 2.5rem; height: 2.5rem; border-radius: 50%;
+  background: #fff; border: 7px solid var(--c); box-shadow: 0 0 0 4px var(--navy-2);
+}
+.trip-leg:last-child .trip-mark { border-width: 10px; }
+.trip-leg[aria-current="step"] .trip-mark { box-shadow: 0 0 0 4px var(--navy); }
+.trip-leg.is-passed .trip-mark, .trip-leg[aria-current="step"] .trip-mark { background: var(--c); }
+.trip-leg-main { min-width: 0; padding-top: 0.45rem; }
+.trip-leg-main p { margin: 0; }
+.trip-leg .station-name { display: block; overflow-wrap: anywhere; }
+.trip-leg-detail { margin-top: 0.4rem; display: grid; gap: 0.15rem; }
+.trip-leg-detail .station-meta { color: #e6ebf1; }
+/* Inside the open leg: the lines to read first, the address set apart, the rest folded away. */
+.leg-key { color: #fff; font-size: var(--t-body); }
+.trip-leg-main .leg-address { color: var(--row-sub); font-style: italic; font-size: var(--t-small); margin-top: 0.2rem; }
+.leg-more, .trip-help { margin-top: 0.35rem; color: #e6ebf1; font-size: var(--t-small); }
+.leg-more summary, .trip-help summary {
+  cursor: pointer; list-style: none; display: block; padding: 0.6rem 0; min-height: 2.75rem;
+  font-weight: 700; color: #fff;
+}
+.leg-more summary::-webkit-details-marker, .trip-help summary::-webkit-details-marker { display: none; }
+.leg-more summary::before, .trip-help summary::before {
+  content: ""; display: inline-block; width: 0.45rem; height: 0.45rem; margin: 0 0.6rem 0.1em 0.1rem; border: solid var(--c); border-width: 3px 3px 0 0;
+  transform: rotate(45deg); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.leg-more[open] summary::before, .trip-help[open] summary::before { transform: rotate(135deg); }
+.leg-more summary:focus-visible, .trip-help summary:focus-visible { outline: 3px solid var(--citron); outline-offset: 2px; }
+.leg-more-hint { font-weight: 400; color: var(--row-sub); }
+.trip-leg-main .leg-more p, .trip-help p { margin: 0 0 0.35rem; }
+.leg-more > p, .trip-help > p, .trip-help ul { padding-left: 1rem; }
+.trip-help ul { margin: 0 0 0.4rem; }
+.leg-more-label { color: var(--row-sub); }
+@media (prefers-reduced-motion: reduce) { .leg-more summary::before, .trip-help summary::before { transition: none; } }
+.trip-from-panel { margin: 0 0 1rem; padding: 0.75rem 0 0.25rem; border-top: 1px solid #2c3a55; border-bottom: 1px solid #2c3a55; }
+.trip-cost { margin: 0 0 0.6rem; max-width: 46rem; }
+.trip-cost .trip-cost-line { margin: 0; }
+.trip-cost .trip-help { margin-top: 0; }
+.field-note { margin: 0; color: var(--row-sub); font-size: var(--t-small); }
+/* The answer leads the result: one sentence in the row-label voice. */
+.trip-answer { margin: 0 0 0.9rem; max-width: 40ch; font: 700 1.25rem/1.3 var(--text); color: #fff; }
+.plug-chip {
+  display: inline-block; margin-right: 0.5rem; padding: 0.05rem 0.45rem; border-radius: 3px; vertical-align: 0.1em;
+  box-shadow: inset 0 0 0 1.5px #fff; color: #fff; font: 700 0.75rem/1.4 var(--text); letter-spacing: 0.04em; text-transform: uppercase;
+}
+.trip-warn { margin: 0 0 0.75rem; }
+.trip-warn .tool-row { margin: 0.5rem 0 0; }
+.trip-warn strong, .trip-home strong { color: #fff; }
+.trip-result .tool-note, .trip-fields .tool-note, .trip-gap, .trip-cost, .trip-warn, .trip-leg-detail { max-width: 68ch; }
+.trip-gap { margin: 0 0 0.5rem; max-width: 46rem; }
+.trip-gap .trip-gap-why { margin: 0; }
+.trip-gap .trip-gap-why strong { color: var(--fig); }
+.trip-fixes { margin: 0.75rem 0 0.25rem; }
+.trip-partial .trip-legs { margin-top: 0.25rem; }
+.trip-stepper { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 0.9rem; margin: 0.9rem 0 0.25rem; }
+.trip-position { margin: 0; min-width: 6.5rem; text-align: center; font: 900 1.375rem/1 var(--display); text-transform: uppercase; color: #fff; font-variant-numeric: tabular-nums; }
+.trip-step-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.trip-save-slot .tool-row { margin-top: 0.9rem; }
+.trip-saved:not(:empty) { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #2c3a55; }
+.trip-saved-title { margin: 0 0 0.25rem; font: 700 var(--t-body) var(--text); color: #fff; }
+.trip-saved-list { list-style: none; padding: 0; margin: 0; }
+.trip-saved-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.25rem 1rem; padding: 0.4rem 0; border-top: 1px solid #2c3a55; }
+.trip-saved-list li:first-child { border-top: 0; }
+.trip-saved-list p { margin: 0; color: #fff; }
+.trip-saved-actions { display: flex; gap: 1.25rem; }
+.trip-saved-actions .btn-link { min-height: 2.75rem; }
+
 @media (max-width: 40rem) {
   .station-item, .car-item { grid-template-columns: minmax(0, 1fr) auto; }
+  .trip-leg { grid-template-columns: 2.5rem minmax(0, 1fr); }
+  .trip-leg .row-figure { grid-column: 2; text-align: left; padding: 0.35rem 0 0; }
+  /* Previous and Next share a row, the counter sits above them, Skip below: no stacked mis-taps. */
+  .trip-stepper { display: grid; grid-template-columns: 1fr 1fr; }
+  .trip-position { min-width: 0; grid-column: 1 / -1; order: -1; text-align: left; }
+  .trip-stepper .btn-link { grid-column: 1 / -1; justify-self: start; }
+  .trip-stepper .btn { padding-inline: 0.6rem; font-size: var(--t-small); }
+  .trip-totals { gap: 0.4rem 1.25rem; }
+  .trip-totals dd { font-size: 1.75rem; }
   .row-figure { white-space: normal; }
   .station-main, .car-main { grid-column: 1 / -1; }
   .row-figure { text-align: left; padding-left: calc(14px + 0.55rem); }
@@ -518,6 +636,7 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .summary-chargers { padding-left: 1.1rem; margin: 0.25rem 0 0; }
 .summary-chargers li { display: grid; margin: 0.3rem 0; }
 .summary-charger-name { font-weight: 600; }
+.summary-trip-facts { display: block; }
 .print-only { display: none; }
 .summary .small { color: var(--muted); }
 .summary-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; margin-top: 1.25rem; }
