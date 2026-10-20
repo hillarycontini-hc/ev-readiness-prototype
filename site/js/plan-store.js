@@ -83,6 +83,7 @@ export function cleanTrip(t) {
     to: { name: str(to.name, 120) || 'Destination', detail: str(to.detail, 160), lat: to.lat, lon: to.lon, park: PARK_CODE.test(to.park) ? to.park : null },
     miles, minutes, legMiles,
     plug: Object.hasOwn(PLUGS, t.plug) ? t.plug : 'any',
+    kwh100: num(t.kwh100, 10, 80, null), // the planned car's efficiency, for the cost estimate
     finalLegMiles: num(t.finalLegMiles, 0, LEG_MAX, 0),
     arriveWithMiles: num(t.arriveWithMiles, 0, LEG_MAX, 0),
     stops,

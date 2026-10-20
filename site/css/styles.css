@@ -499,7 +499,7 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
    stepped through fill in the step's color; the rest wait on the unlit rail. */
 .trip-from { margin: 0 0 0.75rem; color: #fff; }
 .trip-from-label { color: var(--row-sub); }
-.trip-to { margin-bottom: 0.25rem; }
+.trip-to, .trip-start { margin-bottom: 0.25rem; }
 .trip-dests { display: grid; gap: 0.4rem; width: 100%; }
 .trip-dest { align-items: flex-start; padding: 0.55rem 0.8rem; }
 .trip-dest input { margin-top: 0.25rem; }
@@ -548,6 +548,32 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .trip-leg .station-name { display: block; overflow-wrap: anywhere; }
 .trip-leg-detail { margin-top: 0.4rem; display: grid; gap: 0.15rem; }
 .trip-leg-detail .station-meta { color: #e6ebf1; }
+/* Inside the open leg: the lines to read first, the address set apart, the rest folded away. */
+.leg-key { color: #fff; font-size: var(--t-body); }
+.trip-leg-main .leg-address { color: var(--row-sub); font-style: italic; font-size: var(--t-small); margin-top: 0.2rem; }
+.leg-more, .trip-help { margin-top: 0.35rem; color: #e6ebf1; font-size: var(--t-small); }
+.leg-more summary, .trip-help summary {
+  cursor: pointer; list-style: none; display: block; padding: 0.6rem 0; min-height: 2.75rem;
+  font-weight: 700; color: #fff;
+}
+.leg-more summary::-webkit-details-marker, .trip-help summary::-webkit-details-marker { display: none; }
+.leg-more summary::before, .trip-help summary::before {
+  content: ""; display: inline-block; width: 0.45rem; height: 0.45rem; margin: 0 0.6rem 0.1em 0.1rem; border: solid var(--c); border-width: 3px 3px 0 0;
+  transform: rotate(45deg); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.leg-more[open] summary::before, .trip-help[open] summary::before { transform: rotate(135deg); }
+.leg-more summary:focus-visible, .trip-help summary:focus-visible { outline: 3px solid var(--citron); outline-offset: 2px; }
+.leg-more-hint { font-weight: 400; color: var(--row-sub); }
+.trip-leg-main .leg-more p, .trip-help p { margin: 0 0 0.35rem; }
+.leg-more > p, .trip-help > p, .trip-help ul { padding-left: 1rem; }
+.trip-help ul { margin: 0 0 0.4rem; }
+.leg-more-label { color: var(--row-sub); }
+@media (prefers-reduced-motion: reduce) { .leg-more summary::before, .trip-help summary::before { transition: none; } }
+.trip-from-panel { margin: 0 0 1rem; padding: 0.75rem 0 0.25rem; border-top: 1px solid #2c3a55; border-bottom: 1px solid #2c3a55; }
+.trip-cost { margin: 0 0 0.6rem; max-width: 46rem; }
+.trip-cost .trip-cost-line { margin: 0; }
+.trip-cost .trip-help { margin-top: 0; }
+.field-note { margin: 0; color: var(--row-sub); font-size: var(--t-small); }
 .trip-stepper { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 0.9rem; margin: 0.9rem 0 0.25rem; }
 .trip-position { margin: 0; min-width: 6.5rem; text-align: center; font: 900 1.375rem/1 var(--display); text-transform: uppercase; color: #fff; font-variant-numeric: tabular-nums; }
 .trip-step-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

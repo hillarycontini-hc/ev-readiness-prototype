@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanRoute, corridorCells, durationText, legMilesFromRange, milesBetween, planStops, stopsBucket } from '../site/js/trip.js';
+import { chargeTimeText, cleanRoute, corridorCells, durationText, legMilesFromRange, milesBetween, planStops, stopsBucket, tripCost } from '../site/js/trip.js';
 
 // A straight east-west road along latitude 40 starting near Denver: one point every ~1.06 miles.
 const MI_PER_DEG_LON = milesBetween(40, -105, 40, -104);
@@ -28,9 +28,10 @@ test('cleanRoute accepts a well-formed route and rejects anything else', () => {
   assert.equal(cleanRoute({ ...r, points: Array(601).fill([40, -105]) }), null, 'at most 600 points');
 });
 
-test('leg miles from EPA range use the site-wide 1.5x buffer, within limits', () => {
-  assert.equal(legMilesFromRange(300), 200);
-  assert.equal(legMilesFromRange(251), 167);
+test('leg miles are about 70% of the lowest EPA range, to the nearest 5, within limits', () => {
+  assert.equal(legMilesFromRange(300), 210);
+  assert.equal(legMilesFromRange(221), 155);
+  assert.equal(legMilesFromRange(251), 175);
   assert.equal(legMilesFromRange(30), 40, 'never below 40');
   assert.equal(legMilesFromRange(900), 500, 'never above 500');
   assert.equal(legMilesFromRange(undefined), null);
@@ -133,4 +134,21 @@ test('drive time and stop buckets', () => {
   assert.equal(durationText(120), '2 h');
   assert.equal(durationText(410), '6 h 50 min');
   assert.deepEqual([0, 1, 2, 3, 4, 12].map(stopsBucket), ['0', '1', '2-3', '2-3', '4+', '4+']);
+});
+
+test('charging time is a stated range per stop', () => {
+  assert.equal(chargeTimeText(0), null);
+  assert.equal(chargeTimeText(1), '20 min to 45 min');
+  assert.equal(chargeTimeText(2), '40 min to 1 h 30 min');
+});
+
+test('trip cost: first leg at the home rate, the rest at fast chargers, EPA to +30%', () => {
+  // 262 miles, 157 on the home charge, 105 fast-charged; 30 kWh/100 mi; 15 cents at home; $0.53 fast.
+  const c = tripCost({ miles: 262, firstLegMiles: 157, kwh100: 30, homeCentsPerKwh: 15, dcPerKwh: 0.53, gasPrice: 3.2, mpg: 27 });
+  // (157 x 0.15 + 105 x 0.53) x 0.30 = 23.76 -> $25; x 1.3 = 30.89 -> $30. Gas: 262 / 27 x 3.2 = 31.05 -> $30.
+  assert.deepEqual(c, { low: 25, high: 30, homeMiles: 157, fastMiles: 105, gas: 30 });
+  const noStop = tripCost({ miles: 100, firstLegMiles: 100, kwh100: 30, homeCentsPerKwh: 15, dcPerKwh: 0.53, gasPrice: null, mpg: 27 });
+  assert.equal(noStop.fastMiles, 0, 'with no stop, the whole drive is on the home charge');
+  assert.equal(noStop.gas, null, 'no gas price, no comparison');
+  assert.equal(noStop.low, 5, 'never shown as $0');
 });

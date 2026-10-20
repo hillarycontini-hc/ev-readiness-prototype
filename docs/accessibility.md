@@ -53,6 +53,11 @@ it flagged both.
   in place, and a visually hidden `role="status"` line announces "Leg 2 of 3: 95 miles. Stop 1:
   ..." on each step. The visible "Leg 2 of 3" counter is `aria-hidden` so it isn't read twice.
   Previous and Next are real buttons, disabled at the ends; "Skip to arrival" jumps ahead.
+  Inside an open leg, the plug, hours, and price are a native `<details>` disclosure ("Plug:
+  NACS"), as are "What are CCS and NACS?" and "How we estimated this": each opens and closes by
+  tap, click, Enter, or Space, with a visible focus ring and a 44 px target. "Change start" is a
+  button with `aria-expanded` that opens a labelled "Start from" radio group and its own search
+  form. The car choice's EPA range is tied to the select with `aria-describedby`.
   Leg figures carry "on leg N" in screen-reader text. The current leg is shown by a ring, the
   open details, and the counter as well as the filled station, so color isn't the only signal.
   On phones an open tool widens toward the plan's line (fixed: at 320 px the trip form was

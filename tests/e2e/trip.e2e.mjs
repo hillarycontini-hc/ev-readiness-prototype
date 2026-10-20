@@ -45,9 +45,13 @@ test('plan a trip to the park, step through it by keyboard, and save it', async 
   const { page, calls } = await openPlan(context);
   await page.click('.tool-btn:has-text("Plan the trip")');
   await page.waitForSelector('#tool-plan-park .trip-plan-btn');
-  const checked = await page.locator('#tool-plan-park .trip-dest:has(input:checked)').innerText();
+  const checked = await page.locator('#tool-plan-park .trip-to .trip-dest:has(input:checked)').innerText();
   assert.match(checked, /Great Sand Dunes/, 'the step’s park is chosen for you');
-  assert.equal(await page.inputValue('#trip-plan-park-leg'), '200', 'typical EPA range 300 / 1.5');
+  assert.equal(await page.inputValue('#trip-plan-park-leg'), '210', 'typical EPA range 300 x 70%');
+  // Plug help opens and closes in place.
+  await page.click('#tool-plan-park .trip-help summary');
+  assert.match(await page.locator('#tool-plan-park .trip-help').innerText(), /North American Charging Standard/);
+  await page.click('#tool-plan-park .trip-help summary');
   await page.click('#tool-plan-park .trip-plan-btn');
   await page.waitForSelector('#tool-plan-park .trip-legs');
 
@@ -61,8 +65,21 @@ test('plan a trip to the park, step through it by keyboard, and save it', async 
   const n = await legs.count();
   assert.ok(n >= 2, `at least one stop and the arrival (${n} legs)`);
   const figures = await page.$$eval('#tool-plan-park .trip-leg .row-figure', (els) => els.map((e) => parseInt(e.textContent.replace(/,/g, ''), 10)));
-  for (const f of figures) assert.ok(f <= 200, `every leg is within 200 miles: ${figures}`);
+  for (const f of figures) assert.ok(f <= 210, `every leg is within 210 miles: ${figures}`);
   assert.match(await legs.first().innerText(), /Stop 1: [\s\S]*fast port/);
+  // The open leg reads in order: where it is, what's left, the address, then plug details folded away.
+  const open = page.locator('#tool-plan-park .trip-leg[aria-current="step"]');
+  assert.match(await open.locator('.leg-key').first().innerText(), /^Road mile \d+/);
+  assert.match(await open.locator('.leg-key').nth(1).innerText(), /You’d arrive with about \d+ of your 210 planned miles left/);
+  assert.equal(await open.locator('.leg-more').getAttribute('open'), null, 'plug details start closed');
+  await open.locator('.leg-more summary').click();
+  assert.match(await open.locator('.leg-more').innerText(), /Hours:[\s\S]*Price:/);
+  // Time and cost estimates, labeled.
+  const totals = await page.locator('#tool-plan-park .trip-totals').innerText();
+  assert.match(totals, /Charging time, est\.[\s\S]*Electricity, est\./);
+  assert.match(await page.locator('#tool-plan-park .trip-cost-line').innerText(), /^About \$\d+[–\d]* of electricity, vs about \$\d+ of gas/);
+  await page.click('#tool-plan-park .trip-cost-note summary');
+  assert.match(await page.locator('#tool-plan-park .trip-cost-note').innerText(), /Electricity for this drive: about \$\d+[–\d]*[\s\S]*gas car: about \$\d+/);
   assert.match(await legs.last().innerText(), /Arrive: Great Sand Dunes/);
   assert.equal(await legs.first().getAttribute('aria-current'), 'step');
 
@@ -150,19 +167,38 @@ test('saved trips are capped at three and can be viewed offline and removed', as
   await context.close();
 });
 
+test('the start can be changed to a searched place', async () => {
+  const context = await browser.newContext();
+  await context.route('**/api/geocode*', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ results: [{ name: 'Longmont', detail: 'Longmont, CO, United States', lat: 40.1672, lon: -105.1019, type: 'city' }] }) }));
+  const { page, calls } = await openPlan(context);
+  await page.click('.tool-btn:has-text("Plan the trip")');
+  await page.waitForSelector('#tool-plan-park .trip-plan-btn');
+  assert.match(await page.locator('#tool-plan-park .trip-from').innerText(), /From the center of ZIP 80302/);
+  await page.click('#tool-plan-park .trip-from button:has-text("Change start")');
+  await page.fill('#search-trip-plan-park-from-search', 'Longmont');
+  await page.click('#tool-plan-park .trip-from-panel form[role=search] button[type=submit]');
+  await page.click('#tool-plan-park .trip-from-panel .result-btn');
+  assert.match(await page.locator('#tool-plan-park .trip-from').innerText(), /From Longmont/);
+  await page.click('#tool-plan-park .trip-plan-btn');
+  await page.waitForSelector('#tool-plan-park .trip-legs');
+  assert.equal(new URL(calls.at(-1)).searchParams.get('from'), '40.1672,-105.1019');
+  assert.match(await page.locator('#tool-plan-park .trip-title').innerText(), /^Longmont to /i);
+  await context.close();
+});
+
 test('rehearse a drive to a searched place; routing errors are explained', async () => {
   const context = await browser.newContext();
   await context.route('**/api/geocode*', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ results: [{ name: 'Alamosa', detail: 'Alamosa, CO, United States', lat: 37.4695, lon: -105.87, type: 'city' }] }) }));
   const { page } = await openPlan(context, { status: 429 });
   await page.click('.tool-btn:has-text("Plan a trip")');
   await page.waitForSelector('#tool-plan-route .trip-plan-btn');
-  assert.equal(await page.locator('#tool-plan-route .trip-dest input:checked').count(), 0, 'no destination is assumed');
+  assert.equal(await page.locator('#tool-plan-route .trip-to .trip-dest input:checked').count(), 0, 'no destination is assumed');
   await page.click('#tool-plan-route .trip-plan-btn');
   assert.match(await page.locator('#tool-plan-route > .tool-status').innerText(), /Choose where you’re going/);
   await page.fill('#search-trip-plan-route-search', 'Alamosa');
-  await page.click('#tool-plan-route form[role=search] button[type=submit]');
+  await page.click('#tool-plan-route > .place-search form[role=search] button[type=submit]');
   await page.click('#tool-plan-route .result-btn');
-  assert.match(await page.locator('#tool-plan-route .trip-dest:has(input:checked)').innerText(), /Alamosa/);
+  assert.match(await page.locator('#tool-plan-route .trip-to .trip-dest:has(input:checked)').innerText(), /Alamosa/);
   await page.click('#tool-plan-route .trip-plan-btn');
   await page.waitForFunction(() => /Too many trips/.test(document.querySelector('#tool-plan-route > .tool-status')?.textContent || ''));
   await context.close();

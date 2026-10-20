@@ -75,6 +75,9 @@ const VIEWS = {
     await page.waitForSelector('#tool-plan-park .trip-legs');
     await page.click('#tool-plan-park button:has-text("Next leg")');
     await page.click('#tool-plan-park .trip-save');
+    await page.click('#tool-plan-park .trip-leg[aria-current="step"] .leg-more summary').catch(() => {});
+    await page.click('#tool-plan-park .trip-help summary');
+    await page.click('#tool-plan-park .trip-from button:has-text("Change start")');
     await page.click('.tool-btn:has-text("Plan a trip")');
     await page.waitForSelector('#tool-plan-route .trip-saved-list');
   },

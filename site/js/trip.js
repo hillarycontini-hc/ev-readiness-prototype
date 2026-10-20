@@ -34,13 +34,43 @@ export function cleanRoute(body) {
   return { miles, minutes, points: clean };
 }
 
-/**
- * Miles to plan per leg from a car's lowest EPA range: the same 1.5x buffer the site uses for
- * the range you need (winter loss, a reserve so you never arrive at 0%, battery aging).
- */
+// How people road-trip: fast-charge to about 80% and arrive with about 10%, so each leg uses
+// about 70% of the battery. Cold weather and highway speeds use more; the visitor can lower it.
+export const ROAD_TRIP_SHARE = 0.7;
+
+/** Miles to plan per leg from a car's lowest EPA range, to the nearest 5 (the field's step). */
 export function legMilesFromRange(epaMiles) {
   if (!Number.isFinite(epaMiles) || epaMiles <= 0) return null;
-  return Math.max(LEG_MIN, Math.min(LEG_MAX, Math.round(epaMiles / ASSUMPTIONS.rangeBuffer)));
+  return Math.max(LEG_MIN, Math.min(LEG_MAX, Math.round((epaMiles * ROAD_TRIP_SHARE) / 5) * 5));
+}
+
+// Typical published 10%-to-80% fast-charge times for current electric SUVs and pickups run about
+// 20 to 45 minutes. A stated assumption, shown as a range; it depends on the car and the charger.
+export const CHARGE_MINUTES = [20, 45];
+
+/** "About 40 min to 1 h 30 min" of charging for `stops` stops, or null with none. */
+export function chargeTimeText(stops) {
+  if (!stops) return null;
+  const [lo, hi] = CHARGE_MINUTES.map((m) => m * stops);
+  return `${durationText(lo)} to ${durationText(hi)}`;
+}
+
+// Cold weather and highway speeds can use 20-30% more energy than the EPA rating.
+export const EXTRA_USE = 0.3;
+const round5 = (x) => Math.max(5, Math.round(x / 5) * 5);
+
+/**
+ * Rough energy cost of a one-way trip, as a range. The first leg runs on a charge from home at
+ * the home state's rate; every mile after the first stop is charged at fast chargers. The low end
+ * uses the EPA efficiency; the high end adds EXTRA_USE. Gas is the same miles in a `mpg` car.
+ */
+export function tripCost({ miles, firstLegMiles, kwh100, homeCentsPerKwh, dcPerKwh, gasPrice, mpg }) {
+  const homeMiles = Math.min(miles, Math.max(0, firstLegMiles));
+  const fastMiles = miles - homeMiles;
+  const dollars = (factor) => ((homeMiles * homeCentsPerKwh) / 100 + fastMiles * dcPerKwh) * (kwh100 / 100) * factor;
+  const low = round5(dollars(1));
+  const high = Math.max(low, round5(dollars(1 + EXTRA_USE)));
+  return { low, high, homeMiles: Math.round(homeMiles), fastMiles: Math.round(fastMiles), gas: gasPrice ? round5((miles / mpg) * gasPrice) : null };
 }
 
 /** Station map cells (the static data/stations/{i}_{j}.json files) within `corridor` miles of the route. */
@@ -59,7 +89,7 @@ export function corridorCells(points, corridor = CORRIDOR_MILES, cell = 0.5) {
 // Which fast chargers a car can use. Stations with only CHAdeMO are never used: no electric SUV,
 // minivan, or pickup on sale in the U.S. charges with it.
 export const PLUGS = {
-  any: { label: 'Either (CCS or NACS)', ok: (c) => /[CN]/.test(c) },
+  any: { label: 'Either plug', ok: (c) => /[CN]/.test(c) },
   ccs: { label: 'CCS only', ok: (c) => c.includes('C') },
   nacs: { label: 'NACS only', ok: (c) => c.includes('N') },
 };
