@@ -394,19 +394,28 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       if (Number.isFinite(n) && n >= LEG_MIN && n <= LEG_MAX) ui.legMiles = n; else e.target.value = ui.legMiles;
     } });
     const basisId = `${prefix}-basis`;
-    const basisNote = el('p', { class: 'field-note', id: `${basisId}-note` });
-    const drawBasisNote = () => { basisNote.textContent = ui.basis ? `Lowest EPA range ${num.format(ui.basis.range)} mi${ui.basis.id === 'typical' ? ' (the median)' : ''}` : ''; };
+    const basisRange = (b) => `Lowest EPA range ${num.format(b.range)} mi${b.id === 'typical' ? ' (the median)' : ''}`;
     const plugId = `${prefix}-plug`;
     const plugSelect = el('select', { id: plugId, onchange: (e) => { ui.plug = Object.hasOwn(PLUGS, e.target.value) ? e.target.value : 'any'; } },
       Object.entries(PLUGS).map(([k, pl]) => el('option', { value: k, text: pl.label })));
-    const basisSelect = bases.length ? el('select', { id: basisId, 'aria-describedby': `${basisId}-note`, onchange: (e) => {
-      ui.basis = bases.find((b) => b.id === e.target.value) || ui.basis;
-      ui.legMiles = legMilesFromRange(ui.basis.range) || ui.legMiles;
-      legInput.value = ui.legMiles;
-      drawBasisNote();
-    } }, bases.map((b) => el('option', { value: b.id, text: b.label }))) : null;
+    // Plan for: radio choices like "Where to", so a long car name wraps instead of being cut off.
+    // With only one choice there is nothing to pick, so it is plain text.
+    const basisField = bases.length > 1
+      ? el('fieldset', { class: 'seg trip-basis field-wide' }, el('legend', { text: 'Plan for' }),
+        el('div', { class: 'seg trip-dests' }, bases.map((b, i) => {
+          const id = `${basisId}-${i}`;
+          return el('label', { class: 'seg-option trip-dest', for: id },
+            el('input', { type: 'radio', id, name: basisId, value: b.id, checked: ui.basis === b, onchange: () => {
+              ui.basis = b;
+              ui.legMiles = legMilesFromRange(b.range) || ui.legMiles;
+              legInput.value = ui.legMiles;
+            } }),
+            el('span', {}, el('strong', { text: b.label }), el('span', { class: 'trip-dest-detail', text: basisRange(b) })));
+        })))
+      : bases.length ? el('p', { class: 'trip-basis-one field-wide' }, el('span', { class: 'trip-from-label', text: 'Plan for ' }), el('strong', { text: bases[0].label }),
+        el('span', { class: 'trip-dest-detail', text: basisRange(bases[0]) })) : null;
     const rangeFields = el('div', { class: 'finance-fields trip-fields' },
-      basisSelect ? el('div', { class: 'field field-basis' }, el('label', { for: basisId, text: 'Plan for' }), basisSelect, basisNote) : null,
+      basisField,
       el('div', { class: 'field' }, el('label', { for: legId, text: 'Miles between charges' }),
         el('span', { class: 'input-affix' }, legInput, el('span', { 'aria-hidden': 'true', text: 'mi' }))),
       el('div', { class: 'field' }, el('label', { for: plugId, text: 'Fast-charging plug' }),
@@ -420,7 +429,6 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
         el('p', { text: 'Adapters let many cars use the other plug. The brand’s site lists which port a car has. Not sure? Keep “Either plug”: you’ll still see each stop’s plug before you go.' })),
       el('p', { class: 'tool-note field-wide', text: `Miles between charges start at 70% of the car’s lowest EPA range: charging to about 80% at each stop and arriving with about 10% left. Cold weather and highway speeds use more, so lower it for a winter trip.${cars.length ? '' : ' To plan with a specific car, shortlist it in “Compare cars that fit”.'}` }));
 
-    drawBasisNote();
     const status = el('p', { class: 'tool-status', role: 'status' });
     const result = el('div', { class: 'trip-result' });
     const savedBox = el('div', { class: 'trip-saved' });
@@ -513,12 +521,13 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
         || (ui.searched = { name: trip.to.name, detail: trip.to.detail.replace(/(^| · )to the visitor center$/, ''), lat: trip.to.lat, lon: trip.to.lon, park: trip.to.park });
       drawDestinations();
       const basis = bases.find((b) => b.label === trip.car);
-      if (basis) { ui.basis = basis; basisSelect.value = basis.id; drawBasisNote(); }
+      const radios = basisField?.querySelectorAll('input[type=radio]') || [];
+      if (basis) { ui.basis = basis; for (const r of radios) r.checked = r.value === basis.id; }
       ui.legMiles = trip.legMiles;
       legInput.value = trip.legMiles;
       ui.plug = Object.hasOwn(PLUGS, trip.plug) ? trip.plug : 'any';
       plugSelect.value = ui.plug;
-      (basisSelect || legInput).focus();
+      ([...radios].find((r) => r.checked) || legInput).focus();
     }
 
     function toggleSave(trip) {

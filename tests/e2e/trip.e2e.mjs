@@ -6,7 +6,7 @@
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
-import { RENTER_TRIPS, TEST_CONFIG, completeFlow, decodePosthogBody, newVisitorContext, startServer, tripRouteBody as routeBody } from './helpers.mjs';
+import { LONGEST_CAR, RENTER_TRIPS, TEST_CONFIG, completeFlow, decodePosthogBody, newVisitorContext, shortlistCars, startServer, tripRouteBody as routeBody } from './helpers.mjs';
 
 let server;
 let browser;
@@ -239,10 +239,50 @@ test('"Change" puts the shown trip back in the form and moves focus to it', asyn
   const change = page.locator('#tool-plan-park .trip-settings button:has-text("Change")');
   assert.equal(await change.textContent(), 'Change the car, miles, or plug', 'screen readers hear what Change is for');
   await change.click();
-  assert.equal(await page.evaluate(() => document.activeElement.id), 'trip-plan-park-basis', 'focus moves to the first setting');
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'trip-plan-park-leg', 'with no car to choose, focus moves to the miles');
   assert.equal(await page.inputValue('#trip-plan-park-leg'), '210');
   assert.equal(await page.inputValue('#trip-plan-park-plug'), 'any');
   assert.match(await page.locator('#tool-plan-park .trip-to .trip-dest:has(input:checked)').innerText(), /Great Sand Dunes/);
+  await context.close();
+});
+
+test('shortlisted cars are radio choices with their EPA range; Change restores the car', async () => {
+  const context = await browser.newContext();
+  const { page } = await openPlan(context);
+  await shortlistCars(page, [LONGEST_CAR, 'chevrolet-silverado-ev']);
+  await page.click('.tool-btn:has-text("Plan the trip")');
+  await page.waitForSelector('#tool-plan-park .trip-plan-btn');
+  const group = page.locator('#tool-plan-park fieldset.trip-basis');
+  assert.equal(await group.locator('legend').innerText(), 'Plan for');
+  assert.deepEqual(await group.locator('.trip-dest').allInnerTexts(), [
+    'Mercedes-Benz G 580 Electric\nLowest EPA range 249 mi',
+    'Chevrolet Silverado EV\nLowest EPA range 283 mi',
+    'Typical electric SUV\nLowest EPA range 300 mi (the median)',
+  ], 'shortest range first, the typical car last');
+  assert.equal(await page.isChecked('#trip-plan-park-basis-0'), true);
+  assert.equal(await page.inputValue('#trip-plan-park-leg'), '175', '249 x 70%, to the nearest 5');
+  await page.check('#trip-plan-park-basis-2');
+  assert.equal(await page.inputValue('#trip-plan-park-leg'), '210');
+  await page.check('#trip-plan-park-basis-0');
+  await page.click('#tool-plan-park .trip-plan-btn');
+  await page.waitForSelector('#tool-plan-park .trip-legs');
+  assert.match(await page.locator('#tool-plan-park .trip-settings').innerText(), /^Mercedes-Benz G 580 Electric · 175 mi between charges/);
+  // Another car in the form, then Change: the planned car is chosen again and has focus.
+  await page.check('#trip-plan-park-basis-1');
+  await page.click('#tool-plan-park .trip-settings button:has-text("Change")');
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'trip-plan-park-basis-0', 'focus moves to the planned car');
+  assert.equal(await page.isChecked('#trip-plan-park-basis-0'), true);
+  assert.equal(await page.inputValue('#trip-plan-park-leg'), '175');
+  await context.close();
+});
+
+test('with no shortlisted car, "Plan for" is plain text, not a one-option control', async () => {
+  const context = await browser.newContext();
+  const { page } = await openPlan(context);
+  await page.click('.tool-btn:has-text("Plan the trip")');
+  await page.waitForSelector('#tool-plan-park .trip-plan-btn');
+  assert.equal(await page.locator('#tool-plan-park .trip-basis, #tool-plan-park select#trip-plan-park-basis').count(), 0);
+  assert.equal(await page.locator('#tool-plan-park .trip-basis-one').innerText(), 'Plan for Typical electric SUV\nLowest EPA range 300 mi (the median)');
   await context.close();
 });
 

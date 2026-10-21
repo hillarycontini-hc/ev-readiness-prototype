@@ -5,7 +5,7 @@ import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { AxeBuilder } from '@axe-core/playwright';
-import { RENTER_TRIPS, completeFlow, startServer, tripRouteBody } from './helpers.mjs';
+import { LONGEST_CAR, RENTER_TRIPS, completeFlow, shortlistCars, startServer, tripRouteBody } from './helpers.mjs';
 
 let server;
 let browser;
@@ -81,6 +81,13 @@ const VIEWS = {
     await page.click('#tool-plan-park .trip-from button:has-text("Change start")');
     await page.click('.tool-btn:has-text("Plan a trip")');
     await page.waitForSelector('#tool-plan-route .trip-saved-list');
+  },
+  'trip planner with shortlisted cars (the longest name)': async (page) => {
+    await completeFlow(page, '80302', RENTER_TRIPS);
+    await page.click('#plan-cta');
+    await shortlistCars(page, [LONGEST_CAR, 'chevrolet-silverado-ev']);
+    await page.click('.tool-btn:has-text("Plan the trip")');
+    await page.waitForSelector('#tool-plan-park fieldset.trip-basis');
   },
   'trip planner, a trip that does not work yet': async (page) => {
     await page.route('**/api/route*', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(tripRouteBody()) }));

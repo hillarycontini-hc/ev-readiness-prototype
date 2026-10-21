@@ -48,11 +48,15 @@ it flagged both.
 - **Trip planner:** destinations are a native radio group in a fieldset ("Where to"); the
   destination search has its own labelled `role="search"` form (each search form on the page
   now has a distinct name, which axe required); miles between charges and the plug are labelled
-  fields. The submit is "Find charging stops", so it isn't confused with the plan step's own
+  fields. "Plan for" is a native radio group in a fieldset too, one choice per shortlisted car
+  plus the typical electric SUV, each with its name and "Lowest EPA range N mi" inside the
+  choice's label, so the range is read with it. With no car shortlisted it is plain text, not a
+  control with one option. The submit is "Find charging stops", so it isn't confused with the plan step's own
   "Plan the trip" button. After it, focus moves to the trip's heading. Under the heading, a
   plain-text line gives the car, miles between charges, and plug the trip was planned with (also
   in the saved-trips list and the partner summary); its "Change" button (screen readers hear
-  "Change the car, miles, or plug") puts the trip back in the form and moves focus to "Plan for".
+  "Change the car, miles, or plug") puts the trip back in the form and moves focus to its car's
+  choice in "Plan for" (or to the miles when there is no car to choose).
   The legs are an ordered list
   labelled "Legs of this trip"; the current leg carries `aria-current="step"`, its details open
   in place, and a visually hidden `role="status"` line announces "Leg 2 of 3: 95 miles. Stop 1:
@@ -67,7 +71,7 @@ it flagged both.
   NACS"), as are "What are CCS and NACS?" and "How we estimated this": each opens and closes by
   tap, click, Enter, or Space, with a visible focus ring and a 44 px target. "Change start" is a
   button with `aria-expanded` that opens a labelled "Start from" radio group and its own search
-  form. The car choice's EPA range is tied to the select with `aria-describedby`. When a trip
+  form. When a trip
   doesn't work, focus still moves to the trip heading, the reason is the first line under the
   totals, the fixes are real buttons, and the partial list is a `<details>` disclosure; axe scans
   this state too. The "NACS only" tag is a word, not a color, and the "Check your car's plug" line
@@ -78,9 +82,10 @@ it flagged both.
   On phones an open tool widens toward the plan's line (fixed: at 320 px the trip form was
   about 150 px wide and overflowed by 6 px, which the reflow check caught). Fixed from the
   Impeccable critique: at 320 px the "Plan for" dropdown cut its choice to "A typical electric
-  S"; the label is now "Typical electric SUV" and the trip's dropdowns use the small text size on
-  phones, so it shows whole. The longest car names still end in the closed dropdown's cut-off on
-  phones, and show in full when it opens and in the trip's settings line.
+  S"; the label is now "Typical electric SUV". A closed dropdown can't wrap, so the longest car
+  names (28 characters) were still cut off on phones; "Plan for" is now a radio group whose names
+  wrap whole at 320 px. axe scans it at 1280 and 320 px in light and dark with the longest name
+  shortlisted, and the reflow check covers it.
 - **Field edges in the plan tools (1.4.11):** inputs, selects, and choice rings on the navy
   panel are #8593a8, about 4.8:1 (fixed in the trip planner's design review: they were 2.25:1).
 - **Errors (3.3.1, 3.3.3):** ZIP and missing-answer errors are text, announced with
