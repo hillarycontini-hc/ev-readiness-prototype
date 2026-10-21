@@ -512,7 +512,9 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .trip-dest input { accent-color: var(--c); }
 .trip-fields { margin-top: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(13rem, 100%), 1fr)); }
 .trip-fields select { width: 100%; }
-.trip-fields .field-basis { grid-column: 1 / -1; }
+.trip-basis legend { font-size: var(--t-small); }
+.trip-basis-one { color: #fff; }
+.trip-basis-one .trip-dest-detail { display: block; }
 .trip-result:not(:empty) { margin-top: 1.1rem; padding-top: 1.1rem; border-top: 1px solid #2c3a55; }
 .trip-title { margin: 0 0 0.25rem; font: 900 clamp(1.5rem, 3vw, 1.875rem)/1 var(--display); text-transform: uppercase; color: #fff; overflow-wrap: anywhere; }
 .trip-title:focus-visible, .trip-saved-title:focus-visible { outline: 3px solid var(--citron); outline-offset: 3px; }
@@ -625,9 +627,6 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   .trip-position { min-width: 0; grid-column: 1 / -1; order: -1; text-align: left; }
   .trip-stepper .btn-link { grid-column: 1 / -1; justify-self: start; }
   .trip-stepper .btn { padding-inline: 0.6rem; font-size: var(--t-small); }
-  /* A closed select can't wrap: on phones the trip's dropdowns use the small size and a slimmer
-     inset, so "Typical electric SUV" fits whole at 320 px. */
-  .trip-fields select { font-size: var(--t-small); padding-inline: 0.45rem 0.2rem; }
   .trip-totals { gap: 0.4rem 1.25rem; }
   .trip-totals dd { font-size: 1.75rem; }
   .row-figure { white-space: normal; }
