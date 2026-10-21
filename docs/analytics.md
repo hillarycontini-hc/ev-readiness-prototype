@@ -71,7 +71,7 @@ Every event also carries `messaging_variant`, `$feature/landing-messaging`, and 
 | `plan_resumed` | A plan saved on this device is reopened | none |
 | `trip_planned` | The trip planner finishes a route with charging stops | `stops` (bucket: `0`, `1`, `2-3`, `4+`), `dest` (`park` or `place`), `result` (`ok`, `gap`, `too_many_stops`), `fix` (`miles` or `plug`, only when a one-tap fix was used) |
 | `trip_saved` | A planned trip is saved to the plan | `count` (trips saved, at most 3) |
-| `trip_step` | Previous, Next, or Skip in a trip's step-through | `direction` (`previous`, `next`, `skip`) |
+| `trip_step` | Previous, Next, Skip, or a leg's title in a trip's step-through | `direction` (`previous`, `next`, `skip`, `jump`) |
 
 **Never sent:** the ZIP code (the browser only requests the public data file named for its first three digits, from this same site), searched addresses or place names, latitude/longitude, saved station names or ids, trip
 destinations, routes, road miles, or the exact number of charging stops, prices or payments the visitor typed, IP address, full user agent, timezone,

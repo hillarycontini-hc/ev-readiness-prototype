@@ -48,11 +48,21 @@ it flagged both.
 - **Trip planner:** destinations are a native radio group in a fieldset ("Where to"); the
   destination search has its own labelled `role="search"` form (each search form on the page
   now has a distinct name, which axe required); miles between charges and the plug are labelled
-  fields. After "Plan the trip", focus moves to the trip's heading. The legs are an ordered list
+  fields. The submit is "Find charging stops", so it isn't confused with the plan step's own
+  "Plan the trip" button. After it, focus moves to the trip's heading. Under the heading, a
+  plain-text line gives the car, miles between charges, and plug the trip was planned with (also
+  in the saved-trips list and the partner summary); its "Change" button (screen readers hear
+  "Change the car, miles, or plug") puts the trip back in the form and moves focus to "Plan for".
+  The legs are an ordered list
   labelled "Legs of this trip"; the current leg carries `aria-current="step"`, its details open
   in place, and a visually hidden `role="status"` line announces "Leg 2 of 3: 95 miles. Stop 1:
   ..." on each step. The visible "Leg 2 of 3" counter is `aria-hidden` so it isn't read twice.
   Previous and Next are real buttons, disabled at the ends; "Skip to arrival" jumps ahead.
+  Each leg's title is also a button, like a results row: it has `aria-expanded` and
+  `aria-controls` for the leg's details, opens that leg in place, moves `aria-current`, and
+  keeps focus on itself (a 44 px target with a visible focus ring). A trip already saved with the
+  same settings shows a disabled "Already saved" button with the reason in text beside it.
+  Saved-trip View and Remove are 44 px wide and tall.
   Inside an open leg, the plug, hours, and price are a native `<details>` disclosure ("Plug:
   NACS"), as are "What are CCS and NACS?" and "How we estimated this": each opens and closes by
   tap, click, Enter, or Space, with a visible focus ring and a 44 px target. "Change start" is a
@@ -66,7 +76,11 @@ it flagged both.
   Leg figures carry "on leg N" in screen-reader text. The current leg is shown by a ring, the
   open details, and the counter as well as the filled station, so color isn't the only signal.
   On phones an open tool widens toward the plan's line (fixed: at 320 px the trip form was
-  about 150 px wide and overflowed by 6 px, which the reflow check caught).
+  about 150 px wide and overflowed by 6 px, which the reflow check caught). Fixed from the
+  Impeccable critique: at 320 px the "Plan for" dropdown cut its choice to "A typical electric
+  S"; the label is now "Typical electric SUV" and the trip's dropdowns use the small text size on
+  phones, so it shows whole. The longest car names still end in the closed dropdown's cut-off on
+  phones, and show in full when it opens and in the trip's settings line.
 - **Field edges in the plan tools (1.4.11):** inputs, selects, and choice rings on the navy
   panel are #8593a8, about 4.8:1 (fixed in the trip planner's design review: they were 2.25:1).
 - **Errors (3.3.1, 3.3.3):** ZIP and missing-answer errors are text, announced with

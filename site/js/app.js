@@ -12,7 +12,7 @@ import { chevron, el, externalLink as linkTo, num, srOnly, usd, usd10 as money }
 import { createPlanTools } from './plan-tools.js';
 import { clearSaved, decodeShare, emptyPlan, encodeShare, loadSaved, savePlan, sharePayload } from './plan-store.js';
 import { durationText } from './trip.js';
-import { chargeTimeShort, homeText, stopFacts, stopsText, tripCostFor } from './trip-tool.js';
+import { chargeTimeShort, homeText, settingsText, stopFacts, stopsText, tripCostFor } from './trip-tool.js';
 
 const $ = (id) => document.getElementById(id);
 // Questions that apply to this visitor (work charging only when home charging is uncertain).
@@ -643,7 +643,7 @@ async function renderSummary() {
     el('dl', { class: 'summary-facts' },
       el('dt', { text: 'Fuel vs. gas' }), el('dd', { text: c.savings == null ? 'Not available' : c.savings >= 0 ? `About ${money(c.savings)} a year saved` : `About ${money(c.savings)} a year more` }),
       el('dt', { text: 'Charging, per month' }), el('dd', { text: `About ${money(c.evCost / 12)} (vs. about ${c.gasCost == null ? 'n/a' : money(c.gasCost / 12)} on gas)` }),
-      el('dt', { text: 'Range you need' }), el('dd', { text: `${num.format(rec.range.need)} miles between charges` }),
+      el('dt', { text: 'Daily range you need' }), el('dd', { text: `${num.format(rec.range.need)} miles between charges` }),
       el('dt', { text: 'Steps done' }), el('dd', { text: `${doneCount} of ${steps.length}` })),
   ];
 
@@ -689,7 +689,8 @@ async function renderSummary() {
     nodes.push(el('h4', { text: 'Trips you planned' }),
       el('ul', { class: 'summary-places summary-trips' }, p.trips.map((t) => el('li', {},
         el('strong', { text: `${t.from.name} to ${t.to.name}` }),
-        el('span', { class: 'small summary-trip-facts', text: `${num.format(Math.round(t.miles))} road miles one way, about ${durationText(t.minutes)} of driving${t.stops.length ? ` plus about ${chargeTimeShort(t.stops.length)} of charging` : ''}. ${stopsText(t.stops.length)}, planning up to ${t.legMiles} miles between charges.` }),
+        el('span', { class: 'small summary-trip-facts summary-trip-settings', text: settingsText(t) }),
+        el('span', { class: 'small summary-trip-facts', text: `${num.format(Math.round(t.miles))} road miles one way, about ${durationText(t.minutes)} of driving${t.stops.length ? ` plus about ${chargeTimeShort(t.stops.length)} of charging` : ''}. ${stopsText(t.stops.length)}.` }),
         ((cost) => (cost ? el('span', { class: 'small summary-trip-facts', text: `Electricity, est.: ${cost.figure}${cost.gas ? `; the same drive on gas: about $${cost.gas}` : ''}.` }) : null))(tripCostFor(t, { rec, meta: state.meta, stateName: state.zipRec?.s })),
         ((home) => (home ? el('span', { class: 'small summary-trip-facts', text: `Getting home: ${home}` }) : null))(homeText(t, t.to.park ? rec.destinations.find((d) => d.code === t.to.park)?.nearestFastToPark ?? null : null)),
         t.stops.length ? el('ol', { class: 'summary-chargers' }, t.stops.map((s) => el('li', {},

@@ -57,7 +57,7 @@ done and tested; the remaining items are account settings only you can change.
   points rounded to about 10 m: no turn-by-turn text, place names, or anything from the
   provider's response besides those. A route the provider can't find is `no_route`; any other
   failure is `route_unavailable`. The start point is the visitor's saved home or their ZIP
-  center; it goes to Geoapify through the proxy only when they press "Plan the trip".
+  center; it goes to Geoapify through the proxy only when they press "Find charging stops".
 - Build scripts read optional `NREL_API_KEY` / `NPS_API_KEY` from the environment only, redact
   them from logs, and never write them to disk.
 - The PostHog project key (`phc_...`) is public by design: it can send events, not read them.
