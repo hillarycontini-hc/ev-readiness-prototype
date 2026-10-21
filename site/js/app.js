@@ -12,7 +12,7 @@ import { chevron, el, externalLink as linkTo, num, srOnly, usd, usd10 as money }
 import { createPlanTools } from './plan-tools.js';
 import { clearSaved, decodeShare, emptyPlan, encodeShare, loadSaved, savePlan, sharePayload } from './plan-store.js';
 import { durationText } from './trip.js';
-import { chargeTimeShort, homeText, settingsText, stopFacts, stopsText, tripCostFor } from './trip-tool.js';
+import { chargeTimeShort, homeText, homeWarning, settingsText, stopFacts, stopsText, tripCostFor } from './trip-tool.js';
 
 const $ = (id) => document.getElementById(id);
 // Questions that apply to this visitor (work charging only when home charging is uncertain).
@@ -692,7 +692,9 @@ async function renderSummary() {
         el('span', { class: 'small summary-trip-facts summary-trip-settings', text: settingsText(t) }),
         el('span', { class: 'small summary-trip-facts', text: `${num.format(Math.round(t.miles))} road miles one way, about ${durationText(t.minutes)} of driving${t.stops.length ? ` plus about ${chargeTimeShort(t.stops.length)} of charging` : ''}. ${stopsText(t.stops.length)}.` }),
         ((cost) => (cost ? el('span', { class: 'small summary-trip-facts', text: `Electricity, est.: ${cost.figure}${cost.gas ? `; the same drive on gas: about $${cost.gas}` : ''}.` }) : null))(tripCostFor(t, { rec, meta: state.meta, stateName: state.zipRec?.s })),
-        ((home) => (home ? el('span', { class: 'small summary-trip-facts', text: `Getting home: ${home}` }) : null))(homeText(t, t.to.park ? rec.destinations.find((d) => d.code === t.to.park)?.nearestFastToPark ?? null : null)),
+        ((warn, home) => (warn
+          ? el('span', { class: 'summary-warn' }, el('strong', { text: `${warn.lead} ` }), warn.text)
+          : home ? el('span', { class: 'small summary-trip-facts', text: `Getting home: ${home}` }) : null))(homeWarning(t), homeText(t, t.to.park ? rec.destinations.find((d) => d.code === t.to.park)?.nearestFastToPark ?? null : null)),
         t.stops.length ? el('ol', { class: 'summary-chargers' }, t.stops.map((s) => el('li', {},
           el('span', { class: 'summary-charger-name', text: `Road mile ${num.format(s.atMile)}: ${s.name}` }),
           el('span', { class: 'small', text: [[s.street, s.city].filter(Boolean).join(', '), stopFacts(s)].filter(Boolean).join(' · ') })))) : null))),

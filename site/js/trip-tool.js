@@ -4,10 +4,10 @@
 // Rendering uses textContent only.
 
 import { el, num, srOnly } from './dom.js';
-import { SearchUnavailable, connectorNames, fastStationsAlong, fetchRoute, milesBetween, searchPlaces } from './places.js';
+import { SearchUnavailable, chargersNear, connectorNames, fastStationsAlong, fetchRoute, milesBetween, searchPlaces } from './places.js';
 import { ASSUMPTIONS, FLEET_KEY } from './logic.js';
 import { MAX_SAVED_TRIPS } from './plan-store.js';
-import { CHARGE_MINUTES, EXTRA_USE, LEG_MAX, LEG_MIN, MAX_TRIP_STOPS, PLUGS, durationText, legMilesFromRange, nacsOnly, planStops, sameTrip, stopsBucket, suggestFixes, tripCost } from './trip.js';
+import { CHARGE_MINUTES, EXTRA_USE, LEG_MAX, LEG_MIN, MAX_TRIP_STOPS, PLUGS, durationText, fixActions, legMilesFromRange, nacsOnly, planStops, sameTrip, stopsBucket, suggestFixes, tripCost } from './trip.js';
 
 const tripId = () => `trip-${Math.random().toString(36).slice(2, 10)}`;
 const fastPlugs = (codes) => connectorNames((codes || '').replace(/[^CND]/g, ''));
@@ -16,7 +16,10 @@ let renders = 0; // gives each drawn trip's leg panels their own ids
 
 /** What a trip was planned with, so two trips to the same place can be told apart. */
 export function settingsText(trip) {
-  return [trip.car, `${num.format(trip.legMiles)} mi between charges`, (PLUGS[trip.plug] || PLUGS.any).label].filter(Boolean).join(' · ');
+  // Miles that differ from the car's own rule are marked, so a plan never reads as that car's.
+  const custom = Number.isFinite(trip.carLegMiles) && trip.legMiles !== trip.carLegMiles;
+  const miles = `${custom ? 'Custom: ' : ''}${num.format(trip.legMiles)} mi between charges`;
+  return [trip.car, miles, (PLUGS[trip.plug] || PLUGS.any).label].filter(Boolean).join(' · ');
 }
 
 /** One line describing a fast-charging stop: plugs, ports, network. */
@@ -47,7 +50,8 @@ export function homeText(trip, parkFast = null) {
   const back = num.format(trip.returnMiles);
   const left = num.format(trip.arriveWithMiles);
   const enough = trip.arriveWithMiles >= trip.returnMiles;
-  const nearPark = Number.isFinite(parkFast) ? ` The nearest fast charger to the park is about ${num.format(Math.round(parkFast))} miles from it (straight line).` : '';
+  const nearPark = trip.homeCharger != null ? chargerNearText(trip)
+    : Number.isFinite(parkFast) ? ` The nearest fast charger to the park is about ${num.format(Math.round(parkFast))} miles from it (straight line).` : '';
   if (trip.returnTo === 'home') {
     return enough
       ? `There’s no fast charger on this route, but the ${left} planned miles you’d have left cover the ${back} miles home.`
@@ -56,6 +60,30 @@ export function homeText(trip, parkFast = null) {
   return enough
     ? `The first fast charger on the way back is about ${back} miles from ${trip.to.name}, and the ${left} planned miles you’d have left reach it.`
     : `The first fast charger on the way back is about ${back} miles away, more than the ${left} planned miles you’d have left. Charge near ${trip.to.name} before heading back.${nearPark}`;
+}
+
+/** The nearest usable fast charger to the destination (CCS or both preferred with "Either plug"), by name, or what to do when there's none. */
+function chargerNearText(trip) {
+  const c = trip.homeCharger;
+  const place = trip.to.park ? 'the park' : trip.to.name;
+  if (c === false) return ` We don’t know of a fast charger within 30 miles of ${place}; look for Level 2 charging where you stay overnight.`;
+  if (!c) return '';
+  const city = c.city && !c.name.toLowerCase().includes(c.city.toLowerCase()) ? `, ${c.city}` : '';
+  const plugOnly = nacsOnly(c) && trip.plug !== 'nacs' ? ' (NACS only)' : '';
+  return ` The nearest fast charger to ${place} is ${c.name}${city}${plugOnly}, about ${num.format(Math.max(1, Math.round(c.miles)))} miles from it in a straight line.`;
+}
+
+/**
+ * The drive home, up front: when the planned miles left on arrival don't reach the first fast
+ * charger on the way back (or home), a warning to show right under the answer. Null when they do.
+ */
+export function homeWarning(trip) {
+  if (!Number.isFinite(trip.returnMiles) || trip.arriveWithMiles >= trip.returnMiles) return null;
+  const back = num.format(trip.returnMiles);
+  const where = trip.returnTo === 'home'
+    ? `There’s no fast charger on this route, and home is about ${back} miles back`
+    : `The first fast charger on the way back is about ${back} miles away`;
+  return { lead: 'Getting home: charge before you head back.', text: `${where}, and you’d arrive with about ${num.format(trip.arriveWithMiles)} of your planned miles.${chargerNearText(trip)}` };
 }
 
 /** At a glance: how many fast ports, and whose network. */
@@ -172,15 +200,25 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
     else if (plan.nextAtMile == null) why = `There’s no ${plugWord}fast charger for the last ${num.format(total - at)} miles, from road mile ${num.format(at)}${near} to ${trip.to.name}.`;
     else why = `After road mile ${num.format(at)}${near}, the next ${plugWord}fast charger is ${num.format(plan.nextAtMile - at)} miles on, more than your ${num.format(trip.legMiles)} miles between charges.`;
 
-    const actions = [];
-    if (fixes.minLegMiles) actions.push(el('button', { type: 'button', class: 'btn btn-go btn-small trip-fix', onclick: () => onFix('miles', fixes.minLegMiles) }, `Plan with ${fixes.minLegMiles} miles between charges`));
-    if (fixes.plugHelps) actions.push(el('button', { type: 'button', class: `btn ${actions.length ? 'btn-quiet' : 'btn-go'} btn-small trip-fix`, onclick: () => onFix('plug', 'any') }, 'Plan with either plug'));
+    // Fixes that work with the chosen car lead; one that needs more range than it has never does.
+    const ranked = fixActions(fixes);
+    const label = (a) => (a.kind === 'plug' ? 'Plan with either plug'
+      : a.fitsCar && a.value === fixes.carMiles ? `Plan with your car’s ${a.value} miles between charges`
+        : `Plan with ${a.value} miles between charges`);
+    const actions = ranked.map((a) => el('button', {
+      type: 'button', class: `btn ${a.primary ? 'btn-go' : 'btn-quiet'} btn-small trip-fix`, onclick: () => onFix(a.kind, a.value),
+    }, label(a)));
+    const beyond = ranked.find((a) => !a.fitsCar);
+    const notes = [
+      ranked.some((a) => a.kind === 'miles' && a.fitsCar && a.value === fixes.carMiles) ? `${fixes.carMiles} is 70% of this car’s lowest EPA range, the usual road-trip rule.` : null,
+      ranked.some((a) => a.kind === 'plug') ? 'Either plug works if your car can use both, as most can with an adapter.' : null,
+      beyond ? `${ranked.every((a) => !a.fitsCar) ? 'With this car, no setting fixes this route. ' : ''}${beyond.value} miles between charges takes a car with about ${num.format(beyond.epaNeeded)} miles of EPA range${Number.isFinite(fixes.carRange) ? `; this one has ${num.format(fixes.carRange)}` : ''}. It’s the least that works, so the longest leg would have little to spare.` : null,
+    ].filter(Boolean);
     return el('div', { class: 'trip-gap' },
       el('p', { class: 'leg-key trip-gap-why' }, el('strong', { text: 'This trip doesn’t work yet. ' }), why, ' It can be saved once every leg fits.'),
       actions.length ? el('div', { class: 'tool-row trip-fixes' }, actions) : null,
-      fixes.minLegMiles
-        ? el('p', { class: 'tool-note', text: `${fixes.minLegMiles} miles between charges suits a car with about ${num.format(fixes.epaNeeded)} miles of EPA range or more. It’s the least that works, so the longest leg has little to spare; more range is more comfortable.${fixes.plugHelps ? ' Either plug works at your current miles, if your car can use both (most can with an adapter).' : ''}` })
-        : fixes.plugHelps ? null : el('p', { class: 'tool-note', text: 'No setting fixes this route. Try a closer destination, or a town along the way.' }));
+      notes.length ? el('p', { class: 'tool-note', text: notes.join(' ') })
+        : el('p', { class: 'tool-note', text: 'No setting fixes this route. Try a closer destination, or a town along the way.' }));
   }
 
   function renderTrip(box, trip, { gap = null, onSaveToggle, onPlug = null, onChange = null } = {}) {
@@ -210,12 +248,15 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
 
     // With "Either plug", say plainly when a stop has only a NACS plug, and offer the CCS-only plan.
     const nacsStops = trip.plug === 'nacs' ? 0 : trip.stops.filter(nacsOnly).length;
-    const plugCheck = stuck == null && nacsStops ? el('div', { class: 'trip-warn' },
+    const plugCheck = stuck == null && nacsStops ? el('div', { class: 'trip-warn trip-plug-warn' },
       el('p', { class: 'leg-key' }, el('strong', { text: 'Check your car’s plug. ' }),
         `${nacsStops === 1 ? '1 stop has' : `${nacsStops} stops have`} only a NACS plug. A car with a CCS port needs an adapter there, and not every NACS-only site is open to other cars.`),
       onPlug ? el('div', { class: 'tool-row' }, el('button', { type: 'button', class: 'btn btn-quiet btn-small trip-fix', onclick: onPlug }, 'Plan with CCS only')) : null) : null;
     const parkFast = trip.to.park ? ctx.rec?.destinations?.find((d) => d.code === trip.to.park)?.nearestFastToPark ?? null : null;
     const home = stuck == null ? homeText(trip, parkFast) : null;
+    const homeWarn = stuck == null ? homeWarning(trip) : null;
+    const homeFlag = homeWarn ? el('div', { class: 'trip-warn trip-home-warn' },
+      el('p', { class: 'leg-key' }, el('strong', { text: `${homeWarn.lead} ` }), homeWarn.text)) : null;
 
     let current = stuck == null ? 0 : -1;
     const ids = `trip-legs-${++renders}`;
@@ -283,8 +324,9 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
     const legsBlock = stuck == null
       ? [list, stepper, live]
       : [legs.length ? el('details', { class: 'trip-help trip-partial' }, el('summary', { text: `See how far it gets (${plural(legs.length, 'stop')})` }), list) : null];
-    box.replaceChildren(...[heading, settings, answer, totals, costNote,
-      gap ? gapView(trip, gap) : null, plugCheck,
+    // Warnings sit right under the answer, so the drive home and the plug are seen before the legs.
+    box.replaceChildren(...[heading, settings, answer, homeFlag, plugCheck, totals, costNote,
+      gap ? gapView(trip, gap) : null,
       ...legsBlock,
       onSaveToggle ? el('div', { class: 'trip-save-slot' }, saveButton(trip, onSaveToggle)) : null,
       el('p', { class: 'tool-note', text: `One way. Fast chargers only, from the U.S. Department of Energy station list${asOf() ? ` as of ${asOf()}` : ''}; whether a charger is working or free right now isn’t known here, so check the network’s app before you go. Route: Geoapify, © OpenStreetMap contributors.` })].filter(Boolean));
@@ -484,6 +526,8 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
           lat: dest.lat, lon: dest.lon, park: ui.to.park || null,
         },
         miles: route.miles, minutes: route.minutes, legMiles: ui.legMiles, plug: ui.plug, car: ui.basis?.label || null,
+        carLegMiles: legMilesFromRange(ui.basis?.range),
+        homeCharger: null,
         kwh100: Number.isFinite(ui.basis?.kwh100) ? ui.basis.kwh100 : null,
         finalLegMiles: plan.finalLegMiles || 0, arriveWithMiles: plan.arriveWithMiles || 0,
         returnMiles: plan.ok ? plan.returnMiles : null, returnTo: plan.ok ? plan.returnTo : null,
@@ -496,7 +540,21 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       status.textContent = plan.ok
         ? `${num.format(Math.round(route.miles))} miles, about ${durationText(route.minutes)} of driving. ${stopsText(plan.stops.length)}.`
         : 'This trip doesn’t work yet with these settings.';
-      const gap = plan.ok ? null : { plan, fixes: suggestFixes({ route, stations, legMiles: ui.legMiles, plug: ui.plug }), onFix };
+      const carMiles = legMilesFromRange(ui.basis?.range);
+      const gap = plan.ok ? null : {
+        plan, onFix,
+        fixes: { ...suggestFixes({ route, stations, legMiles: ui.legMiles, plug: ui.plug, carMiles }), carRange: ui.basis?.range ?? null },
+      };
+      // When the planned miles left on arrival won't reach the first charger back, name the nearest
+      // usable fast charger to the destination from the same station data (no extra API call).
+      if (plan.ok && lastTrip.arriveWithMiles < lastTrip.returnMiles) {
+        const near = await chargersNear(dest.lat, dest.lon, { radius: 30, fastOnly: true, limit: 12 }).catch(() => null);
+        const usable = PLUGS[ui.plug] || PLUGS.any;
+        // With "Either plug", a charger most cars can use without an adapter comes first (as on the route).
+        const fits = near?.filter((s) => usable.ok(s.connectors || '')) || [];
+        const pick = (ui.plug === 'any' && fits.find((s) => !nacsOnly(s))) || fits[0];
+        lastTrip.homeCharger = near ? (pick ? { ...pick } : false) : null;
+      }
       const heading = renderTrip(result, lastTrip, { gap, onSaveToggle: plan.ok ? toggleSave : null, onPlug: () => onFix('plug', 'ccs'), onChange: changeSettings });
       // The trip itself now shows what the status said; keep the line for screen readers only.
       status.className = 'tool-status sr-only';

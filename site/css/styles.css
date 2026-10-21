@@ -595,9 +595,17 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   display: inline-block; margin-right: 0.5rem; padding: 0.05rem 0.45rem; border-radius: 3px; vertical-align: 0.1em;
   box-shadow: inset 0 0 0 1.5px #fff; color: #fff; font: 700 0.75rem/1.4 var(--text); letter-spacing: 0.04em; text-transform: uppercase;
 }
-.trip-warn { margin: 0 0 0.75rem; }
+/* Warnings in the trip planner use the site's error shape: a poppy diamond leading a chip box
+   (white on #22314d on navy), so they read as warnings without relying on color. */
+.trip-warn { margin: 0 0 0.75rem; padding: 0.6rem 0.8rem; border-radius: var(--radius); background: #22314d; color: #fff; }
+.trip-warn > p:first-child { color: #fff; }
+.trip-warn > p:first-child::before, .summary-warn::before {
+  content: ""; display: inline-block; width: 0.6em; height: 0.6em; margin-right: 0.6em;
+  background: var(--poppy); transform: rotate(45deg); vertical-align: 0.05em;
+}
 .trip-warn .tool-row { margin: 0.5rem 0 0; }
 .trip-warn strong, .trip-home strong { color: #fff; }
+.summary-warn { display: block; margin: 0.35rem 0 0.2rem; padding: 0.45rem 0.65rem; border-radius: var(--radius); background: var(--chip); color: var(--ink); font-size: var(--t-small); }
 .trip-result .tool-note, .trip-fields .tool-note, .trip-gap, .trip-cost, .trip-warn, .trip-leg-detail { max-width: 68ch; }
 .trip-gap { margin: 0 0 0.5rem; max-width: 46rem; }
 .trip-gap .trip-gap-why { margin: 0; }

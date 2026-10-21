@@ -86,6 +86,10 @@ it flagged both.
   names (28 characters) were still cut off on phones; "Plan for" is now a radio group whose names
   wrap whole at 320 px. axe scans it at 1280 and 320 px in light and dark with the longest name
   shortlisted, and the reflow check covers it.
+- **Trip warnings:** "Getting home" and "Check your car's plug" are text in reading order, right
+  under the trip's answer, and carry the site's warning shape (a poppy diamond on a chip box), so
+  they don't depend on color. The one-tap fixes are buttons whose labels say exactly what changes;
+  only a fix that works with the chosen car gets the main-button style.
 - **Field edges in the plan tools (1.4.11):** inputs, selects, and choice rings on the navy
   panel are #8593a8, about 4.8:1 (fixed in the trip planner's design review: they were 2.25:1).
 - **Errors (3.3.1, 3.3.3):** ZIP and missing-answer errors are text, announced with

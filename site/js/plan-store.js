@@ -90,6 +90,10 @@ export function cleanTrip(t) {
     arriveWithMiles: num(t.arriveWithMiles, 0, LEG_MAX, 0),
     returnMiles: num(t.returnMiles, 0, 3000, null), // first fast charger on the way back, or home
     returnTo: ['charger', 'home'].includes(t.returnTo) ? t.returnTo : null,
+    carLegMiles: num(t.carLegMiles, LEG_MIN, LEG_MAX, null), // the car's own 70% rule, to mark custom miles
+    // The nearest usable fast charger to the destination, for the drive home: a station, false when
+    // none was found within 30 miles, or null when it wasn't looked up (older saved trips).
+    homeCharger: t.homeCharger === false ? false : cleanStation(t.homeCharger),
     stops,
   };
 }

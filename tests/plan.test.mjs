@@ -69,7 +69,7 @@ const trip = (over = {}) => ({
   id: 'trip-abc123', step: 'plan-park',
   from: { name: 'Center of ZIP 80302', lat: 40.0, lon: -105.3 },
   to: { name: 'Rocky Mountain National Park', detail: 'CO', lat: 40.35, lon: -105.68, park: 'romo' },
-  miles: 180.4, minutes: 200, legMiles: 165, car: 'Typical electric SUV', plug: 'ccs', kwh100: 31, finalLegMiles: 120, arriveWithMiles: 45, returnMiles: 60, returnTo: 'charger',
+  miles: 180.4, minutes: 200, legMiles: 165, car: 'Typical electric SUV', plug: 'ccs', kwh100: 31, finalLegMiles: 120, arriveWithMiles: 45, returnMiles: 60, returnTo: 'charger', carLegMiles: 210, homeCharger: false,
   stops: [tripStop(1001, 60)],
   ...over,
 });
@@ -117,4 +117,15 @@ test('trips are validated field by field: at most 3, at most 12 stops, stops in 
   assert.equal(car({ name: 'x' }), null);
   assert.equal(car(''), null);
   assert.equal(car(undefined), null, 'trips saved before the car was stored still load');
+});
+
+test('a trip keeps the car’s own miles and the charger near the destination, validated', () => {
+  const near = { id: 4242, name: 'Alamosa Fast', street: '1 Main St', city: 'Alamosa', lat: 37.47, lon: -105.87, level2: 0, fast: 4, network: 'Net', connectors: 'C', hours: '24 hours daily', price: '', miles: 21.4 };
+  const t = sanitizePlan({ v: 1, trips: [trip({ homeCharger: near })] }).trips[0];
+  assert.equal(t.homeCharger.name, 'Alamosa Fast');
+  assert.equal(t.carLegMiles, 210);
+  const odd = sanitizePlan({ v: 1, trips: [trip({ homeCharger: { ...near, lat: 51.5, lon: -0.1 }, carLegMiles: 9999 })] }).trips[0];
+  assert.equal(odd.homeCharger, null, 'a charger outside the U.S. is dropped');
+  assert.equal(odd.carLegMiles, null);
+  assert.equal(sanitizePlan({ v: 1, trips: [trip({ homeCharger: false })] }).trips[0].homeCharger, false, '"none found" is kept');
 });

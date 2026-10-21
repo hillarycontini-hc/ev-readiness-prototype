@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanRoute, corridorCells, durationText, legMilesFromRange, milesBetween, planStops, sameTrip, stopsBucket, suggestFixes, tripCost } from '../site/js/trip.js';
+import { fixActions, cleanRoute, corridorCells, durationText, legMilesFromRange, milesBetween, planStops, sameTrip, stopsBucket, suggestFixes, tripCost } from '../site/js/trip.js';
 
 // A straight east-west road along latitude 40 starting near Denver: one point every ~1.06 miles.
 const MI_PER_DEG_LON = milesBetween(40, -105, 40, -104);
@@ -225,4 +225,37 @@ test('the same trip: same start and end (to about 10 m), miles between charges, 
   assert.ok(!sameTrip(t, { ...t, from: { lat: 40.1672, lon: -105.1019 } }));
   assert.ok(!sameTrip(t, { ...t, to: { lat: 37.793, lon: -105.592 } }));
   assert.ok(!sameTrip(t, null));
+});
+
+test('fixes are ranked honestly: what works with the chosen car leads, more range never does', () => {
+  // The car's own 210 works: offered first, as the main button.
+  assert.deepEqual(fixActions({ minLegMiles: 110, epaNeeded: 160, plugHelps: false, carMiles: 210, carWorks: true }),
+    [{ kind: 'miles', value: 210, fitsCar: true, primary: true }]);
+  // Only more range than the car has would work: offered, but never as the main button.
+  assert.deepEqual(fixActions({ minLegMiles: 265, epaNeeded: 380, plugHelps: false, carMiles: 210, carWorks: false }),
+    [{ kind: 'miles', value: 265, fitsCar: false, epaNeeded: 380, primary: false }]);
+  // Either plug works with the car: it leads; the bigger-car miles come second and quiet.
+  assert.deepEqual(fixActions({ minLegMiles: 265, epaNeeded: 380, plugHelps: true, carMiles: 210, carWorks: false }).map((a) => [a.kind, a.primary]),
+    [['plug', true], ['miles', false]]);
+  assert.deepEqual(fixActions({ minLegMiles: null, plugHelps: false, carMiles: 210, carWorks: false }), []);
+});
+
+test('the car’s own miles are tried as a fix only when they are more than the visitor set', () => {
+  const route = straightRoute(300);
+  const stations = [station(150)];
+  assert.equal(suggestFixes({ route, stations, legMiles: 100, carMiles: 210 }).carWorks, true);
+  assert.equal(suggestFixes({ route, stations, legMiles: 100, carMiles: 120 }).carWorks, false, '120 still leaves a 150-mile leg');
+  assert.equal(suggestFixes({ route, stations, legMiles: 210, carMiles: 210 }).carWorks, false, 'already on the car’s rule');
+});
+
+test('custom miles are marked in the settings line, and the drive home warns only when it must', async () => {
+  const { settingsText, homeWarning } = await import('../site/js/trip-tool.js');
+  const base = { car: 'Kia EV3', plug: 'any', carLegMiles: 155, to: { name: 'The Park' }, legMiles: 155, arriveWithMiles: 40 };
+  assert.equal(settingsText(base), 'Kia EV3 · 155 mi between charges · Either plug');
+  assert.equal(settingsText({ ...base, legMiles: 120 }), 'Kia EV3 · Custom: 120 mi between charges · Either plug');
+  assert.equal(homeWarning({ ...base, returnMiles: 30, returnTo: 'charger' }), null, 'enough to reach the first charger back');
+  const w = homeWarning({ ...base, returnMiles: 60, returnTo: 'charger', homeCharger: { name: 'Town Fast', city: 'Alamosa', miles: 21.4 } });
+  assert.equal(w.lead, 'Getting home: charge before you head back.');
+  assert.equal(w.text, 'The first fast charger on the way back is about 60 miles away, and you’d arrive with about 40 of your planned miles. The nearest fast charger to The Park is Town Fast, Alamosa, about 21 miles from it in a straight line.');
+  assert.match(homeWarning({ ...base, returnMiles: 60, returnTo: 'charger', homeCharger: false }).text, /don’t know of a fast charger within 30 miles of The Park; look for Level 2 charging where you stay overnight\.$/);
 });
