@@ -48,6 +48,7 @@ test('plan a trip to the park, step through it by keyboard, and save it', async 
   const checked = await page.locator('#tool-plan-park .trip-to .trip-dest:has(input:checked)').innerText();
   assert.match(checked, /Great Sand Dunes/, 'the step’s park is chosen for you');
   assert.equal(await page.inputValue('#trip-plan-park-leg'), '210', 'typical EPA range 300 x 70%');
+  assert.equal(await page.locator('#tool-plan-park .trip-plan-btn').innerText(), 'Find charging stops', 'the submit is named for what it does, unlike the step’s button');
   // Plug help opens and closes in place.
   await page.click('#tool-plan-park .trip-help summary');
   assert.match(await page.locator('#tool-plan-park .trip-help').innerText(), /North American Charging Standard/);
@@ -60,6 +61,8 @@ test('plan a trip to the park, step through it by keyboard, and save it', async 
   assert.match(q.get('from'), /^40\.\d+,-105\.\d+$/, 'from the center of the ZIP');
   assert.match(q.get('to'), /^37\.\d+,-105\.\d+$/);
   assert.equal(await page.evaluate(() => document.activeElement.className), 'trip-title', 'focus moves to the trip');
+  // The settings it was planned with stay under the title.
+  assert.equal(await page.locator('#tool-plan-park .trip-settings').textContent(), 'Typical electric SUV · 210 mi between charges · Either plug Change the car, miles, or plug');
 
   const legs = page.locator('#tool-plan-park .trip-leg');
   const n = await legs.count();
@@ -107,17 +110,35 @@ test('plan a trip to the park, step through it by keyboard, and save it', async 
   await page.click('#tool-plan-park button:has-text("Skip to arrival")');
   assert.equal(await legs.last().getAttribute('aria-current'), 'step');
 
+  // A leg's title opens it in place and moves the step-through there; focus stays on the title.
+  const firstTitle = legs.first().locator('.trip-leg-btn');
+  assert.equal(await firstTitle.getAttribute('aria-expanded'), 'false');
+  await firstTitle.focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await legs.first().getAttribute('aria-current'), 'step');
+  assert.equal(await legs.last().getAttribute('aria-current'), null);
+  assert.equal(await firstTitle.getAttribute('aria-expanded'), 'true');
+  assert.equal(await legs.last().locator('.trip-leg-btn').getAttribute('aria-expanded'), 'false');
+  assert.equal(await page.evaluate(() => document.activeElement.classList.contains('trip-leg-btn')), true, 'focus stays on the title used');
+  assert.match(await page.locator('#tool-plan-park .trip-step-status').innerText(), /^Leg 1 of \d+: \d+ miles\. Stop 1: /);
+  assert.equal(await page.isDisabled('#tool-plan-park .trip-stepper button:has-text("Previous leg")'), true);
+  await legs.last().locator('.trip-leg-btn').click();
+  assert.equal(await legs.last().getAttribute('aria-current'), 'step');
+
   await page.click('#tool-plan-park .trip-save');
   assert.equal(await page.getAttribute('#tool-plan-park .trip-save', 'aria-pressed'), 'true');
   assert.match(await page.locator('#tool-plan-park .trip-saved').innerText(), /Saved trips \(1 of 3\)/);
   const summary = await page.locator('#plan-summary').innerText();
   assert.match(summary, /Trips you planned/);
   assert.match(summary, /ZIP 80302 to Great Sand Dunes/);
+  assert.match(summary, /Typical electric SUV · 210 mi between charges · Either plug/);
+  assert.match(summary, /Daily range you need/);
   assert.match(summary, /Road mile \d+: /);
   assert.match(summary, /Getting home: /);
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('evrc-plan-v1')));
   assert.equal(stored.trips.length, 1);
   assert.equal(stored.trips[0].step, 'plan-park');
+  assert.equal(stored.trips[0].car, 'Typical electric SUV');
   await context.close();
 });
 
@@ -153,12 +174,26 @@ test('saved trips are capped at three and can be viewed offline and removed', as
   const { page, calls } = await openPlan(context);
   await planParkTrip(page);
   for (let i = 0; i < 3; i++) {
-    if (i) await page.click('#tool-plan-park .trip-plan-btn');
+    if (i) {
+      await page.fill('#trip-plan-park-leg', String(210 - i * 10));
+      await page.locator('#trip-plan-park-leg').dispatchEvent('change');
+      await page.click('#tool-plan-park .trip-plan-btn');
+    }
     await page.waitForSelector('#tool-plan-park .trip-save[aria-pressed="false"]');
     await page.click('#tool-plan-park .trip-save');
     await page.waitForSelector('#tool-plan-park .trip-save[aria-pressed="true"]');
   }
+  // Each saved trip shows its settings, so trips to the same park can be told apart.
+  assert.deepEqual(await page.locator('#tool-plan-park .trip-saved-list .trip-settings').allInnerTexts(),
+    [210, 200, 190].map((m) => `Typical electric SUV · ${m} mi between charges · Either plug`));
+  // View and Remove are at least 44 px wide and tall.
+  for (const b of await page.locator('#tool-plan-park .trip-saved-actions .btn-link').all()) {
+    const box = await b.boundingBox();
+    assert.ok(box.width >= 44 && box.height >= 44, `${await b.innerText()} is ${box.width}x${box.height}`);
+  }
   // Three saved; a fourth planned trip can't be saved until one is removed.
+  await page.fill('#trip-plan-park-leg', '180');
+  await page.locator('#trip-plan-park-leg').dispatchEvent('change');
   await page.click('#tool-plan-park .trip-plan-btn');
   await page.waitForSelector('#tool-plan-park .trip-save[aria-pressed="false"]');
   assert.equal(await page.isDisabled('#tool-plan-park .trip-save'), true);
@@ -170,6 +205,44 @@ test('saved trips are capped at three and can be viewed offline and removed', as
   await page.click('#tool-plan-park .trip-saved-list li:first-child button:has-text("Remove")');
   assert.match(await page.locator('#tool-plan-park .trip-saved-title').innerText(), /2 of 3/);
   assert.equal(await page.evaluate(() => document.activeElement.className), 'trip-saved-title', 'focus lands on the list after removing');
+  await context.close();
+});
+
+test('the same trip with the same settings can only be saved once', async () => {
+  const context = await browser.newContext();
+  const { page } = await openPlan(context);
+  await planParkTrip(page);
+  await page.click('#tool-plan-park .trip-save');
+  await page.waitForSelector('#tool-plan-park .trip-save[aria-pressed="true"]');
+  await page.click('#tool-plan-park .trip-plan-btn');
+  await page.waitForSelector('#tool-plan-park .trip-save:has-text("Already saved")');
+  assert.equal(await page.isDisabled('#tool-plan-park .trip-save'), true);
+  assert.match(await page.locator('#tool-plan-park .trip-save-note').innerText(), /same settings already\. It’s in Saved trips below/);
+  // Another plug makes it a different trip.
+  await page.selectOption('#trip-plan-park-plug', 'ccs');
+  await page.click('#tool-plan-park .trip-plan-btn');
+  await page.waitForSelector('#tool-plan-park .trip-save:has-text("Save this trip")');
+  assert.equal(await page.isDisabled('#tool-plan-park .trip-save'), false);
+  await context.close();
+});
+
+test('"Change" puts the shown trip back in the form and moves focus to it', async () => {
+  const context = await browser.newContext();
+  const { page } = await openPlan(context);
+  await planParkTrip(page);
+  await page.click('#tool-plan-park .trip-save');
+  await page.fill('#trip-plan-park-leg', '180');
+  await page.locator('#trip-plan-park-leg').dispatchEvent('change');
+  await page.selectOption('#trip-plan-park-plug', 'ccs');
+  // Viewing the saved trip, then Change: the form shows that trip's settings again.
+  await page.click('#tool-plan-park .trip-saved-list button:has-text("View")');
+  const change = page.locator('#tool-plan-park .trip-settings button:has-text("Change")');
+  assert.equal(await change.textContent(), 'Change the car, miles, or plug', 'screen readers hear what Change is for');
+  await change.click();
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'trip-plan-park-basis', 'focus moves to the first setting');
+  assert.equal(await page.inputValue('#trip-plan-park-leg'), '210');
+  assert.equal(await page.inputValue('#trip-plan-park-plug'), 'any');
+  assert.match(await page.locator('#tool-plan-park .trip-to .trip-dest:has(input:checked)').innerText(), /Great Sand Dunes/);
   await context.close();
 });
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanRoute, corridorCells, durationText, legMilesFromRange, milesBetween, planStops, stopsBucket, suggestFixes, tripCost } from '../site/js/trip.js';
+import { cleanRoute, corridorCells, durationText, legMilesFromRange, milesBetween, planStops, sameTrip, stopsBucket, suggestFixes, tripCost } from '../site/js/trip.js';
 
 // A straight east-west road along latitude 40 starting near Denver: one point every ~1.06 miles.
 const MI_PER_DEG_LON = milesBetween(40, -105, 40, -104);
@@ -214,4 +214,15 @@ test('the drive home: how far back to the last fast charger on the route, or all
   assert.equal(plan.returnMiles, 40, 'the charger at mile 260 is 40 miles back from the destination');
   const none = planStops({ route: straightRoute(150), stations: [], legMiles: 200 });
   assert.deepEqual([none.returnTo, none.returnMiles], ['home', 150]);
+});
+
+test('the same trip: same start and end (to about 10 m), miles between charges, and plug', () => {
+  const t = { from: { lat: 40.015, lon: -105.2705 }, to: { lat: 37.733, lon: -105.5123 }, legMiles: 210, plug: 'any', car: 'Typical electric SUV' };
+  assert.ok(sameTrip(t, { ...t, id: 'other', car: 'Another car' }), 'the car name alone does not make a different trip');
+  assert.ok(sameTrip(t, { ...t, from: { lat: 40.01502, lon: -105.27051 } }), 'rounding noise is the same place');
+  assert.ok(!sameTrip(t, { ...t, legMiles: 110 }));
+  assert.ok(!sameTrip(t, { ...t, plug: 'ccs' }));
+  assert.ok(!sameTrip(t, { ...t, from: { lat: 40.1672, lon: -105.1019 } }));
+  assert.ok(!sameTrip(t, { ...t, to: { lat: 37.793, lon: -105.592 } }));
+  assert.ok(!sameTrip(t, null));
 });

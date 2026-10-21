@@ -54,6 +54,7 @@ function cleanStation(s) {
 const TRIP_ID = /^trip-[a-z0-9]{1,12}$/;
 const TRIP_STEPS = ['plan-park', 'plan-route'];
 const PARK_CODE = /^[a-z]{4}$/;
+const MAX_CAR_NAME = 40;
 
 function cleanTripStop(s) {
   const st = cleanStation(s);
@@ -82,6 +83,7 @@ export function cleanTrip(t) {
     from: { name: str(from.name, 120), lat: from.lat, lon: from.lon },
     to: { name: str(to.name, 120) || 'Destination', detail: str(to.detail, 160), lat: to.lat, lon: to.lon, park: PARK_CODE.test(to.park) ? to.park : null },
     miles, minutes, legMiles,
+    car: str(t.car, MAX_CAR_NAME) || null, // the car it was planned for, shown back with the trip's settings
     plug: Object.hasOwn(PLUGS, t.plug) ? t.plug : 'any',
     kwh100: num(t.kwh100, 10, 80, null), // the planned car's efficiency, for the cost estimate
     finalLegMiles: num(t.finalLegMiles, 0, LEG_MAX, 0),

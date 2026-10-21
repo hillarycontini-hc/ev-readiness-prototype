@@ -53,6 +53,15 @@ export const EXTRA_USE = 0.3;
 const round5 = (x) => Math.max(5, Math.round(x / 5) * 5);
 
 /**
+ * Two trips are the same plan when they start and end at the same points (to about 10 m) with the
+ * same miles between charges and plug. The car's name doesn't count: the miles already say it.
+ */
+export function sameTrip(a, b) {
+  const at = (p, q) => Boolean(p && q) && Math.abs(p.lat - q.lat) < 1e-4 && Math.abs(p.lon - q.lon) < 1e-4;
+  return Boolean(a && b) && at(a.from, b.from) && at(a.to, b.to) && a.legMiles === b.legMiles && a.plug === b.plug;
+}
+
+/**
  * Rough energy cost of a one-way trip, as a range. The first leg runs on a charge from home at
  * the home state's rate; every mile after the first stop is charged at fast chargers. The low end
  * uses the EPA efficiency; the high end adds EXTRA_USE. Gas is the same miles in a `mpg` car.

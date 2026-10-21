@@ -7,11 +7,17 @@ import { el, num, srOnly } from './dom.js';
 import { SearchUnavailable, connectorNames, fastStationsAlong, fetchRoute, milesBetween, searchPlaces } from './places.js';
 import { ASSUMPTIONS, FLEET_KEY } from './logic.js';
 import { MAX_SAVED_TRIPS } from './plan-store.js';
-import { CHARGE_MINUTES, EXTRA_USE, LEG_MAX, LEG_MIN, MAX_TRIP_STOPS, PLUGS, durationText, legMilesFromRange, nacsOnly, planStops, stopsBucket, suggestFixes, tripCost } from './trip.js';
+import { CHARGE_MINUTES, EXTRA_USE, LEG_MAX, LEG_MIN, MAX_TRIP_STOPS, PLUGS, durationText, legMilesFromRange, nacsOnly, planStops, sameTrip, stopsBucket, suggestFixes, tripCost } from './trip.js';
 
 const tripId = () => `trip-${Math.random().toString(36).slice(2, 10)}`;
 const fastPlugs = (codes) => connectorNames((codes || '').replace(/[^CND]/g, ''));
 const plural = (n, word) => `${num.format(n)} ${word}${n === 1 ? '' : 's'}`;
+let renders = 0; // gives each drawn trip's leg panels their own ids
+
+/** What a trip was planned with, so two trips to the same place can be told apart. */
+export function settingsText(trip) {
+  return [trip.car, `${num.format(trip.legMiles)} mi between charges`, (PLUGS[trip.plug] || PLUGS.any).label].filter(Boolean).join(' · ');
+}
 
 /** One line describing a fast-charging stop: plugs, ports, network. */
 export function stopFacts(s) {
@@ -177,13 +183,16 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
         : fixes.plugHelps ? null : el('p', { class: 'tool-note', text: 'No setting fixes this route. Try a closer destination, or a town along the way.' }));
   }
 
-  function renderTrip(box, trip, { gap = null, onSaveToggle, onPlug = null } = {}) {
+  function renderTrip(box, trip, { gap = null, onSaveToggle, onPlug = null, onChange = null } = {}) {
     const stuck = gap ? gap.plan.stuckAtMile : null;
     const legs = [
       ...trip.stops.map((s, i) => ({ kind: 'stop', s, title: `Stop ${i + 1}: ${s.name}`, miles: s.legMiles })),
       ...(stuck == null ? [{ kind: 'arrive', title: `Arrive: ${trip.to.name}`, miles: trip.finalLegMiles }] : []),
     ];
     const heading = el('h4', { class: 'trip-title', tabindex: '-1', text: `${trip.from.name} to ${trip.to.name}` });
+    // The settings it was planned with stay in view, with a way back to the fields that set them.
+    const settings = el('p', { class: 'trip-settings' }, settingsText(trip),
+      onChange ? [' ', el('button', { type: 'button', class: 'btn-link', onclick: () => onChange(trip) }, 'Change', srOnly(' the car, miles, or plug'))] : null);
     const cost = stuck == null ? tripCostFor(trip, { rec: ctx.rec, meta: ctx.meta, stateName: ctx.zipRec?.s }) : null;
     // The answer leads; the two figures that frame it follow; time and money share one line.
     const answer = stuck == null ? el('p', { class: 'trip-answer', text: answerText(trip) }) : null;
@@ -209,11 +218,12 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
     const home = stuck == null ? homeText(trip, parkFast) : null;
 
     let current = stuck == null ? 0 : -1;
+    const ids = `trip-legs-${++renders}`;
     const rows = legs.map((leg, i) => {
       const s = leg.s;
       // Read first: where the stop is on the route and what's left. Then the address. The plug,
       // hours, and price sit together behind one disclosure.
-      const detail = el('div', { class: 'trip-leg-detail', hidden: true },
+      const detail = el('div', { class: 'trip-leg-detail', id: `${ids}-${i}`, hidden: true },
         s ? el('p', { class: 'leg-key', text: `Road mile ${num.format(s.atMile)}${s.detourMiles >= 0.5 ? `, about ${s.detourMiles} mi off the route` : ', on the route'}.` }) : null,
         el('p', { class: 'leg-key', text: spareText(s ? trip.legMiles - s.legMiles : trip.arriveWithMiles, trip.legMiles) }),
         !s && home ? el('p', { class: 'leg-key trip-home' }, el('strong', { text: 'Getting home: ' }), home) : null,
@@ -226,8 +236,10 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       return el('li', { class: 'trip-leg' },
         el('span', { class: 'trip-mark', 'aria-hidden': 'true' }),
         el('div', { class: 'trip-leg-main' },
-          el('p', { class: 'station-name', text: leg.title }),
-          el('p', { class: 'station-meta' }, s && nacsOnly(s) ? el('span', { class: 'plug-chip', text: 'NACS only' }) : null, s ? glance(s) : trip.to.detail || 'Your destination'),
+          // Like a results row, the leg's title opens it in place; here it also moves the step-through.
+          el('button', { type: 'button', class: 'trip-leg-btn', 'aria-expanded': 'false', 'aria-controls': detail.id, onclick: () => go(i, 'jump') },
+            el('span', { class: 'station-name', text: leg.title }),
+            el('span', { class: 'station-meta' }, s && nacsOnly(s) ? el('span', { class: 'plug-chip', text: 'NACS only' }) : null, s ? glance(s) : trip.to.detail || 'Your destination')),
           detail),
         el('p', { class: 'row-figure' }, `${num.format(leg.miles)}`, el('span', { class: 'car-unit', text: ' mi' }), srOnly(` on leg ${i + 1}`)));
     });
@@ -244,6 +256,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
         r.classList.toggle('is-passed', i < current);
         if (i === current) r.setAttribute('aria-current', 'step'); else r.removeAttribute('aria-current');
         r.querySelector('.trip-leg-detail').hidden = i !== current;
+        r.querySelector('.trip-leg-btn').setAttribute('aria-expanded', String(i === current));
       });
       prev.disabled = current === 0;
       next.disabled = current === legs.length - 1;
@@ -270,7 +283,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
     const legsBlock = stuck == null
       ? [list, stepper, live]
       : [legs.length ? el('details', { class: 'trip-help trip-partial' }, el('summary', { text: `See how far it gets (${plural(legs.length, 'stop')})` }), list) : null];
-    box.replaceChildren(...[heading, answer, totals, costNote,
+    box.replaceChildren(...[heading, settings, answer, totals, costNote,
       gap ? gapView(trip, gap) : null, plugCheck,
       ...legsBlock,
       onSaveToggle ? el('div', { class: 'trip-save-slot' }, saveButton(trip, onSaveToggle)) : null,
@@ -280,14 +293,17 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
   }
 
   function saveButton(trip, onToggle) {
-    const saved = ctx.plan().trips.some((t) => t.id === trip.id);
-    const full = !saved && ctx.plan().trips.length >= MAX_SAVED_TRIPS;
+    const trips = ctx.plan().trips;
+    const saved = trips.some((t) => t.id === trip.id);
+    const twin = !saved && trips.some((t) => sameTrip(t, trip));
+    const full = !saved && !twin && trips.length >= MAX_SAVED_TRIPS;
     return el('div', { class: 'tool-row' },
       el('button', {
-        type: 'button', class: `btn-save trip-save${saved ? ' is-on' : ''}`, 'aria-pressed': String(saved), disabled: full,
+        type: 'button', class: `btn-save trip-save${saved ? ' is-on' : ''}`, 'aria-pressed': twin ? null : String(saved), disabled: full || twin,
         onclick: () => onToggle(trip),
-      }, saved ? 'Saved to your plan' : full ? `${MAX_SAVED_TRIPS} trips saved (the most)` : 'Save this trip'),
-      full ? el('span', { class: 'tool-note', text: 'Remove a saved trip below to save this one.' }) : null);
+      }, saved ? 'Saved to your plan' : twin ? 'Already saved' : full ? `${MAX_SAVED_TRIPS} trips saved (the most)` : 'Save this trip'),
+      twin ? el('span', { class: 'tool-note trip-save-note', text: 'You’ve saved this trip with the same settings already. It’s in Saved trips below.' })
+        : full ? el('span', { class: 'tool-note trip-save-note', text: 'Remove a saved trip below to save this one.' }) : null);
   }
 
   // ---------- the tool ----------
@@ -368,7 +384,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
     const typical = fleet?.rangeMedian;
     const bases = [
       ...cars.map((v) => ({ id: v.id, label: `${v.make} ${v.model}`, range: v.rangeMin, kwh100: v.kwh100 })),
-      typical ? { id: 'typical', label: 'A typical electric SUV', range: typical, kwh100: fleet.kwhPer100Median } : null,
+      typical ? { id: 'typical', label: 'Typical electric SUV', range: typical, kwh100: fleet.kwhPer100Median } : null,
     ].filter(Boolean);
     ui.basis = bases[0] || null;
     ui.legMiles = legMilesFromRange(ui.basis?.range) || 200;
@@ -383,14 +399,14 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
     const plugId = `${prefix}-plug`;
     const plugSelect = el('select', { id: plugId, onchange: (e) => { ui.plug = Object.hasOwn(PLUGS, e.target.value) ? e.target.value : 'any'; } },
       Object.entries(PLUGS).map(([k, pl]) => el('option', { value: k, text: pl.label })));
+    const basisSelect = bases.length ? el('select', { id: basisId, 'aria-describedby': `${basisId}-note`, onchange: (e) => {
+      ui.basis = bases.find((b) => b.id === e.target.value) || ui.basis;
+      ui.legMiles = legMilesFromRange(ui.basis.range) || ui.legMiles;
+      legInput.value = ui.legMiles;
+      drawBasisNote();
+    } }, bases.map((b) => el('option', { value: b.id, text: b.label }))) : null;
     const rangeFields = el('div', { class: 'finance-fields trip-fields' },
-      bases.length ? el('div', { class: 'field field-basis' }, el('label', { for: basisId, text: 'Plan for' }),
-        el('select', { id: basisId, 'aria-describedby': `${basisId}-note`, onchange: (e) => {
-          ui.basis = bases.find((b) => b.id === e.target.value) || ui.basis;
-          ui.legMiles = legMilesFromRange(ui.basis.range) || ui.legMiles;
-          legInput.value = ui.legMiles;
-          drawBasisNote();
-        } }, bases.map((b) => el('option', { value: b.id, text: b.label }))), basisNote) : null,
+      basisSelect ? el('div', { class: 'field field-basis' }, el('label', { for: basisId, text: 'Plan for' }), basisSelect, basisNote) : null,
       el('div', { class: 'field' }, el('label', { for: legId, text: 'Miles between charges' }),
         el('span', { class: 'input-affix' }, legInput, el('span', { 'aria-hidden': 'true', text: 'mi' }))),
       el('div', { class: 'field' }, el('label', { for: plugId, text: 'Fast-charging plug' }),
@@ -459,7 +475,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
           detail: [ui.to.where ?? ui.to.detail ?? '', dest.viaVisitorCenter ? 'to the visitor center' : ''].filter(Boolean).join(' · '),
           lat: dest.lat, lon: dest.lon, park: ui.to.park || null,
         },
-        miles: route.miles, minutes: route.minutes, legMiles: ui.legMiles, plug: ui.plug,
+        miles: route.miles, minutes: route.minutes, legMiles: ui.legMiles, plug: ui.plug, car: ui.basis?.label || null,
         kwh100: Number.isFinite(ui.basis?.kwh100) ? ui.basis.kwh100 : null,
         finalLegMiles: plan.finalLegMiles || 0, arriveWithMiles: plan.arriveWithMiles || 0,
         returnMiles: plan.ok ? plan.returnMiles : null, returnTo: plan.ok ? plan.returnTo : null,
@@ -473,7 +489,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
         ? `${num.format(Math.round(route.miles))} miles, about ${durationText(route.minutes)} of driving. ${stopsText(plan.stops.length)}.`
         : 'This trip doesn’t work yet with these settings.';
       const gap = plan.ok ? null : { plan, fixes: suggestFixes({ route, stations, legMiles: ui.legMiles, plug: ui.plug }), onFix };
-      const heading = renderTrip(result, lastTrip, { gap, onSaveToggle: plan.ok ? toggleSave : null, onPlug: () => onFix('plug', 'ccs') });
+      const heading = renderTrip(result, lastTrip, { gap, onSaveToggle: plan.ok ? toggleSave : null, onPlug: () => onFix('plug', 'ccs'), onChange: changeSettings });
       // The trip itself now shows what the status said; keep the line for screen readers only.
       status.className = 'tool-status sr-only';
       heading.focus();
@@ -486,11 +502,30 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       onPlan(kind);
     }
 
+    // "Change" puts the shown trip back in the form (start, destination, car, miles, plug) and
+    // moves focus to its first setting, so the visitor edits what they were just reading.
+    function changeSettings(trip) {
+      const at = (p, q) => Math.abs(p.lat - q.lat) < 1e-4 && Math.abs(p.lon - q.lon) < 1e-4;
+      ui.from = [...starts, ui.fromSearched].find((d) => d && at(d, trip.from))
+        || (ui.fromSearched = { name: trip.from.name, label: trip.from.name, detail: '', lat: trip.from.lat, lon: trip.from.lon });
+      drawStarts();
+      ui.to = (trip.to.park ? parks.find((d) => d.park === trip.to.park) : [...parks, ui.searched].find((d) => d && at(d, trip.to)))
+        || (ui.searched = { name: trip.to.name, detail: trip.to.detail.replace(/(^| · )to the visitor center$/, ''), lat: trip.to.lat, lon: trip.to.lon, park: trip.to.park });
+      drawDestinations();
+      const basis = bases.find((b) => b.label === trip.car);
+      if (basis) { ui.basis = basis; basisSelect.value = basis.id; drawBasisNote(); }
+      ui.legMiles = trip.legMiles;
+      legInput.value = trip.legMiles;
+      ui.plug = Object.hasOwn(PLUGS, trip.plug) ? trip.plug : 'any';
+      plugSelect.value = ui.plug;
+      (basisSelect || legInput).focus();
+    }
+
     function toggleSave(trip) {
       let nowSaved = false;
       ctx.update((p) => {
         if (p.trips.some((t) => t.id === trip.id)) p.trips = p.trips.filter((t) => t.id !== trip.id);
-        else if (p.trips.length < MAX_SAVED_TRIPS) { p.trips.push(structuredClone(trip)); nowSaved = true; }
+        else if (p.trips.length < MAX_SAVED_TRIPS && !p.trips.some((t) => sameTrip(t, trip))) { p.trips.push(structuredClone(trip)); nowSaved = true; }
       });
       if (nowSaved) ctx.track('trip_saved', { count: ctx.plan().trips.length });
       drawSaved();
@@ -509,10 +544,12 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       if (!trips.length) { savedBox.replaceChildren(); return; }
       const title = el('h4', { class: 'trip-saved-title', tabindex: '-1', text: `Saved trips (${trips.length} of ${MAX_SAVED_TRIPS})` });
       savedBox.replaceChildren(title, el('ul', { class: 'trip-saved-list' }, trips.map((t) => el('li', {},
-        el('p', {}, el('strong', { text: `${t.from.name} to ${t.to.name}` }),
-          el('span', { class: 'station-meta', text: ` ${num.format(Math.round(t.miles))} mi · ${stopsText(t.stops.length).toLowerCase()}` })),
+        el('div', { class: 'trip-saved-text' },
+          el('p', {}, el('strong', { text: `${t.from.name} to ${t.to.name}` }),
+            el('span', { class: 'station-meta', text: ` ${num.format(Math.round(t.miles))} mi · ${stopsText(t.stops.length).toLowerCase()}` })),
+          el('p', { class: 'station-meta trip-settings', text: settingsText(t) })),
         el('div', { class: 'trip-saved-actions' },
-          el('button', { type: 'button', class: 'btn-link', onclick: () => { lastTrip = t; renderTrip(result, t, { onSaveToggle: toggleSave }).focus(); } }, 'View', srOnly(` the trip to ${t.to.name}`)),
+          el('button', { type: 'button', class: 'btn-link', onclick: () => { lastTrip = t; renderTrip(result, t, { onSaveToggle: toggleSave, onChange: changeSettings }).focus(); } }, 'View', srOnly(` the trip to ${t.to.name}`)),
           el('button', { type: 'button', class: 'btn-link', onclick: () => {
             ctx.update((p) => { p.trips = p.trips.filter((x) => x.id !== t.id); });
             drawSaved();
@@ -525,7 +562,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       el('p', { class: 'trip-from' }, el('span', { class: 'trip-from-label', text: 'From ' }), fromName, ' ', fromToggle),
       fromPanel,
       toFieldset, search, rangeFields,
-      el('div', { class: 'tool-row' }, el('button', { type: 'button', class: 'btn btn-go btn-small trip-plan-btn', onclick: () => onPlan() }, 'Plan the trip')),
+      el('div', { class: 'tool-row' }, el('button', { type: 'button', class: 'btn btn-go btn-small trip-plan-btn', onclick: () => onPlan() }, 'Find charging stops')),
       el('p', { class: 'tool-note', text: 'The start and end points go to our routing service to find the road, and are not stored.' }),
       status, result, savedBox);
     drawSaved();
