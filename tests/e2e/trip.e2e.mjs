@@ -221,6 +221,35 @@ test('a NACS-only stop is tagged and flagged, with a one-tap CCS-only plan', asy
   await context.close();
 });
 
+test('a park whose map point has no road is routed to its visitor center', async () => {
+  const context = await browser.newContext();
+  const routed = [];
+  // Like Great Sand Dunes: the Park Service point is in the dunes, so the router finds no road to it.
+  await context.route('**/api/route*', (r) => {
+    const to = new URL(r.request().url()).searchParams.get('to');
+    routed.push(to);
+    return to.startsWith('37.793,')
+      ? r.fulfill({ status: 422, contentType: 'application/json', body: '{"error":"no_route"}' })
+      : r.fulfill({ contentType: 'application/json', body: JSON.stringify(routeBody()) });
+  });
+  const searched = [];
+  await context.route('**/api/geocode*', (r) => {
+    searched.push(new URL(r.request().url()).searchParams.get('q'));
+    return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ results: [{ name: 'Great Sand Dunes National Park Visitor Center', detail: '11999 Mosca Pass Trail, Mosca, CO 81146', lat: 37.733, lon: -105.5123, type: 'amenity' }] }) });
+  });
+  const page = await context.newPage();
+  await page.goto(server.url);
+  await completeFlow(page, '80302', RENTER_TRIPS);
+  await page.click('#plan-cta');
+  await page.click('.tool-btn:has-text("Plan the trip")');
+  await page.click('#tool-plan-park .trip-plan-btn');
+  await page.waitForSelector('#tool-plan-park .trip-legs');
+  assert.deepEqual(routed, ['37.793,-105.592', '37.733,-105.5123'], 'tried the park point, then the visitor center');
+  assert.deepEqual(searched, ['Great Sand Dunes National Park & Preserve visitor center']);
+  assert.match(await page.locator('#tool-plan-park .trip-leg:last-child .station-meta').innerText(), /to the visitor center$/);
+  await context.close();
+});
+
 test('the start can be changed to a searched place', async () => {
   const context = await browser.newContext();
   await context.route('**/api/geocode*', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ results: [{ name: 'Longmont', detail: 'Longmont, CO, United States', lat: 40.1672, lon: -105.1019, type: 'city' }] }) }));
