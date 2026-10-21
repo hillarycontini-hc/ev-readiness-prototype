@@ -84,7 +84,12 @@ test('plan a trip to the park, step through it by keyboard, and save it', async 
   assert.match(await page.locator('#tool-plan-park .trip-cost-line').innerText(), /^Plus about 20–45 min of charging\. About \$\d+[–\d]* of electricity, vs about \$\d+ of gas/);
   // With "Either plug", the planner picks a CCS stop here rather than the NACS-only site nearby.
   assert.equal(await page.locator('#tool-plan-park .plug-chip').count(), 0);
-  assert.equal(await page.locator('#tool-plan-park .trip-warn').count(), 0);
+  assert.equal(await page.locator('#tool-plan-park .trip-plug-warn').count(), 0);
+  // The drive home doesn't fit (98 planned miles left, 107 to the first charger back): it's said
+  // up front, under the answer, with the nearest fast charger to the park named.
+  const homeWarn = page.locator('#tool-plan-park .trip-home-warn');
+  assert.match(await homeWarn.innerText(), /^Getting home: charge before you head back\. The first fast charger on the way back is about \d+ miles away, and you’d arrive with about \d+ of your planned miles\. The nearest fast charger to the park is .+ \(NACS only\), about \d+ miles from it in a straight line\.$/);
+  assert.ok(await page.locator('#tool-plan-park .trip-answer + .trip-home-warn').count(), 'right under the answer');
   await page.click('#tool-plan-park .trip-cost-note summary');
   assert.match(await page.locator('#tool-plan-park .trip-cost-note').innerText(), /Electricity for this drive: about \$\d+[–\d]*[\s\S]*gas car: about \$\d+/);
   assert.match(await legs.last().innerText(), /Arrive: Great Sand Dunes/);
@@ -185,7 +190,7 @@ test('saved trips are capped at three and can be viewed offline and removed', as
   }
   // Each saved trip shows its settings, so trips to the same park can be told apart.
   assert.deepEqual(await page.locator('#tool-plan-park .trip-saved-list .trip-settings').allInnerTexts(),
-    [210, 200, 190].map((m) => `Typical electric SUV · ${m} mi between charges · Either plug`));
+    [210, 200, 190].map((m) => `Typical electric SUV · ${m === 210 ? '' : 'Custom: '}${m} mi between charges · Either plug`));
   // View and Remove are at least 44 px wide and tall.
   for (const b of await page.locator('#tool-plan-park .trip-saved-actions .btn-link').all()) {
     const box = await b.boundingBox();
@@ -302,13 +307,16 @@ test('a trip that does not work explains why and offers a one-tap fix', async ()
   assert.equal(await page.locator('#tool-plan-park .trip-partial').getAttribute('open'), null, 'the partial list starts folded');
   const fix = page.locator('#tool-plan-park .trip-fix');
   assert.equal(await fix.count(), 1, 'no plug button when a plug change would not help');
-  assert.equal(await fix.innerText(), 'Plan with 110 miles between charges');
-  assert.match(await page.locator('#tool-plan-park .trip-gap .tool-note').innerText(), /about 160 miles of EPA range/);
+  // The car's own miles work, so that's the fix offered, not the bare minimum.
+  assert.equal(await fix.innerText(), 'Plan with your car’s 210 miles between charges');
+  assert.match(await fix.getAttribute('class'), /btn-go/);
+  assert.match(await page.locator('#tool-plan-park .trip-gap .tool-note').innerText(), /^210 is 70% of this car’s lowest EPA range/);
   const before = calls.length;
   await fix.click();
   await page.waitForSelector('#tool-plan-park .trip-save');
   assert.equal(calls.length, before, 'the fix reuses the route: no new routing call');
-  assert.equal(await page.inputValue('#trip-plan-park-leg'), '110', 'the fix sets the field it changed');
+  assert.equal(await page.inputValue('#trip-plan-park-leg'), '210', 'the fix sets the field it changed');
+  assert.match(await page.locator('#tool-plan-park .trip-settings').innerText(), /^Typical electric SUV · 210 mi between charges/, 'back on the car’s own rule, so not marked custom');
   assert.equal(await page.locator('#tool-plan-park .trip-gap').count(), 0);
   assert.equal(await page.evaluate(() => document.activeElement.className), 'trip-title', 'focus moves to the working trip');
   await context.close();
@@ -330,7 +338,12 @@ test('a NACS-only stop is tagged and flagged, with a one-tap CCS-only plan', asy
   assert.equal(calls.length, before, 'replanning reuses the route');
   assert.equal(await page.inputValue('#trip-plan-park-plug'), 'ccs', 'the plug field shows what changed');
   assert.match(await page.locator('#tool-plan-park .trip-gap-why').innerText(), /no CCS fast charger along the 262-mile route/);
-  assert.ok(await page.locator('#tool-plan-park .trip-fix:has-text("Plan with either plug")').count(), 'and the way back is one tap too');
+  // Either plug works with this car, so it leads; more miles than the car can drive is quiet and says why.
+  const fixes = page.locator('#tool-plan-park .trip-fix');
+  assert.deepEqual(await fixes.allInnerTexts(), ['Plan with either plug', 'Plan with 265 miles between charges']);
+  assert.match(await fixes.nth(0).getAttribute('class'), /btn-go/);
+  assert.match(await fixes.nth(1).getAttribute('class'), /btn-quiet/);
+  assert.match(await page.locator('#tool-plan-park .trip-gap .tool-note').innerText(), /265 miles between charges takes a car with about 380 miles of EPA range; this one has 300\./);
   await context.close();
 });
 

@@ -191,14 +191,34 @@ export function planStops({ route, stations, legMiles, plug = 'any', corridor = 
  * LEG_MAX) that works with the same plug, and whether "Either plug" works at the same miles.
  * epaNeeded is the EPA range that gives those miles under the road-trip rule.
  */
-export function suggestFixes({ route, stations, legMiles, plug = 'any' }) {
+export function suggestFixes({ route, stations, legMiles, plug = 'any', carMiles = null }) {
   const candidates = routeCandidates({ route, stations, plug });
   let minLegMiles = null;
   for (let m = Math.floor(legMiles / 5) * 5 + 5; m <= LEG_MAX; m += 5) {
     if (chooseStops({ candidates, totalMiles: route.miles, legMiles: m, preferCcs: plug === 'any' }).ok) { minLegMiles = m; break; }
   }
   const plugHelps = plug !== 'any' && chooseStops({ candidates: routeCandidates({ route, stations, plug: 'any' }), totalMiles: route.miles, legMiles, preferCcs: true }).ok;
-  return { minLegMiles, plugHelps, epaNeeded: minLegMiles ? Math.ceil(minLegMiles / ROAD_TRIP_SHARE / 5) * 5 : null };
+  // The chosen car's own miles between charges (the 70% rule), when the visitor had set fewer.
+  const carWorks = Number.isFinite(carMiles) && carMiles > legMiles
+    && chooseStops({ candidates, totalMiles: route.miles, legMiles: carMiles, preferCcs: plug === 'any' }).ok;
+  return { minLegMiles, plugHelps, epaNeeded: minLegMiles ? Math.ceil(minLegMiles / ROAD_TRIP_SHARE / 5) * 5 : null, carMiles, carWorks };
+}
+
+/**
+ * The one-tap fixes for a trip that doesn't work, honest first. A change that works with the car
+ * the visitor chose leads: its own miles between charges, then either plug. More miles than that
+ * car's rule allows comes last, is never the main button, and carries the EPA range it would take.
+ * Returns [{ kind: 'miles' | 'plug', value, fitsCar, primary, epaNeeded? }].
+ */
+export function fixActions({ minLegMiles, epaNeeded, plugHelps, carMiles, carWorks }) {
+  const out = [];
+  if (carWorks) out.push({ kind: 'miles', value: carMiles, fitsCar: true });
+  if (plugHelps) out.push({ kind: 'plug', value: 'any', fitsCar: true });
+  if (minLegMiles && !carWorks) {
+    out.push({ kind: 'miles', value: minLegMiles, fitsCar: Number.isFinite(carMiles) && minLegMiles <= carMiles, epaNeeded });
+  }
+  out.sort((a, b) => Number(b.fitsCar) - Number(a.fitsCar));
+  return out.map((a, i) => ({ ...a, primary: i === 0 && a.fitsCar }));
 }
 
 /** A NACS-only station: cars with a CCS port need an adapter, and not every such site is open to them. */
