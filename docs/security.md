@@ -53,7 +53,9 @@ done and tested; the remaining items are account settings only you can change.
   asks Geoapify for that exact box with no markers; the page draws the ZIP center and the
   chargers. So neither our server nor Geoapify gets the ZIP or a coordinate from the visitor,
   only which map was shown (at street level, an area about 1.5 miles across, shared by everyone
-  nearby). It returns only a PNG (anything else from the provider becomes `map_unavailable`),
+  nearby). That still narrows the ZIP center to a cell about 600 by 370 m at street level, which
+  in a city usually identifies the ZIP; the on-page privacy notice says this plainly. Nothing is
+  logged, and the browser's own cache keeps the image for up to 30 days on that device. It returns only a PNG (anything else from the provider becomes `map_unavailable`),
   limits each hashed IP to 20 maps a minute (`MAP_LIMITER`) and all uncached maps together to
   20 a minute (`MAP_GLOBAL_LIMITER`), and times out after 8 seconds. Because the image is the
   same for everyone in that area, it is cacheable: `public, max-age` for 30 days, and Cloudflare's

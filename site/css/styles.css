@@ -340,7 +340,7 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   .stop-figure { grid-column: 2; grid-row: 2; text-align: left; padding: 0 0 0.9rem 0.25rem; }
   .stop-chev { grid-column: 3; grid-row: 1 / span 2; }
   .station { grid-row: 1; }
-  .stop-panel { padding-left: 1.25rem; }
+  .stop-panel { padding-left: 2.75rem; } /* clear of the route line */
   .btn-plan { width: 100%; }
 }
 
@@ -728,13 +728,14 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .map-pin text { fill: var(--navy); font: 800 13px var(--text); text-anchor: middle; }
 .map-leader { stroke: var(--navy); }
 .map-spot { fill: var(--navy); }
-.map-home { fill: var(--navy); stroke: #fff; stroke-width: 3; }
-.map-home-halo { fill: #101a2b; fill-opacity: 0.18; }
+.map-home { fill: #fff; stroke: var(--navy); stroke-width: 4; }
 .map-ground { fill: #eef2f5; }
 .map-ring { fill: none; stroke: #4a5568; stroke-width: 1.5; stroke-dasharray: 6 5; }
-.map-ring-label, .map-north { fill: #4a5568; font: 700 13px var(--text); }
+.map-ring-label, .map-north text { fill: #4a5568; font: 700 13px var(--text); }
+.map-north text { text-anchor: middle; }
+.map-north path { fill: #4a5568; }
 .map-caption { margin: 0.5rem 0 0; color: var(--row-sub); }
-.map-key-home { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--navy); box-shadow: 0 0 0 2px #fff; vertical-align: -1px; margin-right: 0.15rem; }
+.map-key-home { display: inline-block; vertical-align: -3px; margin-right: 0.1rem; overflow: visible; }
 .map-status { color: #fff; font-weight: 600; }
 .map-list { list-style: none; padding: 0; margin: 0.6rem 0 0; }
 .map-list li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 0.7rem; align-items: start; padding: 0.55rem 0; border-top: 1px solid #2c3a55; }

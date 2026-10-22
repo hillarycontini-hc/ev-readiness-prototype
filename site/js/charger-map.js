@@ -25,8 +25,8 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 // Pins keep about the same size on screen however wide the map is drawn: k is how many image
 // pixels one screen pixel covers (1 on a wide screen, about 2 on a phone).
 function overlay(view, center, markers, { fallback, k = 1 }) {
-  const at = placeMarkers(view, markers, 26 * k);
   const [cx, cy] = project(view, center.lat, center.lon);
+  const at = placeMarkers(view, markers, 26 * k, { x: cx, y: cy });
   const place = (x, y) => `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${k.toFixed(2)})`;
   const layer = svg('svg', { class: 'map-overlay', viewBox: `0 0 ${MAP_W} ${MAP_H}`, 'aria-hidden': 'true', focusable: 'false' });
   if (fallback) {
@@ -35,11 +35,11 @@ function overlay(view, center, markers, { fallback, k = 1 }) {
       svg('rect', { class: 'map-ground', x: 0, y: 0, width: MAP_W, height: MAP_H }),
       svg('circle', { class: 'map-ring', cx, cy, r: ring.toFixed(1) }),
       svg('text', { class: 'map-ring-label', transform: place(cx + ring * 0.71 + 4 * k, cy - ring * 0.71 - 4 * k) }, '1 mi'),
-      svg('text', { class: 'map-north', transform: place(MAP_W - 30 * k, 26 * k) }, 'N ↑'));
+      svg('g', { class: 'map-north', transform: place(MAP_W - 24 * k, 30 * k) },
+        svg('path', { d: 'M0 -14 L6 0 L-6 0 Z' }),
+        svg('text', { x: 0, y: 14 }, 'N')));
   }
-  layer.append(svg('g', { transform: place(cx, cy) },
-    svg('circle', { class: 'map-home-halo', r: 13 }),
-    svg('circle', { class: 'map-home', r: 7 })));
+  layer.append(svg('g', { transform: place(cx, cy) }, homeMark()));
   // Leader lines first, so pins sit on top of them.
   at.forEach((p) => {
     if (!p.moved) return;
@@ -55,6 +55,10 @@ function overlay(view, center, markers, { fallback, k = 1 }) {
   });
   return layer;
 }
+
+// The ZIP center is drawn as the route's own station: a white disc in a navy ring.
+const homeMark = () => svg('circle', { class: 'map-home', r: 9 });
+const homeKey = () => svg('svg', { class: 'map-key-home', viewBox: '-13 -13 26 26', width: 16, height: 16, 'aria-hidden': 'true', focusable: 'false' }, homeMark());
 
 const uniq = (xs) => [...new Set(xs.filter(Boolean))];
 
@@ -96,19 +100,35 @@ export function chargerMap({ lat, lon, label, track = () => {} }) {
 
   (async () => {
     let stations;
+    let fastNear;
     try {
-      stations = await chargersNear(lat, lon, { radius: 10, limit: 40 });
+      // The card is about the nearest fast charger, so the map always includes it (within 25
+      // miles), along with the nearest chargers of any kind.
+      [stations, fastNear] = await Promise.all([
+        chargersNear(lat, lon, { radius: 10, limit: 40 }),
+        chargersNear(lat, lon, { radius: 25, fastOnly: true, limit: 1 }),
+      ]);
     } catch {
       status.textContent = 'We couldn’t load charger data for the map.';
       return;
     }
-    const { view, markers } = chooseView(lat, lon, groupSites(stations));
+    const all = [...stations, ...fastNear.filter((f) => !stations.some((s) => s.id === f.id))].sort((a, b) => a.miles - b.miles);
+    const sites = groupSites(all);
+    const nearestFast = fastNear[0] ? sites.find((t) => t.stations.some((st) => st.id === fastNear[0].id)) : null;
+    const { view, markers } = chooseView(lat, lon, sites, { must: nearestFast ? [nearestFast] : [] });
+    const fastShown = markers.some((m) => m.stations.some((st) => st.fast > 0));
     const center = { lat, lon };
     const frame = el('div', { class: 'map-frame' });
     const caption = el('figcaption', { class: 'map-caption' });
     const describe = markers.length
       ? `the ${plural(markers.length, 'nearest public charging site')}, numbered by distance`
       : 'no public chargers in view';
+    const legend = !markers.length
+      ? 'No public chargers within about 10 miles.'
+      : `Numbers match the list, nearest first.${fastShown ? ' Square pins have fast charging.' : ''}${nearestFast ? '' : ' No fast chargers within 25 miles.'}`;
+    const credit = el('p', { class: 'src' }, 'Street map: ',
+      externalLink('© OpenStreetMap contributors', 'https://www.openstreetmap.org/copyright'), ', ',
+      externalLink('Geoapify', 'https://www.geoapify.com/'), '.');
     let reported = false;
     const report = (source) => { if (!reported) { reported = true; track('map_rendered', { source }); } };
 
@@ -119,9 +139,8 @@ export function chargerMap({ lat, lon, label, track = () => {} }) {
       plot.removeAttribute('aria-hidden');
       plot.setAttribute('aria-label', `Plot of the center of ${label} and ${describe}. The street map is unavailable right now.`);
       frame.replaceChildren(plot);
-      caption.replaceChildren(
-        el('span', { class: 'map-key-home', 'aria-hidden': 'true' }),
-        ` Center of ${label}. Street map unavailable right now, so chargers are plotted by direction and distance; the ring is 1 mile.`);
+      caption.replaceChildren(homeKey(), ` Center of ${label}. ${legend} Street map unavailable right now, so chargers are plotted by direction and distance; the ring is 1 mile.`);
+      credit.remove(); // no street map is shown; the card already credits the charger data
       report('fallback');
     };
 
@@ -146,14 +165,7 @@ export function chargerMap({ lat, lon, label, track = () => {} }) {
       old.replaceWith(next);
     };
     if (typeof ResizeObserver === 'function') new ResizeObserver(redraw).observe(frame);
-    caption.append(
-      el('span', { class: 'map-key-home', 'aria-hidden': 'true' }),
-      ` Center of ${label}. `,
-      markers.length ? 'Numbers match the list, nearest first. Square pins have fast charging.' : 'No public chargers within about 10 miles of this map.');
-
-    const credit = el('p', { class: 'src' }, 'Street map: ',
-      externalLink('© OpenStreetMap contributors', 'https://www.openstreetmap.org/copyright'), ', ',
-      externalLink('Geoapify', 'https://www.geoapify.com/'), '. Chargers: NREL Alternative Fuels Data Center.');
+    caption.append(homeKey(), ` Center of ${label}. ${legend}`);
     status.remove();
     figure.append(frame, caption, markers.length ? list(markers) : null, credit);
   })();

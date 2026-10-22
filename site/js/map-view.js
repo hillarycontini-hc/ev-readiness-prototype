@@ -2,9 +2,10 @@
 //
 // Privacy: the page never sends the visitor's ZIP or its center. It asks for a map "view": a zoom
 // level and a position on a fixed grid (a quarter of the image apart). Everyone in that part of
-// town gets the same image, so the server learns which map was shown (at street level, an area
-// about 1.5 miles across), not the ZIP, and the image can be shared and cached. The page then
-// draws the ZIP center and the numbered chargers on top.
+// town gets the same image, and it can be shared and cached. The server learns which map was
+// shown, not the ZIP; but at street level that places the ZIP center within about 600 x 370 m,
+// which in a city usually identifies it, and the privacy notice says so. The page then draws the
+// ZIP center and the numbered chargers on top.
 //
 // The math is plain Web Mercator in 256-pixel tiles. The Worker asks the map provider for the exact
 // box (`area=rect:`) rather than a center and zoom, so the picture lines up with the markers whatever
@@ -81,39 +82,58 @@ const inside = (v, s) => {
 
 /**
  * Pick the closest view that still shows the nearest chargers: the highest zoom where at least
- * six of them (or all of them, if fewer) fit, from street level (15) out to about 20 miles across
- * (11). `stations` must be nearest first. Returns the view and up to eight markers, numbered in
- * that same order so the list and the map always agree.
+ * six of them (or all, if fewer) fit, and every site in `must` (the nearest fast charger) fits,
+ * from street level (15) out to about 20 miles across (11). `sites` must be nearest first.
+ * Returns the view and up to eight markers, nearest first, so the list and the map agree:
+ * every `must` site that fits, then the nearest others.
  */
-export function chooseView(lat, lon, stations) {
-  const want = Math.min(6, stations.length);
+export function chooseView(lat, lon, sites, { must = [] } = {}) {
+  const want = Math.min(6, sites.length);
   let view = snapView(lat, lon, MIN_ZOOM);
   for (let z = MAX_ZOOM; z >= MIN_ZOOM; z--) {
     const v = snapView(lat, lon, z);
-    if (stations.filter((s) => inside(v, s)).length >= want) { view = v; break; }
+    if (must.every((m) => inside(v, m)) && sites.filter((s) => inside(v, s)).length >= want) { view = v; break; }
   }
-  const markers = stations.filter((s) => inside(view, s)).slice(0, MAX_MARKERS);
+  const visible = sites.filter((s) => inside(view, s));
+  const kept = must.filter((m) => inside(view, m)).slice(0, MAX_MARKERS);
+  const markers = [...kept, ...visible.filter((s) => !kept.includes(s)).slice(0, MAX_MARKERS - kept.length)]
+    .sort((a, b) => a.miles - b.miles);
   return { view, markers };
 }
 
+const crosses = (a, b, c, d) => {
+  const side = (p, q, r) => Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x));
+  return side(a, b, c) * side(a, b, d) < 0 && side(c, d, a) * side(c, d, b) < 0;
+};
+
 /**
- * Marker positions on the image, nudged apart so numbers never sit on top of each other.
- * Returns [{ x, y }] in the same order as `markers`.
+ * Marker positions on the image, in the order of `markers`. A pin that would cover another
+ * moves outward, away from `from` (the ZIP center), to the first spot that is clear of the
+ * other pins, isn't on another site's true spot, and whose leader line crosses no other leader.
+ * Returns [{ x, y, x0, y0, moved }].
  */
-export function placeMarkers(v, markers, minGap = 26) {
+export function placeMarkers(v, markers, minGap = 26, from = null) {
+  const spots = markers.map((m) => { const [x, y] = project(v, m.lat, m.lon); return { x, y }; });
+  const center = from || { x: MAP_W / 2, y: MAP_H / 2 };
   const placed = [];
-  for (const m of markers) {
-    const [x0, y0] = project(v, m.lat, m.lon);
-    let x = x0;
-    let y = y0;
-    // Walk out on a golden-angle spiral until the pin is clear of the ones already placed.
-    for (let k = 1; k <= 40 && placed.some((p) => Math.hypot(p.x - x, p.y - y) < minGap); k++) {
-      const r = minGap * (0.6 + 0.25 * k);
-      x = x0 + Math.cos(k * 2.4) * r;
-      y = y0 + Math.sin(k * 2.4) * r;
+  const edge = minGap / 2; // a pin's half-width, so none is cut off at the image edge
+  const clamp = (p) => ({ x: Math.min(MAP_W - edge, Math.max(edge, p.x)), y: Math.min(MAP_H - edge, Math.max(edge, p.y)) });
+  spots.forEach((spot, idx) => {
+    const ok = (p) => placed.every((q) => Math.hypot(q.x - p.x, q.y - p.y) >= minGap)
+      && spots.every((t, k) => k === idx || Math.hypot(t.x - p.x, t.y - p.y) >= minGap / 2)
+      && placed.every((q) => !q.moved || !crosses(spot, p, { x: q.x0, y: q.y0 }, q));
+    let best = clamp(spot);
+    if (!placed.every((q) => Math.hypot(q.x - best.x, q.y - best.y) >= minGap)) {
+      const out = Math.atan2(spot.y - center.y, spot.x - center.x) || 0;
+      search: for (const r of [1, 1.5, 2, 2.6, 3.3, 4.2].map((t) => t * minGap)) {
+        for (const d of [0, 0.5, -0.5, 1, -1, 1.6, -1.6, 2.3, -2.3, Math.PI]) {
+          const p = clamp({ x: spot.x + Math.cos(out + d) * r, y: spot.y + Math.sin(out + d) * r });
+          if (ok(p)) { best = p; break search; }
+        }
+      }
     }
-    placed.push({ x: Math.min(MAP_W - 13, Math.max(13, x)), y: Math.min(MAP_H - 13, Math.max(13, y)), moved: x !== x0 || y !== y0, x0, y0 });
-  }
+    placed.push({ ...best, x0: spot.x, y0: spot.y, moved: Math.hypot(best.x - spot.x, best.y - spot.y) > 0.5 });
+  });
   return placed;
 }
 

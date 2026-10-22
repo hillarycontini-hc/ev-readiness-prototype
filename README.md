@@ -170,9 +170,10 @@ Privacy is a product requirement here, not a footnote:
   never sent to a server.
 - **Address search goes through our own proxy,** so the search provider never sees your IP,
   and nothing is logged.
-- **The charger map never sends your ZIP.** The page asks our server for a map tile on a fixed
+- **The charger map doesn't send your ZIP.** The page asks our server for a map on a fixed
   grid (the same image for everyone nearby) and draws your ZIP center and the chargers on top
-  itself.
+  itself. Which map is shown still reveals roughly where you are, and the privacy notice says so;
+  nothing is logged or kept.
 - **No cookies and no consent banner needed.** Analytics identity lives in
   memory for one page view.
 - **No session replay, no autocapture.** Only 30 named events are sent, and an allowlist

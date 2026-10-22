@@ -329,7 +329,6 @@ function chargerStop(rec) {
     },
     panel: [
       el('p', { text: REASON_COPY[local.id](local.value) }),
-      mapSlot,
       trips ? el('p', { text: REASON_COPY[trips.id](trips.value) }) : null,
       el('dl', {},
         el('dt', { text: 'Nearest fast charger' }), el('dd', { text: nearest }),
@@ -337,6 +336,7 @@ function chargerStop(rec) {
         el('dt', { text: 'Level 2 stations within 5 miles' }), el('dd', { text: num.format(c.l2Within5) }),
         el('dt', { text: 'Level 2 stations within 10 miles' }), el('dd', { text: num.format(c.l2Within10) })),
       el('p', { text: `${c.l2Percentile >= 10 ? `More Level 2 charging than ${c.l2Percentile}% of U.S. ZIP codes.` : 'Less Level 2 charging than most U.S. ZIP codes.'} Level 2 adds about 20 to 30 miles of range per hour; fast chargers can add 150+ miles in about 30 minutes, depending on the car.` }),
+      mapSlot,
       el('p', { class: 'src', text: 'Source: NREL Alternative Fuels Data Center, public stations open today.' }),
     ],
   };

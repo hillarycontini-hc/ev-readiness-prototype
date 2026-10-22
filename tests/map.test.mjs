@@ -159,3 +159,14 @@ test('map: anything but a PNG from the provider becomes map_unavailable', async 
   globalThis.fetch = async () => { throw new Error('timeout'); };
   assert.equal((await worker.fetch(req(mapPath), env())).status, 502);
 });
+
+test('the nearest fast charger is always on the map, even when Level 2 sites are closer', () => {
+  const level2 = Array.from({ length: 12 }, (_, i) => ({ ...near(0.0004 * (i + 1), 0.0002), stations: [{ fast: 0 }] }));
+  const fast = { ...near(0.05, 0.02), stations: [{ fast: 2 }] };
+  const sites = [...level2, fast].sort((a, b) => a.miles - b.miles);
+  const { view, markers } = chooseView(BOULDER.lat, BOULDER.lon, sites, { must: [fast] });
+  assert.ok(markers.includes(fast));
+  assert.ok(markers.length <= MAX_MARKERS);
+  assert.deepEqual(markers, [...markers].sort((a, b) => a.miles - b.miles), 'still nearest first');
+  assert.ok(view.z < MAX_ZOOM, 'zooms out to reach it');
+});
