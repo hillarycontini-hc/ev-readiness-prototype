@@ -35,7 +35,17 @@ WARN vehicle prices were checked 41 days ago (2026-10-19); re-check them (docs/p
    the Automotive Finance Market*) and whether a published average lease residual or money
    factor now exists. Update the period and source.
 6. Spot-check the `brands` links (below).
-7. Set `checkedAt` to today, then run:
+7. Refresh safety ratings (free NHTSA API, about a minute):
+
+   ```bash
+   npm run data:nhtsa
+   ```
+
+   It prints any car it can't find in NHTSA's list. If NHTSA lists it under another name, add
+   `nhtsaModel` (a name or a list of names) and, when one NHTSA model covers two of ours,
+   `nhtsaVersion` (text in the version description, such as `SUV`) to that car in
+   `data/vehicles-curated.json`. Never copy a rating by hand.
+8. Set `checkedAt` to today, then run:
 
    ```bash
    npm run data:vehicles
@@ -43,7 +53,7 @@ WARN vehicle prices were checked 41 days ago (2026-10-19); re-check them (docs/p
 
    It joins EPA data, fails a vehicle with no EPA rating out of the explorer (and says so), and
    checks every brand link. Fix any `WARN` line it prints.
-8. Run `npm test` and `npm run test:e2e`, then open a pull request titled
+9. Run `npm test` and `npm run test:e2e`, then open a pull request titled
    `Vehicle prices: <month year>`. The diff of `site/data/vehicles.json` is the review.
 
 ## Brand links (every quarter, or when a link breaks)

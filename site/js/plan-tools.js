@@ -2,6 +2,7 @@
 // a car explorer with price, loan, and lease estimates (step 4), a trip planner with
 // fast-charging stops (steps 5 and 6, in trip-tool.js), and test-drive links (step 7). Rendering uses textContent only.
 
+import { SORTS, availableSorts, cargoText, compareBy, hasIihs, iihsText, recentAwards, safetyText } from './car-sort.js';
 import { el, externalLink, num, srOnly, usd } from './dom.js';
 import { SearchUnavailable, chargersNear, connectorNames, searchPlaces, zipCenter } from './places.js';
 import { leasePayment, loanPayment, moneyFactorToApr } from './finance.js';
@@ -233,7 +234,14 @@ export function createPlanTools(ctx) {
         el('p', { class: 'station-meta', text: [`${v.modelYear}`, CLASS_LABEL[v.class] || v.class, `${v.seats} seats`, v.thirdRow ? 'third row available' : null, `${rangeText(v)} EPA range`, v.kwh100 ? `${v.kwh100} kWh/100 mi` : null].filter(Boolean).join(' · ') }),
         el('p', { class: 'station-meta' },
           `From ${usd(v.msrp)} + ${v.destination ? `${usd(v.destination)} destination` : 'destination not published'} · checked ${data.checkedAtLabel} · `,
-          externalLink('price source', v.priceSource))),
+          externalLink('price source', v.priceSource)),
+        el('p', { class: 'station-meta' },
+          [cargoText(v), iihsText(v)].filter(Boolean).map((t) => `${t} · `).join(''),
+          safetyText(v),
+          v.nhtsa?.source ? ' · ' : null,
+          v.nhtsa?.source ? externalLink('NHTSA record', v.nhtsa.source) : null),
+        recentAwards(v).length ? el('ul', { class: 'car-awards', 'aria-label': `Awards for the ${v.make} ${v.model}` },
+          recentAwards(v).map((w) => el('li', {}, externalLink(`${w.name} ${w.year}`, w.url), ` (${w.publisher})`))) : null),
       el('p', { class: 'row-figure' }, figureFor(v, f), el('span', { class: 'car-unit', text: monthly == null ? ' starting' : ' /mo est.' })),
       el('button', {
         type: 'button', class: 'btn-save', 'aria-pressed': String(shortlisted), disabled: full,
@@ -255,7 +263,8 @@ export function createPlanTools(ctx) {
     try { data = await loadVehicles(); } catch { status.textContent = 'We couldn’t load the car list. Please try again.'; return; }
     data.checkedAtLabel = new Date(`${data.checkedAt}T12:00:00`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     const need = ctx.rec.range.need;
-    const ui = { klass: 'suv', coverNeed: true };
+    const ui = { klass: 'suv', coverNeed: true, sort: 'price', tspOnly: false };
+    const sorts = availableSorts(data.vehicles);
     const f = () => ctx.plan().finance;
     const setF = (k, v) => { ctx.update((plan) => { plan.finance[k] = v; }); };
 
@@ -318,15 +327,16 @@ export function createPlanTools(ctx) {
         .filter((v) => v.class === ui.klass)
         .filter((v) => !fin.thirdRow || v.thirdRow)
         .filter((v) => !ui.coverNeed || v.rangeMax >= need)
+        .filter((v) => !ui.tspOnly || v.iihs)
         .filter((v) => {
           if (fin.mode === 'price') return v.msrp <= fin.maxPrice;
           return monthlyFor(v, fin) <= fin.maxMonthly;
         })
-        .sort((a, b) => (fin.mode === 'price' ? a.msrp - b.msrp : monthlyFor(a, fin) - monthlyFor(b, fin)));
+        .sort(compareBy(ui.sort, (a, b) => (fin.mode === 'price' ? a.msrp - b.msrp : monthlyFor(a, fin) - monthlyFor(b, fin))));
       const rerender = () => draw();
       list.replaceChildren(...matches.map((v) => carRow(v, fin, rerender, data)));
       count.textContent = matches.length
-        ? `${matches.length} ${ui.klass === 'pickup' ? 'pickup' : 'SUV'}${matches.length > 1 ? 's' : ''} match, ${fin.mode === 'price' ? 'lowest price' : 'lowest monthly estimate'} first.`
+        ? `${matches.length} ${ui.klass === 'pickup' ? 'pickup' : 'SUV'}${matches.length > 1 ? 's' : ''} match, ${ui.sort === 'price' ? (fin.mode === 'price' ? 'lowest price first' : 'lowest monthly estimate first') : `sorted by ${SORTS[ui.sort].toLowerCase()}`}.`
         : 'Nothing matches yet. Try a higher budget or fewer filters.';
       note.textContent = fin.mode === 'lease'
         ? 'Lease estimates are rough: real offers change monthly and depend on credit, incentives, and negotiation. Taxes and fees are not included.'
@@ -350,14 +360,20 @@ export function createPlanTools(ctx) {
         radio('fin-mode', 'loan', 'Monthly loan', f().mode === 'loan', () => { setF('mode', 'loan'); ctx.track('finance_mode', { mode: 'loan' }); draw(); }),
         radio('fin-mode', 'lease', 'Monthly lease', f().mode === 'lease', () => { setF('mode', 'lease'); ctx.track('finance_mode', { mode: 'lease' }); draw(); })),
       modeFields,
+      el('div', { class: 'field sort-field' },
+        el('label', { for: 'car-sort', text: 'Sort by' }),
+        el('select', { id: 'car-sort', onchange: (e) => { ui.sort = e.target.value; ctx.track('car_sorted', { mode: ui.sort }); draw(); } },
+          sorts.map((k) => el('option', { value: k, selected: k === ui.sort, text: k === 'price' ? 'Lowest price or payment' : SORTS[k] })))),
       el('div', { class: 'tool-row' },
         el('label', { class: 'check', for: 'car-third-row' },
           el('input', { type: 'checkbox', id: 'car-third-row', checked: f().thirdRow, onchange: (e) => { setF('thirdRow', e.target.checked); draw(); } }), 'Needs a third row'),
         el('label', { class: 'check', for: 'car-cover-need' },
-          el('input', { type: 'checkbox', id: 'car-cover-need', checked: true, onchange: (e) => { ui.coverNeed = e.target.checked; draw(); } }), `Covers my ${num.format(need)} miles between charges`)));
+          el('input', { type: 'checkbox', id: 'car-cover-need', checked: true, onchange: (e) => { ui.coverNeed = e.target.checked; draw(); } }), `Covers my ${num.format(need)} miles between charges`),
+        hasIihs(data.vehicles) ? el('label', { class: 'check', for: 'car-tsp' },
+          el('input', { type: 'checkbox', id: 'car-tsp', onchange: (e) => { ui.tspOnly = e.target.checked; draw(); } }), 'IIHS Top Safety Pick or Pick+ only') : null));
     status.remove();
     box.append(controls, count, note, list,
-      el('p', { class: 'tool-note', text: `Fully electric models only, listed neutrally and sorted by your budget. Prices checked ${data.checkedAtLabel}; they change, so confirm with the brand before you buy.` }));
+      el('p', { class: 'tool-note', text: `Fully electric models only, listed neutrally: sorted by your budget unless you choose another order, with ties broken by price. Prices checked ${data.checkedAtLabel}; they change, so confirm with the brand before you buy. Safety ratings from NHTSA, checked ${data.nhtsaCheckedAt ? new Date(`${data.nhtsaCheckedAt}T12:00:00`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'recently'}; "Not yet rated" means NHTSA hasn't crash-tested that model year, not that it is unsafe.` }));
     draw();
   }
 

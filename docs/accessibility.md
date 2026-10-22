@@ -43,6 +43,9 @@ it flagged both.
   fallback is a single `role="img"` with a label that says the street map is unavailable. Fast
   charging is shown by pin shape (square) and color, and by "fast" in the list. Pins are
   redrawn at the map's real width, so on a phone they stay about 24 px across.
+- **Car explorer sort:** "Sort by" is a labelled native `select`; the result count (a
+  `role="status"` line) says which order is in use. Safety ratings are words ("NHTSA: 5-star
+  overall", "Not yet rated"), not star glyphs.
 - **Plan tools:** each tool opens from a button with `aria-expanded`; search is a labelled
   `role="search"` form; results, loading, and "search unavailable" messages are in
   `role="status"` regions; Save buttons report their state with `aria-pressed` and are
