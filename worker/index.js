@@ -1,11 +1,20 @@
-// The site's one piece of server code: a privacy-preserving proxy for place search and routing.
+// The site's one piece of server code: a privacy-preserving proxy for place search, routing, and
+// the street map behind the charger map.
 // Everything else is static files served by Cloudflare. This Worker runs only for /api/*.
 //
 // Why a proxy: the Geoapify key stays secret, the provider never sees the visitor's IP,
 // requests are rate-limited, and nothing is logged or cached. Queries are passed through
 // and forgotten.
 
+import { MAP_H, MAP_W, validView, viewBounds } from '../site/js/map-view.js';
+
 const GEOCODE_URL = 'https://api.geoapify.com/v1/geocode/search';
+const STATIC_MAP_URL = 'https://maps.geoapify.com/v1/staticmap';
+const MAP_TIMEOUT_MS = 8000;
+const MAP_MAX_BYTES = 3_000_000;
+// Bump when the map request changes (style, size), so old cached images are not reused.
+export const MAP_VERSION = 1;
+const MAP_CACHE_SECONDS = 30 * 24 * 3600;
 const ROUTING_URL = 'https://api.geoapify.com/v1/routing';
 const UPSTREAM_TIMEOUT_MS = 5000;
 const ROUTE_TIMEOUT_MS = 8000;
@@ -200,11 +209,89 @@ async function route(request, url, env) {
   });
 }
 
+/** "z", "x", "y" query values: small whole numbers only. */
+export function cleanView(params) {
+  const nums = ['z', 'x', 'y'].map((k) => {
+    const v = params.get(k);
+    return typeof v === 'string' && /^\d{1,7}$/.test(v) ? Number(v) : NaN;
+  });
+  const view = { z: nums[0], x: nums[1], y: nums[2] };
+  if (!validView(view)) return null;
+  const b = viewBounds(view);
+  // Only U.S. maps: the box's center must be in the U.S.
+  return inUS((b.north + b.south) / 2, (b.west + b.east) / 2) ? view : null;
+}
+
+/**
+ * The street map for one grid view, with no markers: the page draws the ZIP center and the
+ * numbered chargers itself. The view is shared by everyone nearby and says nothing about the
+ * visitor, so the image may be cached (by the browser, and at the edge where Cloudflare allows it).
+ * Errors are JSON, and the page falls back to a drawn plot.
+ */
+async function staticMap(request, url, env) {
+  const refused = refuse(request);
+  if (refused) return refused;
+  const view = cleanView(url.searchParams);
+  if (!view) return json({ error: 'bad_query' }, 400);
+
+  if (!env.GEOAPIFY_KEY) return json({ error: 'map_unavailable' }, 503);
+  if (!env.MAP_LIMITER || !env.MAP_GLOBAL_LIMITER) return json({ error: 'limiter_missing' }, 503);
+  const { success } = await env.MAP_LIMITER.limit({ key: await visitorKey(request) });
+  if (!success) return json({ error: 'rate_limited' }, 429);
+
+  // A cache key on our own origin that holds only the view, never anything about the visitor.
+  const cacheKey = new Request(`${url.origin}/api/map-cache/v${MAP_VERSION}/${view.z}/${view.x}/${view.y}`);
+  const cache = globalThis.caches?.default;
+  try {
+    const hit = cache && (await cache.match(cacheKey));
+    if (hit) return hit;
+  } catch { /* no edge cache here: fetch the map */ }
+
+  // Only misses spend map credits, so only misses count against the site-wide limit.
+  const site = await env.MAP_GLOBAL_LIMITER.limit({ key: 'all-visitors' });
+  if (!site.success) return json({ error: 'map_unavailable' }, 503);
+
+  const b = viewBounds(view);
+  const upstream = new URL(STATIC_MAP_URL);
+  upstream.searchParams.set('style', 'osm-bright');
+  upstream.searchParams.set('width', String(MAP_W));
+  upstream.searchParams.set('height', String(MAP_H));
+  upstream.searchParams.set('scaleFactor', '2');
+  upstream.searchParams.set('format', 'png');
+  upstream.searchParams.set('area', `rect:${b.west.toFixed(6)},${b.north.toFixed(6)},${b.east.toFixed(6)},${b.south.toFixed(6)}`);
+  upstream.searchParams.set('apiKey', env.GEOAPIFY_KEY);
+
+  let body;
+  try {
+    const res = await fetch(upstream, { signal: AbortSignal.timeout(MAP_TIMEOUT_MS), headers: { Accept: 'image/png' } });
+    const type = res.headers.get('Content-Type') || '';
+    if (!res.ok || !/^image\/png\b/.test(type)) return json({ error: 'map_unavailable' }, 502);
+    body = await res.arrayBuffer();
+  } catch {
+    return json({ error: 'map_unavailable' }, 502);
+  }
+  if (!body.byteLength || body.byteLength > MAP_MAX_BYTES) return json({ error: 'map_unavailable' }, 502);
+
+  const response = new Response(body, {
+    status: 200,
+    headers: {
+      'Content-Type': 'image/png',
+      'Cache-Control': `public, max-age=${MAP_CACHE_SECONDS}`,
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer',
+      'Cross-Origin-Resource-Policy': 'same-origin',
+    },
+  });
+  try { if (cache) await cache.put(cacheKey, response.clone()); } catch { /* serve it uncached */ }
+  return response;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === '/api/geocode') return geocode(request, url, env);
     if (url.pathname === '/api/route') return route(request, url, env);
+    if (url.pathname === '/api/map') return staticMap(request, url, env);
     if (url.pathname.startsWith('/api/')) return json({ error: 'not_found' }, 404);
     return env.ASSETS.fetch(request);
   },

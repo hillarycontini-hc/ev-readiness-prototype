@@ -53,7 +53,8 @@ reasoning shown might.
    Every question can be skipped.
 3. **A verdict with reasons:** Strong fit, Good fit with a plan, Possible with tradeoffs, or
    Not yet. Each reason says whether it works for or against you. Four cards follow:
-   charging, range, cost, and outdoor trips.
+   charging, range, cost, and outdoor trips. The charging card opens to a street map of the
+   area around your ZIP with the nearest public chargers numbered to match a list beside it.
 4. **"Get my EV plan."** Steps built from the answers: who to ask about charging, what
    to shop for, which park trips need a charging stop, and what to bring to a test drive.
    It asks for no contact details; it started as a fake-door test for lead capture.
@@ -169,9 +170,12 @@ Privacy is a product requirement here, not a footnote:
   never sent to a server.
 - **Address search goes through our own proxy,** so the search provider never sees your IP,
   and nothing is logged.
+- **The charger map never sends your ZIP.** The page asks our server for a map tile on a fixed
+  grid (the same image for everyone nearby) and draws your ZIP center and the chargers on top
+  itself.
 - **No cookies and no consent banner needed.** Analytics identity lives in
   memory for one page view.
-- **No session replay, no autocapture.** Only 26 named events are sent, and an allowlist
+- **No session replay, no autocapture.** Only 30 named events are sent, and an allowlist
   filter strips everything else, including URL query strings, ad click ids, full user agent,
   and timezone.
 - **Global Privacy Control and Do Not Track are respected:** analytics does not load at all.

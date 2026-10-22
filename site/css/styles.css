@@ -718,6 +718,35 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 
 /* ---------- print: the plan and the verdict only ---------- */
 
+/* ---------- charger map (inside the charger stop) ---------- */
+
+.charger-map { margin: 0.9rem 0 0.6rem; }
+.map-frame { position: relative; aspect-ratio: 640 / 400; border-radius: 6px; overflow: hidden; background: #dfe6ec; box-shadow: inset 0 0 0 1px #2c3a55; }
+.map-img, .map-overlay { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.map-pin circle { fill: var(--aqua); stroke: var(--navy); stroke-width: 2.5; }
+.map-pin.is-fast rect { fill: var(--citron); stroke: var(--navy); stroke-width: 2.5; }
+.map-pin text { fill: var(--navy); font: 800 13px var(--text); text-anchor: middle; }
+.map-leader { stroke: var(--navy); }
+.map-spot { fill: var(--navy); }
+.map-home { fill: var(--navy); stroke: #fff; stroke-width: 3; }
+.map-home-halo { fill: #101a2b; fill-opacity: 0.18; }
+.map-ground { fill: #eef2f5; }
+.map-ring { fill: none; stroke: #4a5568; stroke-width: 1.5; stroke-dasharray: 6 5; }
+.map-ring-label, .map-north { fill: #4a5568; font: 700 13px var(--text); }
+.map-caption { margin: 0.5rem 0 0; color: var(--row-sub); }
+.map-key-home { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--navy); box-shadow: 0 0 0 2px #fff; vertical-align: -1px; margin-right: 0.15rem; }
+.map-status { color: #fff; font-weight: 600; }
+.map-list { list-style: none; padding: 0; margin: 0.6rem 0 0; }
+.map-list li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 0.7rem; align-items: start; padding: 0.55rem 0; border-top: 1px solid #2c3a55; }
+.map-list li:first-child { border-top: 0; }
+.map-num { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--aqua); color: var(--navy); font-weight: 800; font-size: 0.8125rem; margin-top: 0.05rem; }
+.map-num.is-fast { border-radius: 4px; background: var(--citron); }
+.map-more { color: var(--row-sub); font-weight: 600; }
+.stop-panel .map-list p { margin: 0; }
+.map-name { font-weight: 700; color: #fff; }
+.map-miles { color: var(--aqua); white-space: nowrap; }
+.map-meta { color: var(--row-sub); }
+
 @media print {
   .tool-btn, .tool-panel, .summary-actions, .share-link, .shared-banner,
   .topbar, .site-footer, .skip-link, button, .results-meta, .assumed, .route-hint, .route, .next-steps, .method, .start-over { display: none !important; }

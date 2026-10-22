@@ -9,6 +9,7 @@ import {
 } from './copy.js';
 import * as analytics from './analytics.js';
 import { chevron, el, externalLink as linkTo, num, srOnly, usd, usd10 as money } from './dom.js';
+import { chargerMap } from './charger-map.js';
 import { createPlanTools } from './plan-tools.js';
 import { clearSaved, decodeShare, emptyPlan, encodeShare, loadSaved, savePlan, sharePayload } from './plan-store.js';
 import { durationText } from './trip.js';
@@ -315,13 +316,20 @@ function chargerStop(rec) {
   const trips = reasonOf(rec, 'trips-');
   const tone = trips && trips.tone === 'minus' ? 'minus' : local.tone;
   const nearest = c.nearestDc == null ? 'None within 100 miles' : `${c.nearestDc} miles (straight line)`;
+  const mapSlot = el('div', { class: 'map-slot' });
   return {
     key: 'charger', label: 'Nearest fast charger', tone,
     figure: c.nearestDc == null ? 'None' : `${c.nearestDc} mi`,
     detail: `${c.dcWithin10 ? `${num.format(c.dcWithin10)} fast-charging stations` : 'No fast-charging stations'} within 10 mi · ${c.dcPercentile >= 10 ? `more than ${c.dcPercentile}% of U.S. ZIP codes` : 'fewer than most U.S. ZIP codes'}`,
     assumed: assumedAny(rec, 'longTrips'),
+    // The map loads the first time the panel opens, so a closed card costs nothing.
+    onOpen: () => {
+      if (mapSlot.firstChild || !Number.isFinite(state.zipRec?.la)) return;
+      mapSlot.append(chargerMap({ lat: state.zipRec.la, lon: state.zipRec.lo, label: `ZIP ${state.zip}`, track: analytics.track }));
+    },
     panel: [
       el('p', { text: REASON_COPY[local.id](local.value) }),
+      mapSlot,
       trips ? el('p', { text: REASON_COPY[trips.id](trips.value) }) : null,
       el('dl', {},
         el('dt', { text: 'Nearest fast charger' }), el('dd', { text: nearest }),
@@ -442,6 +450,7 @@ function renderStop(stop, i, nextKey) {
       const open = btn.getAttribute('aria-expanded') === 'true';
       btn.setAttribute('aria-expanded', String(!open));
       panel.hidden = open;
+      if (!open) stop.onOpen?.();
     },
   },
   el('span', { class: 'station', 'aria-hidden': 'true' }),
