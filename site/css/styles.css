@@ -475,7 +475,8 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .btn-save:focus-visible { outline: 3px solid var(--citron); outline-offset: 2px; }
 
 .row-figure { margin: 0; font: 900 1.75rem/1 var(--display); color: var(--fig); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.car-unit { font: 600 var(--t-small) var(--text); color: var(--row-sub); }
+.nowrap { white-space: nowrap; }
+.car-unit { white-space: nowrap;  font: 600 var(--t-small) var(--text); color: var(--row-sub); }
 .car-controls { display: grid; gap: 0.9rem; }
 .seg { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .seg legend { width: 100%; margin-bottom: 0.35rem; }
@@ -645,6 +646,7 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   .row-figure { white-space: normal; }
   .station-main, .car-main { grid-column: 1 / -1; }
   .row-figure { text-align: left; padding-left: calc(14px + 0.55rem); }
+  .row-figure .car-unit { display: block; margin-top: 0.15rem; }
 }
 
 /* ---------- partner summary ---------- */

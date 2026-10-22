@@ -55,6 +55,10 @@ async function findModels(make, model, year, override) {
 const STARS = new Set(['1', '2', '3', '4', '5']);
 
 async function ratingFor(v) {
+  // The curated model year first. If NHTSA hasn't listed it, or has listed it but rated no version
+  // yet, use the previous year's rating (labeled with its year on the page), so a car isn't ranked
+  // last just because of when NHTSA created a listing.
+  let listedUnrated = null;
   for (const year of [v.modelYear, v.modelYear - 1]) {
     const names = await findModels(v.make, v.model, year, v.nhtsaModel);
     if (!names.length) continue;
@@ -62,23 +66,26 @@ async function ratingFor(v) {
     let versions = [];
     for (const u of modelUrls) versions.push(...((await get(`${u}?format=json`)).Results || []));
     // One NHTSA model can cover two of ours (the Hummer EV SUV and Pickup): keep matching versions.
-    if (v.nhtsaVersion) versions = versions.filter((ver) => ver.VehicleDescription.toLowerCase().includes(v.nhtsaVersion.toLowerCase()));
+    if (v.nhtsaVersion) versions = versions.filter((ver) => String(ver.VehicleDescription || '').toLowerCase().includes(v.nhtsaVersion.toLowerCase()));
     const name = names.join(' / ');
     const modelUrl = modelUrls[0];
     const rated = [];
     for (const ver of versions) {
+      if (!Number.isInteger(ver.VehicleId) || ver.VehicleId <= 0) continue;
       const r = ((await get(`${API}/VehicleId/${ver.VehicleId}?format=json`)).Results || [])[0];
       if (r && STARS.has(String(r.OverallRating))) rated.push({ version: ver.VehicleDescription, overall: Number(r.OverallRating) });
     }
-    return {
+    const result = {
       year, nhtsaModel: name, source: modelUrl,
       versions: versions.length,
       rated,
       overallMin: rated.length ? Math.min(...rated.map((x) => x.overall)) : null,
       overallMax: rated.length ? Math.max(...rated.map((x) => x.overall)) : null,
     };
+    if (rated.length) return result;
+    listedUnrated ??= result; // listed but unrated: try the previous year before saying so
   }
-  return null;
+  return listedUnrated;
 }
 
 if (import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}` || process.argv[1]?.endsWith('fetch-nhtsa.mjs')) {

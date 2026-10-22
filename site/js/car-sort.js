@@ -9,7 +9,7 @@ export const SORTS = {
   range: 'Longest range',
   seats: 'Most seats',
   cargo: 'Most cargo space',
-  safety: 'NHTSA safety rating',
+  safety: 'Highest NHTSA rating',
   awards: 'Most awards (last 3 model years)',
 };
 

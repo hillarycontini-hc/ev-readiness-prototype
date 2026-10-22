@@ -56,9 +56,9 @@ test('sorting by safety puts rated cars first and says "Not yet rated" for the r
   const firstUnrated = list.findIndex((r) => r.text.includes('NHTSA: Not yet rated'));
   assert.ok(firstUnrated > 0, 'some rated cars come first');
   assert.ok(list.slice(firstUnrated).every((r) => r.text.includes('Not yet rated')), 'every unrated car is after every rated one');
-  assert.match(await page.locator('#tool-plan-range, #tool-plan-range-any').first().innerText(), /not that it is unsafe/);
-  const link = page.locator('.car-item a:has-text("NHTSA record")').first();
-  assert.match(await link.getAttribute('href'), /^https:\/\/api\.nhtsa\.gov\/SafetyRatings\//);
+  assert.match(await page.locator('#tool-plan-range, #tool-plan-range-any').first().innerText(), /not that it’s unsafe/);
+  const link = page.locator('.car-item a:has-text("rating source")').first();
+  assert.match(await link.getAttribute('href'), /^https:\/\/www\.nhtsa\.gov\/ratings/);
   await context.close();
 });
 
