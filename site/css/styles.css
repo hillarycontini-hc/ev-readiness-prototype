@@ -341,7 +341,7 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   .stop-figure { grid-column: 2; grid-row: 2; text-align: left; padding: 0 0 0.9rem 0.25rem; }
   .stop-chev { grid-column: 3; grid-row: 1 / span 2; }
   .station { grid-row: 1; }
-  .stop-panel { padding-left: 1.25rem; }
+  .stop-panel { padding-left: 2.75rem; } /* clear of the route line */
   /* Each term sits over its value, so values get the full width instead of one word per line. */
   .stop-panel dl { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .stop-panel dd + dt { margin-top: 0.5rem; }
@@ -740,6 +740,36 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .footnote { color: var(--muted); }
 
 /* ---------- print: the plan and the verdict only ---------- */
+
+/* ---------- charger map (inside the charger stop) ---------- */
+
+.charger-map { margin: 0.9rem 0 0.6rem; }
+.map-frame { position: relative; aspect-ratio: 640 / 400; border-radius: 6px; overflow: hidden; background: #dfe6ec; box-shadow: inset 0 0 0 1px #2c3a55; }
+.map-img, .map-overlay { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.map-pin circle { fill: var(--aqua); stroke: var(--navy); stroke-width: 2.5; }
+.map-pin.is-fast rect { fill: var(--citron); stroke: var(--navy); stroke-width: 2.5; }
+.map-pin text { fill: var(--navy); font: 800 13px var(--text); text-anchor: middle; }
+.map-leader { stroke: var(--navy); }
+.map-spot { fill: var(--navy); }
+.map-home { fill: #fff; stroke: var(--navy); stroke-width: 4; }
+.map-ground { fill: #eef2f5; }
+.map-ring { fill: none; stroke: #4a5568; stroke-width: 1.5; stroke-dasharray: 6 5; }
+.map-ring-label, .map-north text { fill: #4a5568; font: 700 13px var(--text); }
+.map-north text { text-anchor: middle; }
+.map-north path { fill: #4a5568; }
+.map-caption { margin: 0.5rem 0 0; color: var(--row-sub); }
+.map-key-home { display: inline-block; vertical-align: -3px; margin-right: 0.1rem; overflow: visible; }
+.map-status { color: #fff; font-weight: 600; }
+.map-list { list-style: none; padding: 0; margin: 0.6rem 0 0; }
+.map-list li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 0.7rem; align-items: start; padding: 0.55rem 0; border-top: 1px solid #2c3a55; }
+.map-list li:first-child { border-top: 0; }
+.map-num { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--aqua); color: var(--navy); font-weight: 800; font-size: 0.8125rem; margin-top: 0.05rem; }
+.map-num.is-fast { border-radius: 4px; background: var(--citron); }
+.map-more { color: var(--row-sub); font-weight: 600; }
+.stop-panel .map-list p { margin: 0; }
+.map-name { font-weight: 700; color: #fff; }
+.map-miles { color: var(--aqua); white-space: nowrap; }
+.map-meta { color: var(--row-sub); }
 
 @media print {
   .tool-btn, .tool-panel, .summary-actions, .share-link, .shared-banner,

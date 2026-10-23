@@ -324,6 +324,10 @@ A navy bar, 6px corners, 5.75rem tall, with four columns: station, label block, 
 
 **Motion:** when results load the line draws down segment by segment (0.42s, staggered 0.14s per stop) and each station pops from 0.4 scale (0.36s), on `cubic-bezier(0.16, 1, 0.3, 1)`. It runs once, content is visible from the start, and reduced-motion users get the static route.
 
+### Charger Map
+
+A plain street map (Geoapify osm-bright, no provider markers) inside the charger stop panel, with the page's own overlay on top. The ZIP center is the route's station: a white disc in a 4px navy ring. Level 2 sites are aqua circles and fast-charging sites are citron rounded squares, both with a navy stroke and a navy number. Shape carries the difference, not color alone. Pins keep about 24 screen pixels at any width. Crowded pins step outward from the ZIP center along a thin navy leader to a dot on their true spot. Below the map is a numbered list on navy, with each number badge in its pin's shape and color; it is the accessible version of the map. If the street map can't load, the same overlay sits on a fog plot with a dashed 1-mile ring and a drawn north arrow, never a glyph.
+
 ## Do's and Don'ts
 
 ### Do:

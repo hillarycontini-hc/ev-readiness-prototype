@@ -101,6 +101,12 @@ const VIEWS = {
     await page.waitForSelector('#tool-plan-park .trip-gap');
     await page.click('#tool-plan-park .trip-partial summary');
   },
+  // The static test server has no /api/map, so this is the drawn fallback; charger-map.e2e covers the street map.
+  'charger map open': async (page) => {
+    await completeFlow(page, '80302');
+    await page.click('.stop.s-charger .stop-btn');
+    await page.waitForSelector('.charger-map .map-list li');
+  },
   'results (ZIP only)': async (page) => {
     await page.fill('#zip', '10001');
     await page.click('#zip-form button[type=submit]');
