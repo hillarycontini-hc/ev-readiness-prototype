@@ -129,6 +129,7 @@ export function chargerMap({ lat, lon, label, track = () => {} }) {
       : `Numbers match the list, nearest first.${fastShown ? ' Square pins have fast charging.' : ''}${nearestFast ? '' : ' No fast chargers within 25 miles.'}`;
     const credit = el('p', { class: 'src' }, 'Street map: ',
       externalLink('© OpenStreetMap contributors', 'https://www.openstreetmap.org/copyright'), ', ',
+      externalLink('© OpenMapTiles', 'https://openmaptiles.org/'), ', ',
       externalLink('Geoapify', 'https://www.geoapify.com/'), '.');
     let reported = false;
     const report = (source) => { if (!reported) { reported = true; track('map_rendered', { source }); } };

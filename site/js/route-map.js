@@ -77,7 +77,8 @@ export function routeMap({ trip, points, others, track = () => {} }) {
   const report = (source) => { if (!reported) { reported = true; track('map_rendered', { source, type: 'route' }); } };
   const credit = el('p', { class: 'src' }, 'Street map: ',
     externalLink('© OpenStreetMap contributors', 'https://www.openstreetmap.org/copyright'), ', ',
-    externalLink('Geoapify', 'https://www.geoapify.com/'), '.');
+    externalLink('© OpenMapTiles', 'https://openmaptiles.org/'), ', ',
+      externalLink('Geoapify', 'https://www.geoapify.com/'), '.');
 
   // The whole 640 x 400 picture, placed so only the crop shows.
   const img = el('img', { class: 'map-img', width: MAP_W, height: MAP_H, decoding: 'async', alt: `Map of ${describe}.` });
