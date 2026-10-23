@@ -450,3 +450,36 @@ test('analytics gets trip events with coarse values only', async () => {
   }
   await context.close();
 });
+
+test('the route overview asks for a map view only, matches the stops, and offers in-range alternatives', async () => {
+  const { AxeBuilder } = await import('@axe-core/playwright');
+  const probe = await browser.newPage();
+  await probe.setViewportSize({ width: 64, height: 40 });
+  await probe.setContent('<body style="margin:0;background:#f4f1ea"></body>');
+  const png = await probe.screenshot();
+  await probe.close();
+  for (const mode of ['static', 'fallback']) {
+    const context = await browser.newContext();
+    const maps = [];
+    await context.route('**/api/map*', (r) => {
+      maps.push(r.request().url());
+      return mode === 'static'
+        ? r.fulfill({ status: 200, contentType: 'image/png', body: png })
+        : r.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"map_unavailable"}' });
+    });
+    const { page } = await openPlan(context);
+    await planParkTrip(page);
+    await page.waitForSelector(mode === 'static' ? '#tool-plan-park .route-map .map-img' : '#tool-plan-park .route-map .is-fallback');
+    assert.equal(maps.length, 1);
+    assert.deepEqual([...new URL(maps[0]).searchParams.keys()].sort(), ['x', 'y', 'z'], 'only the view: no route, stops, or start');
+    const stops = (await page.locator('#tool-plan-park .trip-leg').count()) - 1; // every leg but the arrival
+    assert.equal(await page.locator('#tool-plan-park .route-map .map-pin').count(), stops);
+    assert.ok(await page.locator('#tool-plan-park .route-map .route-other').count() > 0, 'other fast chargers along the way');
+    const alts = await page.locator('#tool-plan-park .leg-alts li').allInnerTexts();
+    assert.ok(alts.length > 0 && alts.every((t) => /^\d+ mi (earlier|later): .+ · road mile \d+/.test(t)), alts.join(' | '));
+    if (mode === 'fallback') assert.match(await page.locator('#tool-plan-park .route-map svg[role=img]').getAttribute('aria-label'), /street map is unavailable/);
+    const axe = await new AxeBuilder({ page }).include('#tool-plan-park').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+    assert.deepEqual(axe.violations.map((v) => v.id), []);
+    await context.close();
+  }
+});

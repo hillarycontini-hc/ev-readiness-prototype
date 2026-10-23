@@ -48,7 +48,7 @@ done and tested; the remaining items are account settings only you can change.
   set, it returns "search unavailable" and the page falls back to ZIP. Spend cap: Geoapify's
   free plan with no card on file refuses requests past its quota instead of billing.
 - **The street-map proxy** (`/api/map`, same Worker, same key) takes only a view: a zoom
-  (11-15) and a position on a fixed grid a quarter of the image apart, as whole numbers
+  (11-15 for the charger map, 4-13 for a trip's route overview) and a position on a fixed grid a quarter of the image apart, as whole numbers
   ([`site/js/map-view.js`](../site/js/map-view.js)). It rejects anything outside the U.S. and
   asks Geoapify for that exact box with no markers; the page draws the ZIP center and the
   chargers. So neither our server nor Geoapify gets the ZIP or a coordinate from the visitor,

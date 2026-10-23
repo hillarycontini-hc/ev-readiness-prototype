@@ -12,7 +12,7 @@ import { chargersNear, connectorNames } from './places.js';
 import { displayName } from './names.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-function svg(tag, attrs = {}, ...children) {
+export function svg(tag, attrs = {}, ...children) {
   const node = document.createElementNS(SVG_NS, tag);
   for (const [k, v] of Object.entries(attrs)) if (v != null) node.setAttribute(k, String(v));
   for (const c of children) if (c) node.append(typeof c === 'string' ? document.createTextNode(c) : c);
@@ -20,7 +20,7 @@ function svg(tag, attrs = {}, ...children) {
 }
 
 const METERS_PER_MILE = 1609.344;
-const scaleOf = (frame) => Math.min(2.4, Math.max(1, MAP_W / (frame.clientWidth || MAP_W)));
+export const scaleOf = (frame) => Math.min(2.4, Math.max(1, MAP_W / (frame.clientWidth || MAP_W)));
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 // Pins keep about the same size on screen however wide the map is drawn: k is how many image
@@ -58,8 +58,8 @@ function overlay(view, center, markers, { fallback, k = 1 }) {
 }
 
 // The ZIP center is drawn as the route's own station: a white disc in a navy ring.
-const homeMark = () => svg('circle', { class: 'map-home', r: 9 });
-const homeKey = () => svg('svg', { class: 'map-key-home', viewBox: '-13 -13 26 26', width: 16, height: 16, 'aria-hidden': 'true', focusable: 'false' }, homeMark());
+export const homeMark = () => svg('circle', { class: 'map-home', r: 9 });
+export const homeKey = () => svg('svg', { class: 'map-key-home', viewBox: '-13 -13 26 26', width: 16, height: 16, 'aria-hidden': 'true', focusable: 'false' }, homeMark());
 
 const uniq = (xs) => [...new Set(xs.filter(Boolean))];
 

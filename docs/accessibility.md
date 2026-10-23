@@ -46,6 +46,9 @@ it flagged both.
 - **Car explorer sort:** "Sort by" is a labelled native `select`; the result count (a
   `role="status"` line) says which order is in use. Safety ratings are words ("NHTSA: 5-star
   overall", "Not yet rated"), not star glyphs.
+- **Route overview:** the trip's map is a figure whose alt text names the start, destination,
+  road miles, number of stops, and other fast chargers, and says the legs below describe each
+  stop. Stops are numbered like the legs; alternatives are listed as text in each stop's details.
 - **Plan tools:** each tool opens from a button with `aria-expanded`; search is a labelled
   `role="search"` form; results, loading, and "search unavailable" messages are in
   `role="status"` regions; Save buttons report their state with `aria-pressed` and are

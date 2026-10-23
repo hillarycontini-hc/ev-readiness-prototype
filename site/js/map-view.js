@@ -15,7 +15,11 @@ export const MAP_W = 640;
 export const MAP_H = 400;
 export const STEP_X = MAP_W / 4;
 export const STEP_Y = MAP_H / 4;
-export const MIN_ZOOM = 11;
+// Charger maps run from street level (15) out to about 20 miles across (11). Route overviews can
+// zoom out to a few states across (4). The Worker draws any view in MIN_ZOOM..MAX_ZOOM.
+export const MIN_ZOOM = 4;
+export const ZIP_MIN_ZOOM = 11;
+export const ROUTE_MAX_ZOOM = 13;
 export const MAX_ZOOM = 15;
 export const MAX_MARKERS = 8;
 const MARGIN = 18; // keep numbered markers clear of the image edge
@@ -89,8 +93,8 @@ const inside = (v, s) => {
  */
 export function chooseView(lat, lon, sites, { must = [] } = {}) {
   const want = Math.min(6, sites.length);
-  let view = snapView(lat, lon, MIN_ZOOM);
-  for (let z = MAX_ZOOM; z >= MIN_ZOOM; z--) {
+  let view = snapView(lat, lon, ZIP_MIN_ZOOM);
+  for (let z = MAX_ZOOM; z >= ZIP_MIN_ZOOM; z--) {
     const v = snapView(lat, lon, z);
     if (must.every((m) => inside(v, m)) && sites.filter((s) => inside(v, s)).length >= want) { view = v; break; }
   }
@@ -149,4 +153,31 @@ export function groupSites(stations, sameMiles = 0.03) {
     else sites.push({ lat: s.lat, lon: s.lon, miles: s.miles, stations: [s] });
   }
   return sites;
+}
+
+/**
+ * The closest view that shows every point (a route's line, its start and end) with a margin, for
+ * the route overview. At each zoom it tries the four grid positions around the points' middle, so
+ * staying on the grid costs as little zoom as possible.
+ */
+const ROUTE_MARGIN = 12; // a stop pin's half-width, so none is cut off
+
+export function fitView(points) {
+  const lats = points.map((p) => p[0]);
+  const lons = points.map((p) => p[1]);
+  const mid = { lat: (Math.min(...lats) + Math.max(...lats)) / 2, lon: (Math.min(...lons) + Math.max(...lons)) / 2 };
+  const fits = (v) => validView(v) && points.every(([lat, lon]) => {
+    const [x, y] = project(v, lat, lon);
+    return x >= ROUTE_MARGIN && x <= MAP_W - ROUTE_MARGIN && y >= ROUTE_MARGIN && y <= MAP_H - ROUTE_MARGIN;
+  });
+  for (let z = ROUTE_MAX_ZOOM; z > MIN_ZOOM; z--) {
+    const [px, py] = toWorld(mid.lat, mid.lon, z);
+    for (const x of [Math.floor(px / STEP_X), Math.ceil(px / STEP_X)]) {
+      for (const y of [Math.floor(py / STEP_Y), Math.ceil(py / STEP_Y)]) {
+        const v = { z, x, y };
+        if (fits(v)) return v;
+      }
+    }
+  }
+  return snapView(mid.lat, mid.lon, MIN_ZOOM);
 }

@@ -239,3 +239,30 @@ export function stopsBucket(n) {
   if (n <= 3) return '2-3';
   return '4+';
 }
+
+/**
+ * For each chosen stop, up to one usable fast charger a little earlier and one a little later on
+ * the route (within `window` road miles), picked only when swapping it in keeps the legs on both
+ * sides within `legMiles`. Nearest to the chosen stop wins.
+ * - candidates: routeCandidates() for the same route and plug
+ * - stops: the plan's stops ({ id, atMile, detourMiles })
+ * Returns [{ earlier, later }] in stop order; each is { station, atMile, detourMiles, deltaMiles } or null.
+ */
+export function stopAlternatives({ candidates, stops, totalMiles, legMiles, window = 60 }) {
+  const chosen = new Set(stops.map((s) => s.id));
+  return stops.map((stop, i) => {
+    const prev = i ? { atMile: stops[i - 1].atMile, detour: stops[i - 1].detourMiles } : { atMile: 0, detour: 0 };
+    const next = stops[i + 1] ? { atMile: stops[i + 1].atMile, detour: stops[i + 1].detourMiles } : { atMile: totalMiles, detour: 0 };
+    const fits = (c) => c.atMile - prev.atMile + prev.detour + c.detour <= legMiles
+      && next.atMile - c.atMile + c.detour + next.detour <= legMiles;
+    const near = candidates.filter((c) => !chosen.has(c.station.id) && Math.abs(c.atMile - stop.atMile) <= window && fits(c));
+    const pick = (list) => {
+      const c = list.sort((a, b) => Math.abs(a.atMile - stop.atMile) - Math.abs(b.atMile - stop.atMile))[0];
+      return c ? { station: c.station, atMile: Math.round(c.atMile), detourMiles: Math.round(c.detour * 10) / 10, deltaMiles: Math.round(Math.abs(c.atMile - stop.atMile)) } : null;
+    };
+    return {
+      earlier: pick(near.filter((c) => c.atMile < stop.atMile - 0.5)),
+      later: pick(near.filter((c) => c.atMile > stop.atMile + 0.5)),
+    };
+  });
+}

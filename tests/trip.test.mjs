@@ -259,3 +259,18 @@ test('custom miles are marked in the settings line, and the drive home warns onl
   assert.equal(w.text, 'The first fast charger on the way back is about 60 miles away, and you’d arrive with about 40 of your planned miles. The nearest fast charger to The Park is Town Fast, Alamosa, about 21 miles from it in a straight line.');
   assert.match(homeWarning({ ...base, returnMiles: 60, returnTo: 'charger', homeCharger: false }).text, /don’t know of a fast charger within 30 miles of The Park; look for Level 2 charging where you stay overnight\.$/);
 });
+
+test('alternative stops keep both neighboring legs within range, nearest first', async () => {
+  const { stopAlternatives } = await import('../site/js/trip.js');
+  const cand = (id, atMile, detour = 0.2) => ({ station: { id, name: id, fast: 2, connectors: 'C' }, atMile, detour });
+  const candidates = [cand('a', 90), cand('b', 140), cand('chosen', 150), cand('c', 158), cand('far', 175), cand('d', 300)];
+  const stops = [{ id: 'chosen', atMile: 150, detourMiles: 0.2 }];
+  const [alt] = stopAlternatives({ candidates, stops, totalMiles: 300, legMiles: 170 });
+  assert.equal(alt.earlier.station.id, 'b', 'nearest earlier that still reaches the destination');
+  assert.equal(alt.earlier.deltaMiles, 10);
+  assert.equal(alt.later.station.id, 'c');
+  // 'a' at mile 90 would leave 210 miles to go: too long, so it is never offered.
+  const [tight] = stopAlternatives({ candidates: [cand('a', 90), cand('chosen', 150)], stops, totalMiles: 300, legMiles: 170 });
+  assert.equal(tight.earlier, null);
+  assert.equal(tight.later, null);
+});
