@@ -23,6 +23,11 @@ test('joining words, abbreviations, ordinals, and names with apostrophes read na
   assert.equal(displayName("MCDONALD'S 2ND ST"), "McDonald's 2nd St");
   assert.equal(displayName("O'BRIEN HALL"), "O'Brien Hall");
   assert.equal(displayName('MEMORIAL CITY MCKINLEY'), 'Memorial City McKinley');
+  assert.equal(displayName('WENDY’S 1'), 'Wendy’s 1');
+  assert.equal(displayName('O’KEEFE PLAZA'), 'O’Keefe Plaza');
+  assert.equal(displayName('METRO NASHVILLE SE LIBRARY 2'), 'Metro Nashville SE Library 2');
+  assert.equal(displayName('SFO LOT D'), 'SFO Lot D');
+  assert.equal(displayName('HAMPTON INN HAMPTON IN'), 'Hampton Inn Hampton In');
 });
 
 test('initials joined by an ampersand and single letters stay as written', () => {

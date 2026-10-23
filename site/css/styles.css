@@ -635,9 +635,15 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   /* The leg's miles stay beside its title; an open leg's details run full width beneath both. */
   .trip-leg { gap: 0 0.6rem; }
   .trip-leg-main { display: contents; }
-  .trip-leg-btn { grid-column: 2; grid-row: 1; min-width: 0; }
+  /* Only the title's first line makes room for the miles (a float as wide as "999 mi", about
+     3.4rem, plus the gap); the rest of the title and the glance line run full width. */
+  .trip-leg-btn { grid-column: 2 / -1; grid-row: 1; min-width: 0; }
+  .trip-leg .station-name::before { content: ""; float: right; width: 4.25rem; height: 1.2em; height: 1lh; }
   .trip-leg-detail { grid-column: 2 / -1; grid-row: 2; min-width: 0; }
-  .trip-leg .row-figure { grid-column: 3; grid-row: 1; text-align: right; padding: 0.5rem 0 0; font-size: 1.375rem; white-space: nowrap; }
+  .trip-leg .row-figure {
+    grid-column: 3; grid-row: 1; justify-self: end; pointer-events: none;
+    text-align: right; padding: 0.5rem 0 0; font-size: 1.375rem; white-space: nowrap;
+  }
   /* Previous and Next share a row, the counter sits above them, Skip below: no stacked mis-taps. */
   .trip-stepper { display: grid; grid-template-columns: 1fr 1fr; }
   .trip-position { min-width: 0; grid-column: 1 / -1; order: -1; text-align: left; }
@@ -652,8 +658,8 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 /* Narrowest phones: beside the title would break its words, so the miles go right under the
    title, still above an open leg's details. */
 @media (max-width: 22.5rem) {
-  .trip-leg-btn { grid-column: 2 / -1; }
-  .trip-leg .row-figure { grid-column: 2 / -1; grid-row: 2; text-align: left; padding: 0.1rem 0 0; }
+  .trip-leg .station-name::before { content: none; }
+  .trip-leg .row-figure { grid-column: 2 / -1; grid-row: 2; justify-self: start; text-align: left; padding: 0.1rem 0 0; }
   .trip-leg-detail { grid-row: 3; }
 }
 

@@ -2,14 +2,15 @@
 // plans, and analytics keep the source's own text.
 
 // Uppercase words that stay uppercase. Charging terms, common agencies and brands that are
-// written as initials, and state codes that aren't also ordinary words (IN, OR, ME, HI, OH,
+// written as initials, compass points with a vowel (NE, SE), and state codes that aren't also ordinary words (IN, OR, ME, HI, OH,
 // OK, LA, CO, DE, AL, ID, and PA read as words in station names, so they get title case, and
 // CT, FL, and MT are usually court, floor, and mount).
 const ACRONYMS = new Set(`
   EV EVS EVC EVSE DC DCFC CCS NACS AC SC HQ USA US UC UCLA UCSD UCSF UCI USC NYU MIT ADA AAA
-  IKEA BMW GM VW AMC HOA YMCA YWCA ATM PD FD ISD USD NPS BLM USPS DMV DOT VA ARCO AMZ OBE
+  IKEA BMW GM VW AMC HOA YMCA YWCA ATM PD FD ISD USD NPS BLM USPS DMV DOT VA ARCO AMZ OBE SFO CSU UH VIP
+  NE SE
   II III IV VI VII VIII IX XI XII
-  AK AZ AR CA GA IA KS KY MA MI MN MO MS NC ND NE NH NJ NM NV NY RI SD TN TX UT VT WA WI WV WY
+  AK AZ AR CA GA IA KS KY MA MI MN MO MS NC ND NH NJ NM NV NY RI SD TN TX UT VT WA WI WV WY
 `.trim().split(/\s+/));
 
 // Words without a vowel are almost always initials (BVSD, PCB), except these abbreviations.
@@ -45,15 +46,16 @@ function code(w) {
 export function displayName(name) {
   const s = String(name ?? '');
   if (!/[A-Z]/.test(s) || /[a-z]/.test(s)) return s;
-  return s.replace(/[A-Z0-9]+(?:'[A-Z]+)?/g, (token, at) => {
+  return s.replace(/[A-Z0-9]+(?:['’][A-Z]+)?/g, (token, at) => {
     const before = s.charAt(at - 1);
     const after = s.charAt(at + token.length);
     if (before === '&' || after === '&') return token; // AT&T, F&M
     if (/\d/.test(token)) return code(token);
-    const [base, tail] = token.split("'");
-    const joining = at > 0 && before === ' ' && (after === '' || after === ' ');
-    if (tail == null) return word(base, joining);
-    // O'BRIEN → O'Brien; MCDONALD'S → McDonald's
-    return base === 'O' ? `O'${cap(tail)}` : `${word(base, false)}'${tail.toLowerCase()}`;
+    const [base, mark, tail] = token.split(/(['’])/);
+    // A joining word only mid-name: a last IN or OR is more likely Indiana or Oregon.
+    const joining = at > 0 && before === ' ' && after === ' ';
+    if (mark == null) return word(base, joining);
+    // O'BRIEN → O'Brien; MCDONALD’S → McDonald’s (keeping whichever apostrophe the source used)
+    return base === 'O' ? `O${mark}${cap(tail)}` : `${word(base, false)}${mark}${tail.toLowerCase()}`;
   });
 }
