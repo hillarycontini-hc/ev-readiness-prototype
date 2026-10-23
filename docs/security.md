@@ -36,8 +36,8 @@ done and tested; the remaining items are account settings only you can change.
 
 ## What the site does and does not do
 
-- Static files plus two small Worker endpoints, `/api/geocode` for address search and
-  `/api/route` for the trip planner. No database, no logins, no forms that send data anywhere else.
+- Static files plus three small Worker endpoints: `/api/geocode` for address search,
+  `/api/route` for the trip planner, and `/api/map` for the street map behind the charger map. No database, no logins, no forms that send data anywhere else.
 - **The geocoding proxy** ([`worker/index.js`](../worker/index.js)) holds the only runtime key
   (`GEOAPIFY_KEY`, a Cloudflare secret, never in the repo). It answers only same-origin `GET`
   requests (a header check that stops other sites' pages, not scripts; the rate limits cover
@@ -47,6 +47,20 @@ done and tested; the remaining items are account settings only you can change.
   `no-store`. Worker logs and observability are off, so searches are not kept. With no key
   set, it returns "search unavailable" and the page falls back to ZIP. Spend cap: Geoapify's
   free plan with no card on file refuses requests past its quota instead of billing.
+- **The street-map proxy** (`/api/map`, same Worker, same key) takes only a view: a zoom
+  (11-15) and a position on a fixed grid a quarter of the image apart, as whole numbers
+  ([`site/js/map-view.js`](../site/js/map-view.js)). It rejects anything outside the U.S. and
+  asks Geoapify for that exact box with no markers; the page draws the ZIP center and the
+  chargers. So neither our server nor Geoapify gets the ZIP or a coordinate from the visitor,
+  only which map was shown (at street level, an area about 1.5 miles across, shared by everyone
+  nearby). That still narrows the ZIP center to a cell about 600 by 370 m at street level, which
+  in a city usually identifies the ZIP; the on-page privacy notice says this plainly. Nothing is
+  logged, and the browser's own cache keeps the image for up to 30 days on that device. It returns only a PNG (anything else from the provider becomes `map_unavailable`),
+  limits each hashed IP to 20 maps a minute (`MAP_LIMITER`) and all uncached maps together to
+  20 a minute (`MAP_GLOBAL_LIMITER`), and times out after 8 seconds. Because the image is the
+  same for everyone in that area, it is cacheable: `public, max-age` for 30 days, and Cloudflare's
+  edge cache keyed only by the view where the Cache API is available. Failures fall back to a
+  drawn plot in the page.
 - **The routing proxy** (`/api/route`, same Worker, same key) takes two points (`from`,
   `to`), accepts only plain decimal U.S. coordinates between 0.5 and 750 straight-line miles
   apart (about 1,000 road miles, which also bounds Geoapify's per-distance credits), and has its

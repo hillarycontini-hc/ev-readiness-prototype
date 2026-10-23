@@ -25,6 +25,8 @@ const EVENTS = new Set([
   'plan_step_done', 'share_link_copied', 'shared_plan_opened', 'plan_resumed',
   // Trip planner (phase B). Never coordinates, place or station names, or exact miles.
   'trip_planned', 'trip_saved', 'trip_step',
+  // Charger map: whether the street map or the drawn fallback was shown. Never a place.
+  'map_rendered',
 ]);
 
 // Property names that must never leave the browser, even by mistake.
@@ -63,7 +65,7 @@ const ALLOWED_CUSTOM = new Set([
   'state', 'question', 'step', 'answer', 'from_question', 'answered', 'skipped',
   'tier', 'score_band', 'confidence', 'blockers', 'link_id', 'park', 'reason', 'stage', 'type',
   'tool', 'slot', 'method', 'class', 'mode', 'make', 'places', 'count',
-  'stops', 'dest', 'result', 'direction', 'fix',
+  'stops', 'dest', 'result', 'direction', 'fix', 'source',
   'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term',
 ]);
 // PostHog defaults we do not need: full user agent string and timezone (fingerprinting, coarse location).

@@ -36,6 +36,13 @@ it flagged both.
   tier with "(your result)" and `aria-current`.
 - **Route stops** are real buttons with `aria-expanded` and `aria-controls`; a browser test
   opens and closes one by keyboard.
+- **Charger map:** the picture is a figure whose numbered list is the accessible version: an
+  ordered list, nearest first, with each charger's name, distance, address, ports, plugs,
+  network, hours, and price. The street map has alt text saying what it shows and that the list
+  describes each pin; the pins and ZIP center are drawn in an `aria-hidden` layer. The drawn
+  fallback is a single `role="img"` with a label that says the street map is unavailable. Fast
+  charging is shown by pin shape (square) and color, and by "fast" in the list. Pins are
+  redrawn at the map's real width, so on a phone they stay about 24 px across.
 - **Plan tools:** each tool opens from a button with `aria-expanded`; search is a labelled
   `role="search"` form; results, loading, and "search unavailable" messages are in
   `role="status"` regions; Save buttons report their state with `aria-pressed` and are
