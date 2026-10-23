@@ -12,6 +12,7 @@ import { chevron, el, externalLink as linkTo, num, srOnly, usd, usd10 as money }
 import { chargerMap } from './charger-map.js';
 import { createPlanTools } from './plan-tools.js';
 import { clearSaved, decodeShare, emptyPlan, encodeShare, loadSaved, savePlan, sharePayload } from './plan-store.js';
+import { displayName } from './names.js';
 import { durationText } from './trip.js';
 import { chargeTimeShort, homeText, homeWarning, settingsText, stopFacts, stopsText, tripCostFor } from './trip-tool.js';
 
@@ -688,7 +689,7 @@ async function renderSummary() {
       el('ul', { class: 'summary-places' }, placesWithSaves.map((pl) => el('li', {},
         el('strong', { text: pl.name }),
         el('ul', { class: 'summary-chargers' }, p.saved[pl.id].map((st) => el('li', {},
-          el('span', { class: 'summary-charger-name', text: `${st.name}, ${planTools().milesText(st.miles)} mi` }),
+          el('span', { class: 'summary-charger-name', text: `${displayName(st.name)}, ${planTools().milesText(st.miles)} mi` }),
           el('span', { class: 'small', text: [[st.street, st.city].filter(Boolean).join(', '), st.hours, st.price].filter(Boolean).join(' · ') }),
           el('span', { class: 'small', text: [st.level2 ? `${st.level2} Level 2` : null, st.fast ? `${st.fast} fast` : null, st.network].filter(Boolean).join(' · ') }))))))),
       asOf ? el('p', { class: 'small', text: `Stations as of ${asOf}, from the U.S. Department of Energy. Check hours and prices before you go.` }) : null);
@@ -705,7 +706,7 @@ async function renderSummary() {
           ? el('span', { class: 'summary-warn' }, el('strong', { text: `${warn.lead} ` }), warn.text)
           : home ? el('span', { class: 'small summary-trip-facts', text: `Getting home: ${home}` }) : null))(homeWarning(t), homeText(t, t.to.park ? rec.destinations.find((d) => d.code === t.to.park)?.nearestFastToPark ?? null : null)),
         t.stops.length ? el('ol', { class: 'summary-chargers' }, t.stops.map((s) => el('li', {},
-          el('span', { class: 'summary-charger-name', text: `Road mile ${num.format(s.atMile)}: ${s.name}` }),
+          el('span', { class: 'summary-charger-name', text: `Road mile ${num.format(s.atMile)}: ${displayName(s.name)}` }),
           el('span', { class: 'small', text: [[s.street, s.city].filter(Boolean).join(', '), stopFacts(s)].filter(Boolean).join(' · ') })))) : null))),
       el('p', { class: 'small', text: 'Fast chargers from the U.S. Department of Energy station list. Check that each one is working on its network’s app before you go.' }));
   }

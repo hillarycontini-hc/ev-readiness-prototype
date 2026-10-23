@@ -7,6 +7,7 @@ import { el, externalLink, num, srOnly, usd } from './dom.js';
 import { SearchUnavailable, chargersNear, connectorNames, searchPlaces, zipCenter } from './places.js';
 import { leasePayment, loanPayment, moneyFactorToApr } from './finance.js';
 import { createTripTool } from './trip-tool.js';
+import { displayName } from './names.js';
 
 const SLOT_LABEL = {
   home: { title: 'Home', search: 'Your home address' },
@@ -89,14 +90,14 @@ export function createPlanTools(ctx) {
     const plugs = connectorNames(s.connectors).join(', ');
     return el('li', { class: `station-item${saved ? ' is-saved' : ''}` },
       el('div', { class: 'station-main' },
-        el('p', { class: 'station-name' }, savedMark(), el('span', { text: s.name })),
+        el('p', { class: 'station-name' }, savedMark(), el('span', { text: displayName(s.name) })),
         el('p', { class: 'station-meta', text: [[s.street, s.city].filter(Boolean).join(', '), s.hours, s.price].filter(Boolean).join(' · ') }),
         el('p', { class: 'station-meta', text: [ports, plugs, s.network].filter(Boolean).join(' · ') })),
       el('p', { class: 'row-figure' }, milesText(s.miles), el('span', { class: 'car-unit', text: ' mi' })),
       el('button', {
         type: 'button', class: 'btn-save', 'aria-pressed': String(saved),
         onclick: () => { toggleSaved(place, s); rerender(); },
-      }, saved ? 'Saved' : 'Save', srOnly(`: ${s.name}`)));
+      }, saved ? 'Saved' : 'Save', srOnly(`: ${displayName(s.name)}`)));
   }
 
   function renderChargers(box, place) {

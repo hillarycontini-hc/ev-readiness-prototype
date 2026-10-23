@@ -9,6 +9,7 @@
 import { el, externalLink } from './dom.js';
 import { MAP_H, MAP_W, chooseView, groupSites, metersPerPixel, placeMarkers, project } from './map-view.js';
 import { chargersNear, connectorNames } from './places.js';
+import { displayName } from './names.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 function svg(tag, attrs = {}, ...children) {
@@ -81,7 +82,7 @@ function list(sites) {
       el('span', { class: `map-num${fast ? ' is-fast' : ''}`, 'aria-hidden': 'true', text: String(i + 1) }),
       el('div', {},
         el('p', { class: 'map-name' },
-          el('span', { text: first.name }),
+          el('span', { text: displayName(first.name) }),
           more ? el('span', { class: 'map-more', text: ` and ${plural(more, 'more charger')} here` }) : null,
           el('span', { class: 'map-miles', text: ` ${site.miles < 0.1 ? '<0.1' : site.miles} mi` })),
         el('p', { class: 'map-meta', text: [[first.street, first.city].filter(Boolean).join(', '), siteLine(site)].filter(Boolean).join(' · ') }),

@@ -43,8 +43,11 @@ export const arrowIcon = () => icon('M4 12 L12 4 M6 4 L12 4 L12 10', 14);
 /** An https-only link that opens in a new tab and announces it. `onClick` runs before navigation. */
 export function externalLink(text, url, onClick) {
   if (!/^https:\/\//i.test(String(url))) return el('span', { text });
+  // The arrow (an authored SVG, hidden from screen readers) stays on the line with the last word.
+  const words = String(text);
+  const cut = words.lastIndexOf(' ') + 1;
   return el('a', { href: url, target: '_blank', rel: 'noopener noreferrer', onclick: onClick || null },
-    text, arrowIcon(), srOnly(' (opens in a new tab)'));
+    words.slice(0, cut), el('span', { class: 'ext-tail' }, words.slice(cut), arrowIcon()), srOnly(' (opens in a new tab)'));
 }
 
 export const num = new Intl.NumberFormat('en-US');
