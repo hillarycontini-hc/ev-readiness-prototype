@@ -8,7 +8,7 @@ import { SearchUnavailable, chargersNear, connectorNames, fastStationsAlong, fet
 import { ASSUMPTIONS, FLEET_KEY } from './logic.js';
 import { MAX_SAVED_TRIPS } from './plan-store.js';
 import { displayName } from './names.js';
-import { CHARGE_MINUTES, EXTRA_USE, LEG_MAX, LEG_MIN, MAX_TRIP_STOPS, PLUGS, durationText, fixActions, legMilesFromRange, nacsOnly, planStops, routeCandidates, sameTrip, stopAlternatives, stopsBucket, suggestFixes, tripCost } from './trip.js';
+import { CHARGE_MINUTES, EXTRA_USE, LEG_MAX, LEG_MIN, MAX_TRIP_STOPS, PLUGS, durationText, fixActions, legMilesFromRange, nacsOnly, planStops, routeCandidates, sameTrip, stopAlternatives, stopsBucket, suggestFixes, swapStations, tripCost } from './trip.js';
 import { routeMap } from './route-map.js';
 
 const tripId = () => `trip-${Math.random().toString(36).slice(2, 10)}`;
@@ -223,11 +223,11 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
         : el('p', { class: 'tool-note', text: 'No setting fixes this route. Try a closer destination, or a town along the way.' }));
   }
 
-  // "12 mi earlier: Name · road mile 140, on the route · CCS" for a stop the visitor could use instead.
+  // "12 mi earlier · Name · on the route · CCS" for a stop the visitor could use instead.
   function altLine(alt, direction) {
     const s = alt.station;
     const where = alt.detourMiles >= 0.5 ? `about ${alt.detourMiles} mi off the route` : 'on the route';
-    return `${num.format(alt.deltaMiles)} mi ${direction}: ${s.name} · road mile ${num.format(alt.atMile)}, ${where} · ${nacsOnly(s) ? 'NACS only' : fastPlugs(s.connectors).join(' and ') || 'plug not listed'}`;
+    return `${num.format(alt.deltaMiles)} mi ${direction} · ${s.name} · ${where} · ${nacsOnly(s) ? 'NACS only' : fastPlugs(s.connectors).join(' and ') || 'plug not listed'}`;
   }
 
   function renderTrip(box, trip, { gap = null, onSaveToggle, onPlug = null, onChange = null, overview = null } = {}) {
@@ -572,11 +572,11 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       let overview = null;
       if (plan.ok) {
         const candidates = routeCandidates({ route, stations, plug: ui.plug });
-        const chosen = new Set(lastTrip.stops.map((s) => s.id));
+        const args = { candidates, stops: lastTrip.stops, totalMiles: route.miles, legMiles: ui.legMiles };
         overview = {
           points: route.points,
-          others: candidates.filter((c) => !chosen.has(c.station.id)).map((c) => c.station),
-          alts: stopAlternatives({ candidates, stops: lastTrip.stops, totalMiles: route.miles, legMiles: ui.legMiles }),
+          others: swapStations(args),
+          alts: stopAlternatives({ ...args, plug: ui.plug }),
         };
       }
       const heading = renderTrip(result, lastTrip, { gap, onSaveToggle: plan.ok ? toggleSave : null, onPlug: () => onFix('plug', 'ccs'), onChange: changeSettings, overview });

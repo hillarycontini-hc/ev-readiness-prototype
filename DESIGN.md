@@ -328,6 +328,10 @@ A navy bar, 6px corners, 5.75rem tall, with four columns: station, label block, 
 
 A plain street map (Geoapify osm-bright, no provider markers) inside the charger stop panel, with the page's own overlay on top. The ZIP center is the route's station: a white disc in a 4px navy ring. Level 2 sites are aqua circles and fast-charging sites are citron rounded squares, both with a navy stroke and a navy number. Shape carries the difference, not color alone. Pins keep about 24 screen pixels at any width. Crowded pins step outward from the ZIP center along a thin navy leader to a dot on their true spot. Below the map is a numbered list on navy, with each number badge in its pin's shape and color; it is the accessible version of the map. If the street map can't load, the same overlay sits on a fog plot with a dashed 1-mile ring and a drawn north arrow, never a glyph.
 
+### Route Overview
+
+A planned trip's map uses the Charger Map vocabulary, cropped to the route, at most 40rem wide, after the trip's answer and totals. The route is a teal line in a white casing. The start is the white route station. The destination is the end of the line: a poppy station disc (the parks color) with a white center. The chosen stops are citron rounded squares numbered like the legs. Other fast chargers that could replace a stop are small unnumbered citron squares, drawn under the route and merged where they would overlap. The caption is a key: each mark beside its label. The fallback is the same drawing on a fog plot with a drawn north arrow.
+
 ## Do's and Don'ts
 
 ### Do:

@@ -474,9 +474,9 @@ test('the route overview asks for a map view only, matches the stops, and offers
     assert.deepEqual([...new URL(maps[0]).searchParams.keys()].sort(), ['x', 'y', 'z'], 'only the view: no route, stops, or start');
     const stops = (await page.locator('#tool-plan-park .trip-leg').count()) - 1; // every leg but the arrival
     assert.equal(await page.locator('#tool-plan-park .route-map .map-pin').count(), stops);
-    assert.ok(await page.locator('#tool-plan-park .route-map .route-other').count() > 0, 'other fast chargers along the way');
+    assert.ok(await page.locator('#tool-plan-park .route-map .route-other').count() > 0, 'other stops in range');
     const alts = await page.locator('#tool-plan-park .leg-alts li').allInnerTexts();
-    assert.ok(alts.length > 0 && alts.every((t) => /^\d+ mi (earlier|later): .+ · road mile \d+/.test(t)), alts.join(' | '));
+    assert.ok(alts.length > 0 && alts.every((t) => /^\d+ mi (earlier|later) · .+ · (on the route|about [\d.]+ mi off the route) · /.test(t)), alts.join(' | '));
     if (mode === 'fallback') assert.match(await page.locator('#tool-plan-park .route-map svg[role=img]').getAttribute('aria-label'), /street map is unavailable/);
     const axe = await new AxeBuilder({ page }).include('#tool-plan-park').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
     assert.deepEqual(axe.violations.map((v) => v.id), []);

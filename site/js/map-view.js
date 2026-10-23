@@ -172,12 +172,40 @@ export function fitView(points) {
   });
   for (let z = ROUTE_MAX_ZOOM; z > MIN_ZOOM; z--) {
     const [px, py] = toWorld(mid.lat, mid.lon, z);
+    // Of the grid positions that fit, the one that puts the route most nearly in the middle.
+    const options = [];
     for (const x of [Math.floor(px / STEP_X), Math.ceil(px / STEP_X)]) {
       for (const y of [Math.floor(py / STEP_Y), Math.ceil(py / STEP_Y)]) {
         const v = { z, x, y };
-        if (fits(v)) return v;
+        if (fits(v)) options.push({ v, off: Math.hypot(x * STEP_X - px, y * STEP_Y - py) });
       }
     }
+    if (options.length) return options.sort((a, b) => a.off - b.off)[0].v;
   }
   return snapView(mid.lat, mid.lon, MIN_ZOOM);
+}
+
+/**
+ * The part of the image worth showing for a route: the points' box plus a margin, widened to an
+ * aspect between 4:5 and 16:10, inside the image. In image pixels: { x, y, w, h }.
+ */
+export function cropBox(v, points, margin = 28) {
+  const xy = points.map(([lat, lon]) => project(v, lat, lon));
+  let x0 = Math.min(...xy.map((p) => p[0])) - margin;
+  let x1 = Math.max(...xy.map((p) => p[0])) + margin;
+  let y0 = Math.min(...xy.map((p) => p[1])) - margin;
+  let y1 = Math.max(...xy.map((p) => p[1])) + margin;
+  const grow = (lo, hi, want, max) => {
+    const add = Math.max(0, want - (hi - lo)) / 2;
+    let a = lo - add;
+    let b = hi + add;
+    if (a < 0) { b -= a; a = 0; }
+    if (b > max) { a -= b - max; b = max; }
+    return [Math.max(0, a), Math.min(max, b)];
+  };
+  // Not too tall (at least 4:5 wide) and not too wide (at most 16:10).
+  [x0, x1] = grow(x0, x1, (y1 - y0) * 0.8, MAP_W);
+  [y0, y1] = grow(y0, y1, (x1 - x0) / 1.6, MAP_H);
+  [x0, x1] = grow(Math.max(0, x0), Math.min(MAP_W, x1), (y1 - y0) * 0.8, MAP_W);
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }

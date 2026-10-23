@@ -274,3 +274,15 @@ test('alternative stops keep both neighboring legs within range, nearest first',
   assert.equal(tight.earlier, null);
   assert.equal(tight.later, null);
 });
+
+test('with "Either plug", a CCS alternative comes before a nearer NACS-only one; swaps exclude unusable stations', async () => {
+  const { stopAlternatives, swapStations } = await import('../site/js/trip.js');
+  const cand = (id, atMile, connectors = 'C') => ({ station: { id, name: id, fast: 2, connectors }, atMile, detour: 0.2 });
+  const stops = [{ id: 'chosen', atMile: 150, detourMiles: 0.2 }];
+  const candidates = [cand('ccs', 160), cand('tesla', 152, 'N'), cand('chosen', 150), cand('early', 20)];
+  const [alt] = stopAlternatives({ candidates, stops, totalMiles: 300, legMiles: 170, plug: 'any' });
+  assert.equal(alt.later.station.id, 'ccs');
+  const [nacsPlan] = stopAlternatives({ candidates, stops, totalMiles: 300, legMiles: 170, plug: 'nacs' });
+  assert.equal(nacsPlan.later.station.id, 'tesla', 'with a NACS car the nearest wins');
+  assert.deepEqual(swapStations({ candidates, stops, totalMiles: 300, legMiles: 170 }).map((s) => s.id).sort(), ['ccs', 'tesla'], 'mile 20 could never replace the stop');
+});
