@@ -188,3 +188,20 @@ Full plan: [`docs/plan-v2.md`](docs/plan-v2.md).
 | 121 | One analytics event, `map_rendered`, with `source` = `static` or `fallback` | Measures how often the fallback shows (a sign the quota or provider is failing) without any place data. |
 | 122 | The map comes after the card's own facts (nearest fast charger, counts), not before them | The design review found the map pushed the card's headline facts about 1,250 px down. |
 | 123 | On phones, stop panels start clear of the route line (2.75rem instead of 1.25rem) | Found in the map's design review: on every stop, panel text and the new map sat on top of the line. |
+
+## Car explorer sorting and safety (October 2026)
+
+Numbered after the charger map's decisions (112-123), which ship in their own pull request.
+
+| # | Decision | Why |
+|---|---|---|
+| 124 | The car explorer gets "Sort by": price or payment (default), longest range, most seats, NHTSA safety rating, and (once the data exists) most cargo space and most awards | Hillary's plan, part 3. Price stays the default so the list starts neutral. |
+| 125 | Every sort breaks ties by the visitor's budget order, then by name | No brand is ever placed by hand, whatever the sort. |
+| 126 | Missing data (not yet rated, no published cargo figure, no awards) sorts last and is never treated as zero | "Not yet rated" means NHTSA hasn't crash-tested that model year; it says nothing about safety. The page says so in those words. |
+| 127 | NHTSA ratings come from NHTSA's free public SafetyRatings API at build time (`npm run data:nhtsa`), saved dated in `data/nhtsa-ratings.json` and reviewed in the pull request | A live call per visitor would add a third-party request, and a saved, dated file is checkable. Of 54 cars on 2026-10-22: 19 rated (all 5 stars), 23 listed but not yet rated, 12 not yet in NHTSA's list. |
+| 128 | A car's rating is for its curated model year. If NHTSA hasn't listed that year, or has listed it but rated no version yet, the previous year's rating is used and labeled ("2026 model") | Ratings usually carry over until a redesign, and a car shouldn't sink in the safety sort just because of when NHTSA created a listing. On 2026-10-22 the second case changed nothing: none of the 23 unrated cars has a rated previous year. |
+| 129 | When versions differ (drivetrains), the explorer shows the range and how many versions are rated ("1 of 2 versions rated"); the safety sort uses the lowest rated version | Picking the best version would overstate the car you might buy. |
+| 130 | NHTSA model names that don't match ours are set by hand (`nhtsaModel`, `nhtsaVersion` in `vehicles-curated.json`); ratings are never copied by hand | Hummer EV SUV and Pickup share one NHTSA model; the Lexus RZ is three NHTSA models; the MINI Countryman SE is "COUNTRYMAN SE BEV". |
+| 131 | Cargo space, IIHS Top Safety Pick, and awards are read from `data/vehicle-research.json`, which part 4's research step writes and a person reviews. Until it exists, those sorts and the IIHS filter are hidden | Part 4 produces this data. Showing empty sorts first would mislead. The build validates every entry (https source, year, value range). |
+| 132 | One analytics event, `car_sorted`, with the sort chosen | Shows which comparisons matter to visitors, with no car or price data. |
+| 133 | Each car links "rating source" to NHTSA's public ratings page; the exact API record for each car stays in `data/nhtsa-ratings.json` | A visitor shouldn't land on raw JSON; the audit trail stays in the repo. |

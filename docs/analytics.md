@@ -64,6 +64,7 @@ Every event also carries `messaging_variant`, `$feature/landing-messaging`, and 
 | `charger_saved` | A charger is saved to the plan | `slot`, `count` (saved for that place) |
 | `car_shortlisted` | A car is added to the shortlist | `class` (`suv`, `pickup`), `make`, `count` |
 | `finance_mode` | Budget switched between price, loan, and lease | `mode` |
+| `car_sorted` | The car explorer's "Sort by" changes | `mode`: `price`, `range`, `seats`, `cargo`, `safety`, or `awards` |
 | `test_drive_clicked` | A brand booking or dealer link is opened | `make` |
 | `plan_step_done` | A plan step is checked off | `step` (step id, for example `work`) |
 | `share_link_copied` | "Copy a share link" | `places` (whether saved places were included) |

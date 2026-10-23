@@ -208,6 +208,7 @@ All free and public, downloaded and precomputed by `npm run data`:
 | EIA | State residential electricity prices, regional gasoline prices |
 | National Park Service API (116 outdoor park units) | Outdoor destinations |
 | Each automaker's U.S. site, checked monthly (52 models) | Starting prices, seats, test-drive and dealer links ([process](docs/price-refresh.md)) |
+| NHTSA 5-Star Safety Ratings API (free, no key), checked monthly | Overall crash-test rating per car and model year |
 | Experian *State of the Automotive Finance Market* | Starting loan APR for payment estimates |
 | Geoapify (live, through the proxy) | Address search in the plan tools |
 

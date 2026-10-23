@@ -196,7 +196,9 @@
       "thirdRow": false,
       "source": "https://thechargeport.com/ev/gmc-hummer-ev",
       "confidence": "third-party",
-      "notes": "2X."
+      "notes": "2X.",
+      "nhtsaModel": "HUMMER EV",
+      "nhtsaVersion": "SUV"
     },
     {
       "make": "GMC",
@@ -210,7 +212,9 @@
       "thirdRow": false,
       "source": "https://thechargeport.com/ev/gmc-hummer-ev",
       "confidence": "third-party",
-      "notes": "2X."
+      "notes": "2X.",
+      "nhtsaModel": "HUMMER EV",
+      "nhtsaVersion": "PU/CC"
     },
     {
       "make": "GMC",
@@ -392,7 +396,12 @@
       "thirdRow": false,
       "source": "https://autofinder.com/cars/lexus/rz-350e/2026",
       "confidence": "third-party",
-      "notes": "RZ 350e; KBB shows $47,295 with destination."
+      "notes": "RZ 350e; KBB shows $47,295 with destination.",
+      "nhtsaModel": [
+        "RZ 350E BEV",
+        "RZ 450E BEV",
+        "RZ 550E BEV"
+      ]
     },
     {
       "make": "Lucid",
@@ -420,7 +429,8 @@
       "thirdRow": false,
       "source": "https://www.miniusa.com/model/countryman.html",
       "confidence": "manufacturer",
-      "notes": "Electric Countryman."
+      "notes": "Electric Countryman.",
+      "nhtsaModel": "COUNTRYMAN SE BEV"
     },
     {
       "make": "Maserati",
