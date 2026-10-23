@@ -7,6 +7,7 @@ import { el, num, srOnly } from './dom.js';
 import { SearchUnavailable, chargersNear, connectorNames, fastStationsAlong, fetchRoute, milesBetween, searchPlaces } from './places.js';
 import { ASSUMPTIONS, FLEET_KEY } from './logic.js';
 import { MAX_SAVED_TRIPS } from './plan-store.js';
+import { displayName } from './names.js';
 import { CHARGE_MINUTES, EXTRA_USE, LEG_MAX, LEG_MIN, MAX_TRIP_STOPS, PLUGS, durationText, fixActions, legMilesFromRange, nacsOnly, planStops, sameTrip, stopsBucket, suggestFixes, tripCost } from './trip.js';
 
 const tripId = () => `trip-${Math.random().toString(36).slice(2, 10)}`;
@@ -30,7 +31,7 @@ export function stopFacts(s) {
 /** The answer in one sentence: how many stops, and where. */
 export function answerText(trip) {
   const n = trip.stops.length;
-  const where = (x) => `${x.city || x.name} (road mile ${num.format(x.atMile)})`;
+  const where = (x) => `${x.city || displayName(x.name)} (road mile ${num.format(x.atMile)})`;
   if (!n) return `No charging stop needed: you’d arrive with about ${num.format(trip.arriveWithMiles)} of your ${num.format(trip.legMiles)} planned miles to spare.`;
   if (n === 1) return `1 fast-charging stop: ${where(trip.stops[0])}.`;
   if (n <= 3) {
@@ -70,7 +71,7 @@ function chargerNearText(trip) {
   if (!c) return '';
   const city = c.city && !c.name.toLowerCase().includes(c.city.toLowerCase()) ? `, ${c.city}` : '';
   const plugOnly = nacsOnly(c) && trip.plug !== 'nacs' ? ' (NACS only)' : '';
-  return ` The nearest fast charger to ${place} is ${c.name}${city}${plugOnly}, about ${num.format(Math.max(1, Math.round(c.miles)))} miles from it in a straight line.`;
+  return ` The nearest fast charger to ${place} is ${displayName(c.name)}${city}${plugOnly}, about ${num.format(Math.max(1, Math.round(c.miles)))} miles from it in a straight line.`;
 }
 
 /**
@@ -224,7 +225,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
   function renderTrip(box, trip, { gap = null, onSaveToggle, onPlug = null, onChange = null } = {}) {
     const stuck = gap ? gap.plan.stuckAtMile : null;
     const legs = [
-      ...trip.stops.map((s, i) => ({ kind: 'stop', s, title: `Stop ${i + 1}: ${s.name}`, miles: s.legMiles })),
+      ...trip.stops.map((s, i) => ({ kind: 'stop', s, title: `Stop ${i + 1}: ${displayName(s.name)}`, miles: s.legMiles })),
       ...(stuck == null ? [{ kind: 'arrive', title: `Arrive: ${trip.to.name}`, miles: trip.finalLegMiles }] : []),
     ];
     const heading = el('h4', { class: 'trip-title', tabindex: '-1', text: `${trip.from.name} to ${trip.to.name}` });

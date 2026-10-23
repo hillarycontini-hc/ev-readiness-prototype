@@ -85,8 +85,9 @@ body {
   caret-color: var(--poppy);
 }
 
-/* Tabular figures only where numbers line up; the face also widens punctuation under tnum. */
-.stop-figure, .stop-panel dd, .zip-row input, .miles { font-variant-numeric: tabular-nums; }
+/* Tabular figures only on bare figures that line up; the face also widens punctuation under tnum,
+   so values that mix figures with words and decimals (the stop panels' lists) keep proportional figures. */
+.stop-figure, .zip-row input, .miles { font-variant-numeric: tabular-nums; }
 
 ::selection { background: var(--citron); color: var(--navy); }
 
@@ -341,6 +342,9 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   .stop-chev { grid-column: 3; grid-row: 1 / span 2; }
   .station { grid-row: 1; }
   .stop-panel { padding-left: 1.25rem; }
+  /* Each term sits over its value, so values get the full width instead of one word per line. */
+  .stop-panel dl { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .stop-panel dd + dt { margin-top: 0.5rem; }
   .btn-plan { width: 100%; }
 }
 
@@ -628,8 +632,12 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 
 @media (max-width: 40rem) {
   .station-item, .car-item { grid-template-columns: minmax(0, 1fr) auto; }
-  .trip-leg { grid-template-columns: 2.5rem minmax(0, 1fr); }
-  .trip-leg .row-figure { grid-column: 2; text-align: left; padding: 0.35rem 0 0; }
+  /* The leg's miles stay beside its title; an open leg's details run full width beneath both. */
+  .trip-leg { gap: 0 0.6rem; }
+  .trip-leg-main { display: contents; }
+  .trip-leg-btn { grid-column: 2; grid-row: 1; min-width: 0; }
+  .trip-leg-detail { grid-column: 2 / -1; grid-row: 2; min-width: 0; }
+  .trip-leg .row-figure { grid-column: 3; grid-row: 1; text-align: right; padding: 0.5rem 0 0; font-size: 1.375rem; white-space: nowrap; }
   /* Previous and Next share a row, the counter sits above them, Skip below: no stacked mis-taps. */
   .trip-stepper { display: grid; grid-template-columns: 1fr 1fr; }
   .trip-position { min-width: 0; grid-column: 1 / -1; order: -1; text-align: left; }
@@ -640,6 +648,13 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   .row-figure { white-space: normal; }
   .station-main, .car-main { grid-column: 1 / -1; }
   .row-figure { text-align: left; padding-left: calc(14px + 0.55rem); }
+}
+/* Narrowest phones: beside the title would break its words, so the miles go right under the
+   title, still above an open leg's details. */
+@media (max-width: 22.5rem) {
+  .trip-leg-btn { grid-column: 2 / -1; }
+  .trip-leg .row-figure { grid-column: 2 / -1; grid-row: 2; text-align: left; padding: 0.1rem 0 0; }
+  .trip-leg-detail { grid-row: 3; }
 }
 
 /* ---------- partner summary ---------- */
@@ -696,7 +711,9 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
   content: ""; position: absolute; left: 0; top: 0.35em; width: 0.8rem; height: 0.8rem; border-radius: 50%;
   background: var(--surface); border: 3px solid var(--teal);
 }
-.link-list a svg, .park-list a svg { vertical-align: -0.1em; margin-left: 0.25em; }
+/* The new-tab arrow stays with the link's last word, so it never wraps onto a line alone. */
+.ext-tail { white-space: nowrap; }
+.ext-tail svg { vertical-align: -0.1em; margin-left: 0.25em; }
 .link-list .src { color: var(--muted); font-size: var(--t-small); }
 
 .method { margin: 2rem 0 1.5rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1.1rem; background: var(--surface); }
