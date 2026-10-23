@@ -1,0 +1,581 @@
+{
+  "checkedAt": "2026-10-22",
+  "method": "AI-assisted research, human-verified",
+  "status": "draft",
+  "reviewedBy": null,
+  "reviewedAt": null,
+  "vehicles": {
+    "audi-q4-e-tron": {
+      "cargoCuFt": {
+        "value": 24.8,
+        "modelYear": 2026,
+        "source": "https://media.audiusa.com/assets/applications/original/17280-2026my-audi-q4-e-tron-technical-specs-rev-260803.pdf",
+        "evidence": "Cargo Volume Trunk (cu. ft.) / With Seats Folded (cu. ft.): 24.8 / 53.1",
+        "notes": "Audi of America media-site tech spec PDF (updated 8/3/2026). Same 24.8 for Q4 45 e-tron RWD and Q4 55 quattro (Sportback is 26.1). 'Trunk' = rear seats up; SAE not stated. audiusa.com consumer page only shows 53.1 folded."
+      }
+    },
+    "audi-q6-e-tron": {
+      "cargoCuFt": {
+        "value": 30.2,
+        "modelYear": 2027,
+        "source": "https://media.audiusa.com/assets/applications/original/16582-2027my-audi-q6-sq6-e-tron-technical-specs-rev-260311.pdf",
+        "evidence": "Cargo Volume Behind Row 1 / Row 2 (cu. ft.): 30.2 / 60.2",
+        "notes": "Audi of America media-site tech spec PDF (updated 3/11/26), Q6 e-tron quattro column. Row label order is 'Row 1 / Row 2' but values read seats-up first (30.2) then folded (60.2). SAE not stated."
+      },
+      "iihs": {
+        "award": "TSP+",
+        "year": 2026,
+        "modelYears": "2027",
+        "qualifier": null,
+        "source": "https://www.iihs.org/ratings/top-safety-picks/2026",
+        "evidence": "Top Safety Pick + 2027 Audi Q6 e-tron 4-door SUV"
+      }
+    },
+    "audi-sq6-e-tron": {
+      "cargoCuFt": {
+        "value": 30.2,
+        "modelYear": 2027,
+        "source": "https://media.audiusa.com/assets/applications/original/16582-2027my-audi-q6-sq6-e-tron-technical-specs-rev-260311.pdf",
+        "evidence": "Cargo Volume Behind Row 1 / Row 2 (cu. ft.): 30.2 / 60.4",
+        "notes": "Same Audi media PDF, SQ6 e-tron column (folded figure 60.4 differs from Q6's 60.2; seats-up identical). SAE not stated."
+      }
+    },
+    "bmw-ix3": {
+      "cargoCuFt": {
+        "value": 30.4,
+        "modelYear": 2027,
+        "source": "https://www.press.bmwgroup.com/usa/article/detail/T0452316EN_US/the-all-new-bmw-ix3?language=en_US",
+        "evidence": "Cargo capacity (rear) cu ft 30.4-65.0",
+        "notes": "BMW USA press release spec table for iX3 50 xDrive (Sept 2025 reveal; release states no model year, US launch model is MY2027 per the pricing release). Front trunk 2.0 cu ft (bmwusa.com tech data page lists 2.05). bmwusa.com tech-data page shows only front cargo. Global (ECE) figure is 520 L, which is much smaller than 30.4 cu ft, so US figure likely uses a different (SAE) method; flag as worth a second look."
+      },
+      "awards": [
+        {
+          "name": "World Car of the Year",
+          "publisher": "World Car Awards",
+          "year": 2026,
+          "url": "https://www.worldcarawards.com/files/2026_WCA_Winner_WCOTY.pdf",
+          "evidence": "The BMW iX3 is the 2026 World Car of the Year™."
+        },
+        {
+          "name": "World Electric Vehicle",
+          "publisher": "World Car Awards",
+          "year": 2026,
+          "url": "https://www.worldcarawards.com/files/2026_WCA_Winner_Electric.pdf",
+          "evidence": "The BMW iX3 is the 2026 World Electric Vehicle."
+        }
+      ]
+    },
+    "cadillac-lyriq": {
+      "cargoCuFt": {
+        "value": 28,
+        "modelYear": 2027,
+        "source": "https://www.cadillac.com/electric/lyriq/specs",
+        "evidence": "CARGO VOLUME WITH REAR SEATS UPRIGHT 28 CU. FT.*",
+        "notes": "Same 28 for LYRIQ and LYRIQ-V. Published rounded to whole number; SAE not stated."
+      }
+    },
+    "cadillac-optiq": {
+      "cargoCuFt": {
+        "value": 26,
+        "modelYear": 2027,
+        "source": "https://www.cadillac.com/electric/optiq/specs",
+        "evidence": "REAR CARGO VOLUME 26 CU. FT.*",
+        "notes": "Same for both OPTIQ columns shown (incl. OPTIQ-V). Published rounded to whole number; SAE not stated."
+      }
+    },
+    "cadillac-vistiq": {
+      "cargoCuFt": {
+        "value": 43,
+        "modelYear": 2027,
+        "source": "https://www.cadillac.com/electric/vistiq/specs",
+        "evidence": "CARGO SPACE 43 CU. FT.* BEHIND SECOND ROW",
+        "notes": "Three-row: 43 behind 2nd row (3rd row folded), 15.2 behind 3rd row, 80.2 behind 1st row. Published rounded; SAE not stated."
+      }
+    },
+    "chevrolet-blazer-ev": {
+      "cargoCuFt": {
+        "value": 25.5,
+        "modelYear": 2027,
+        "source": "https://www.chevrolet.com/shopping/configurator/electric/2027/blazer-ev/blazer-ev/compare",
+        "evidence": "Cargo Volume to Seat 2 25.50 ft³",
+        "notes": "From chevrolet.com Compare Trims > Dimensions for 2027 Blazer EV LT FWD (the only trim loaded by default). Marketing page gives only 59.1 max. SAE not stated."
+      }
+    },
+    "chevrolet-equinox-ev": {
+      "cargoCuFt": {
+        "value": 26.4,
+        "modelYear": 2027,
+        "source": "https://www.chevrolet.com/shopping/configurator/electric/2027/equinox-ev/equinox-ev/compare",
+        "evidence": "Cargo Volume to Seat 2 26.40 ft³",
+        "notes": "From chevrolet.com Compare Trims > Dimensions for 2027 Equinox EV LT 1 FWD (default/base trim). SAE not stated."
+      }
+    },
+    "ford-mustang-mach-e": {
+      "cargoCuFt": {
+        "value": 29.7,
+        "modelYear": 2026,
+        "source": "https://www.ford.com/suvs/mach-e/models/select/",
+        "evidence": "With 29.7 cu ft behind the rear seat",
+        "notes": "2026 Mach-E Select page. Folded figure given as 59.7 here (search snippets suggest 59.1 elsewhere on ford.com). Frunk is optional for 2026 (ford.com support page cites 2.6 cu ft for 2025+). SAE not stated."
+      },
+      "iihs": {
+        "award": "TSP",
+        "year": 2026,
+        "modelYears": "2026",
+        "qualifier": null,
+        "source": "https://www.iihs.org/ratings/top-safety-picks/2026",
+        "evidence": "Top Safety Pick 2026 Ford Mustang Mach-E 4-door SUV"
+      }
+    },
+    "genesis-electrified-gv70": {
+      "cargoCuFt": {
+        "value": 28.7,
+        "modelYear": 2027,
+        "source": "https://www.genesis.com/us/en/electrified-gv70",
+        "evidence": "\"innerCargo\":\"56.5/28.7 cu ft\"",
+        "notes": "From the vehicle data embedded in Genesis USA's 2027 Electrified GV70 page; visible spec tab did not render. Folded 56.5. SAE not stated."
+      },
+      "iihs": {
+        "award": "TSP+",
+        "year": 2026,
+        "modelYears": "2026",
+        "qualifier": "for 2026 models",
+        "source": "https://www.iihs.org/ratings/top-safety-picks/2026",
+        "evidence": "Top Safety Pick + 2026 Genesis Electrified GV70 4-door SUV"
+      }
+    },
+    "genesis-gv60": {
+      "cargoCuFt": {
+        "value": 24,
+        "modelYear": 2027,
+        "source": "https://www.genesis.com/us/en/gv60",
+        "evidence": "\"innerCargo\":\"54.7/24 cu ft\"",
+        "notes": "From the vehicle data embedded in Genesis USA's 2027 GV60 page (same for all trims listed); visible spec tab did not render. Folded 54.7. SAE not stated."
+      },
+      "iihs": {
+        "award": "TSP+",
+        "year": 2026,
+        "modelYears": "2026",
+        "qualifier": "for 2026 models",
+        "source": "https://www.iihs.org/ratings/top-safety-picks/2026",
+        "evidence": "Top Safety Pick + 2026 Genesis GV60 4-door SUV"
+      }
+    },
+    "gmc-hummer-ev-suv": {
+      "cargoCuFt": {
+        "value": 35.9,
+        "modelYear": 2026,
+        "source": "https://www.gmc.com/electric/hummer-ev/suv",
+        "evidence": "\"cargoVolume\":\"35.9 cu ft, 81.8 cu ft with seat area\"",
+        "notes": "Taken from the schema.org Vehicle structured data embedded in GMC's 2026 HUMMER EV SUV page (not in visible copy). Matches GMC's 2024 Features/Specs brochure (35.9 behind rear seats). eTrunk up to 11.3 cu ft."
+      }
+    },
+    "honda-prologue": {
+      "cargoCuFt": {
+        "value": 25.2,
+        "modelYear": 2026,
+        "source": "https://hondanews.com/en-US/honda-automobiles/releases/release-e5d30c25af38c0c6604e43e79c015883-2026-honda-prologue-specifications-features",
+        "evidence": "Rear Cargo Volume (cu ft.) (Seat Up / Seat Down) 25.2 / 57.7",
+        "notes": "the explorer prices the EX; Honda lists EX 25.2 (Touring and Elite 23.7). SAE J1100. Varies by trim: EX (FWD/AWD) 25.2; Touring and Elite 23.7. Took the smallest (23.7); if the curated base trim is EX, use 25.2."
+      }
+    },
+    "hyundai-ioniq-5": {
+      "cargoCuFt": {
+        "value": 26.3,
+        "modelYear": 2027,
+        "source": "https://www.hyundaiusa.com/us/en/vehicles/ioniq-5",
+        "evidence": "Cargo capacity, rear seats up (cu. ft.) 26.3",
+        "notes": "Same across all five 2027 trims shown. Under-hood storage tray 0.85 cu ft. SAE not stated on page."
+      },
+      "awards": [
+        {
+          "name": "World Performance Car",
+          "publisher": "World Car Awards",
+          "year": 2024,
+          "url": "https://www.worldcarawards.com/files/2024_WCA_Winner_Performance.pdf",
+          "evidence": "The HYUNDAI IONIQ 5 N is the 2024 World Performance Car."
+        },
+        {
+          "name": "Edmunds Top Rated Electric SUV",
+          "publisher": "Edmunds",
+          "year": 2026,
+          "url": "https://www.edmunds.com/car-news/hyundai-ioniq-5-edmunds-top-rated-electric-suv-2026.html",
+          "evidence": "Hyundai Ioniq 5: Edmunds Top Rated Electric SUV 2026"
+        }
+      ],
+      "iihs": {
+        "award": "TSP+",
+        "year": 2026,
+        "modelYears": "2026",
+        "qualifier": "for 2026 models",
+        "source": "https://www.iihs.org/ratings/top-safety-picks/2026",
+        "evidence": "Top Safety Pick + 2026 Hyundai Ioniq 5 4-door SUV"
+      }
+    },
+    "hyundai-ioniq-9": {
+      "cargoCuFt": {
+        "value": 46.7,
+        "modelYear": 2026,
+        "source": "https://www.hyundainews.com/assets/documents/original/65341-2026IONIQ9SpecsFeatures20250305.pdf",
+        "evidence": "SAE Volume (cubic feet) 86.9 / 46.7 / 21.9",
+        "notes": "Hyundai Motor America 2026 IONIQ 9 Features & Specifications (3/5/2025), luggage behind 1st / 2nd / 3rd rows, 'All' trims. 46.7 = behind 2nd row with 3rd row folded."
+      },
+      "iihs": {
+        "award": "TSP+",
+        "year": 2026,
+        "modelYears": "2026",
+        "qualifier": null,
+        "source": "https://www.iihs.org/ratings/top-safety-picks/2026",
+        "evidence": "Top Safety Pick + 2026 Hyundai Ioniq 9 4-door SUV"
+      }
+    },
+    "jeep-recon": {
+      "cargoCuFt": {
+        "value": 30.3,
+        "modelYear": 2026,
+        "source": "https://www.jeep.com/recon/faq.html",
+        "evidence": "Recon has 30.3 cubic feet of cargo space behind the second-row seats",
+        "notes": "Jeep.com 2026 Recon FAQ. Folded: 65.9 (FAQ) vs 69.5 on Jeep's design page; seats-up figure is consistent. SAE not stated."
+      }
+    },
+    "jeep-wagoneer-s": {
+      "cargoCuFt": {
+        "value": 30.6,
+        "modelYear": 2025,
+        "source": "https://www.jeep.com/wagoneer-s/faq.html",
+        "evidence": "30.6 cubic feet with rear seats up and 3 cubic feet in the frunk",
+        "notes": "Jeep.com still publishes the 2025 Wagoneer S (no 2026 spec found on jeep.com or Stellantis media), so modelYear set to 2025. Frunk 3 cu ft. SAE not stated."
+      }
+    },
+    "kia-ev3": {
+      "cargoCuFt": {
+        "value": 26.1,
+        "modelYear": 2027,
+        "source": "https://www.kia.com/us/en/ev3/specs-compare",
+        "evidence": "Cargo volume (SAE): Rear seat fixed / Rear seat folded down ... 26.1 / 56.5",
+        "notes": "Same for all five trims (Light, Wind, Land, GT-Line, GT); cargo floor at lowest level."
+      },
+      "awards": [
+        {
+          "name": "World Car of the Year",
+          "publisher": "World Car Awards",
+          "year": 2025,
+          "url": "https://www.worldcarawards.com/files/2025_WCA_Winner_WCOTY.pdf",
+          "evidence": "The KIA EV3 is the 2025 World Car of the Year™ winner."
+        }
+      ]
+    },
+    "kia-ev6": {
+      "cargoCuFt": {
+        "value": 24.4,
+        "modelYear": 2026,
+        "source": "https://www.kia.com/us/en/ev6/specs-compare",
+        "evidence": "Cargo volume (SAE): Rear seat fixed / Rear seat folded down 24.4 / 46.7 cu.",
+        "notes": "Same for Light, Light Long Range, Wind, GT-Line."
+      }
+    },
+    "kia-ev9": {
+      "cargoCuFt": {
+        "value": 43.5,
+        "modelYear": 2026,
+        "source": "https://www.kia.com/us/en/ev9/specs-compare",
+        "evidence": "Cargo Volume (SAE): behind 1st / behind 2nd-row / behind 3rd-row 81.7 / 43.5 /",
+        "notes": "Same for all trim columns. 43.5 = behind 2nd row with 3rd row folded (also stated on kia.com/us/en/ev9 overview)."
+      },
+      "awards": [
+        {
+          "name": "North American Utility Vehicle of the Year",
+          "publisher": "NACTOY",
+          "year": 2024,
+          "url": "https://northamericancaroftheyear.org/nactoy-2024-winners/",
+          "evidence": "North American Utility Vehicle of the Year™: Kia EV9"
+        },
+        {
+          "name": "World Car of the Year",
+          "publisher": "World Car Awards",
+          "year": 2024,
+          "url": "https://www.worldcarawards.com/files/2024_WCA_Winner_WCOTY.pdf",
+          "evidence": "The KIA EV9 is the 2024 World Car of the Year™."
+        },
+        {
+          "name": "World Electric Vehicle",
+          "publisher": "World Car Awards",
+          "year": 2024,
+          "url": "https://www.worldcarawards.com/files/2024_WCA_Winner_Electric.pdf",
+          "evidence": "The KIA EV9 is the 2024 World Electric Vehicle."
+        },
+        {
+          "name": "Edmunds Top Rated Electric SUV",
+          "publisher": "Edmunds",
+          "year": 2024,
+          "url": "https://www.edmunds.com/top-rated/2024/electric-suv/",
+          "evidence": "Edmunds Top Rated Electric SUV 2024"
+        },
+        {
+          "name": "Edmunds Top Rated Best of the Best",
+          "publisher": "Edmunds",
+          "year": 2024,
+          "url": "https://www.edmunds.com/car-news/kia-ev9-edmunds-top-rated-best-of-the-best.html",
+          "evidence": "The Kia EV9 Is Edmunds Top Rated Best of the Best for 2024"
+        },
+        {
+          "name": "Edmunds Top Rated Electric SUV",
+          "publisher": "Edmunds",
+          "year": 2025,
+          "url": "https://www.edmunds.com/car-news/kia-ev9-edmunds-top-rated-electric-suv-2025.html",
+          "evidence": "Kia EV9: Edmunds Top Rated Electric SUV 2025"
+        }
+      ],
+      "iihs": {
+        "award": "TSP+",
+        "year": 2026,
+        "modelYears": "2026",
+        "qualifier": null,
+        "source": "https://www.iihs.org/ratings/top-safety-picks/2026",
+        "evidence": "Top Safety Pick + 2026 Kia EV9 4-door SUV"
+      }
+    },
+    "kia-niro-ev": {
+      "cargoCuFt": {
+        "value": 22.8,
+        "modelYear": 2026,
+        "source": "https://www.kia.com/us/en/niro-ev/specs-compare",
+        "evidence": "Cargo Volume: Rear Seat Up/Down (SAE) 22.8 / 63.7 cu. ft.",
+        "notes": "Same for Wind and Wave trims."
+      }
+    },
+    "lucid-gravity": {
+      "awards": [
+        {
+          "name": "World Luxury Car",
+          "publisher": "World Car Awards",
+          "year": 2026,
+          "url": "https://www.worldcarawards.com/files/2026_WCA_Winner_Luxury.pdf",
+          "evidence": "The Lucid Gravity is the 2026 World Luxury Car."
+        }
+      ]
+    },
+    "maserati-grecale-folgore": {
+      "cargoCuFt": {
+        "value": 18.9,
+        "modelYear": 2027,
+        "source": "https://www.maserati.com/us/en/models/grecale",
+        "evidence": "THE FULLY ELECTRIC FOLGORE OFFERS 18.9 CU FT.",
+        "notes": "From the trunk-capacity FAQ on the U.S. Grecale page (2027). It is labeled 'trunk capacity' without stating seat position; for a two-row SUV this is taken as behind the second row. The Folgore technical-specs panel lists no cargo figure."
+      }
+    },
+    "mini-countryman-se-all4": {
+      "cargoCuFt": {
+        "value": 24.83,
+        "modelYear": 2027,
+        "source": "https://www.miniusa.com/model/electric-vehicles/countryman/specs.html",
+        "evidence": "CARGO CAPACITY (CU FT) 24.83-56.18",
+        "notes": "SE ALL4 column on the 2027 electric Countryman compare page. The lower figure is seats up; 56.18 is rear seats folded. The gas S ALL4 and JCW are listed at 24.98."
+      }
+    },
+    "polestar-polestar-3": {
+      "cargoCuFt": {
+        "value": 21.1,
+        "modelYear": 2026,
+        "source": "https://www.polestar.com/us/polestar-3/specifications/",
+        "evidence": "17.1 ft³ up to the rear seatbacks 21.1 ft³ up to the inner roof",
+        "notes": "Polestar publishes two seats-up figures: 17.1 to the seatbacks and 21.1 to the inner roof. Took the to-roof figure, the SAE-style convention most U.S. brands use. Both include 3.2 ft³ under the floor; 49.8 ft³ seats folded; frunk 1.1 ft³. The page shows no model year, so 2026 is assumed from the vehicle list."
+      }
+    },
+    "polestar-polestar-4": {
+      "cargoCuFt": {
+        "value": 18.6,
+        "modelYear": 2026,
+        "source": "https://www.polestar.com/us/polestar-4-models/polestar-4-coupe/specifications/",
+        "evidence": "18.6 cubic foot cargo capacity with seats up, including under floor",
+        "notes": "From the U.S. Polestar 4 specs page (redirects to the Polestar 4 coupe). 54.2 cu ft seats folded; frunk 0.5 cu ft. The page shows no model year, so 2026 is assumed from the vehicle list."
+      }
+    },
+    "porsche-macan-electric": {
+      "cargoCuFt": {
+        "value": 18,
+        "modelYear": 2027,
+        "source": "https://www.porsche.com/usa/models/macan/macan-electric-models/macan-electric/",
+        "evidence": null,
+        "notes": "standard audio on the base Macan Electric is 18.0 (16.7 is with the optional Burmester system); quote not captured for 18.0, so check it on the tech data. Base Macan Electric tech data gives 18.0 ft³ standard (labeled Performance Battery Plus), 17.0 with Bose and 16.7 with Burmester. Took the smallest, per the rule. Frunk 2.9 ft³. Seats folded 46.5 / 45.5 / 45.2. The page shows no model year, so 2027 is assumed from the vehicle list."
+      }
+    },
+    "rivian-r1s": {
+      "cargoCuFt": {
+        "value": 48.6,
+        "modelYear": 2027,
+        "source": "https://rivian.com/compare?a=r1s-dual-standard",
+        "evidence": "48.6 cu ft Cargo volume (third row folded)",
+        "notes": "Same for all R1S trims on the compare page (Quad, Performance, Premium). Third row up 17.6; second row folded 90.7; total interior storage 105.8 cu ft. The page shows no model year, so 2027 is assumed from the vehicle list."
+      },
+      "iihs": {
+        "award": "TSP+",
+        "year": 2026,
+        "modelYears": "2026-27",
+        "qualifier": null,
+        "source": "https://www.iihs.org/ratings/top-safety-picks/2026",
+        "evidence": "Top Safety Pick + 2026-27 Rivian R1S 4-door SUV"
+      }
+    },
+    "rivian-r1t": {
+      "awards": [
+        {
+          "name": "Edmunds Top Rated Electric Truck",
+          "publisher": "Edmunds",
+          "year": 2025,
+          "url": "https://www.edmunds.com/car-news/rivian-r1t-edmunds-top-rated-electric-truck-2025.html",
+          "evidence": "Rivian R1T: Edmunds Top Rated Electric Truck 2025"
+        },
+        {
+          "name": "Edmunds Top Rated Electric Truck",
+          "publisher": "Edmunds",
+          "year": 2026,
+          "url": "https://www.edmunds.com/car-news/rivian-r1t-edmunds-top-rated-electric-truck-2026.html",
+          "evidence": "Rivian R1T: Edmunds Top Rated Electric Truck 2026"
+        }
+      ],
+      "iihs": {
+        "award": "TSP",
+        "year": 2025,
+        "modelYears": "2025-26",
+        "qualifier": "for 2025-26 models",
+        "source": "https://www.iihs.org/ratings/top-safety-picks/2025",
+        "evidence": "Top Safety Pick 2025-26 Rivian R1T crew cab pickup"
+      }
+    },
+    "rivian-r2": {
+      "cargoCuFt": {
+        "value": 28.7,
+        "modelYear": 2026,
+        "source": "https://rivian.com/r2",
+        "evidence": "Rear cargo area 28.7 cu-ft",
+        "notes": "Spec table on the R2 page; listed separately from 'Rear cargo area with seats folded 79.4 cu-ft', so 28.7 is seats up. Total storage with the frunk is 90.1 cu-ft. The page shows no model year, so 2026 is assumed from the vehicle list."
+      }
+    },
+    "subaru-solterra": {
+      "cargoCuFt": {
+        "value": 23.8,
+        "modelYear": 2027,
+        "source": "https://media.subaru.com/view-spec.do?bFileId=50446",
+        "evidence": "EPA Cargo Volume 23.8 cu. ft. (rear seatbacks up)",
+        "notes": "From the 2027 Solterra Specifications & At-A-Glance PDF on the Subaru media site; one figure for all trims. 63.5 cu ft with rear seatbacks down."
+      }
+    },
+    "subaru-trailseeker": {
+      "cargoCuFt": {
+        "value": 31.3,
+        "modelYear": 2027,
+        "source": "https://media.subaru.com/view-spec.do?bFileId=50559",
+        "evidence": "31.3 cu ft. / 74.0 cu. ft without moonroof",
+        "notes": "From the 2027 Trailseeker spec PDF: 31.3 without moonroof, 30.4 with. The moonroof is Touring-only, so the base Premium is 31.3."
+      }
+    },
+    "subaru-uncharted": {
+      "cargoCuFt": {
+        "value": 23,
+        "modelYear": 2027,
+        "source": "https://media.subaru.com/view-spec.do?bFileId=50493",
+        "evidence": "EPA Cargo Volume 23.0 cu. ft. (rear seatbacks up)",
+        "notes": "From the 2027 Uncharted spec PDF; one figure for all trims. 59.5 cu ft with rear seatbacks down."
+      }
+    },
+    "tesla-cybertruck": {
+      "iihs": {
+        "award": "TSP+",
+        "year": 2026,
+        "modelYears": "2026-27",
+        "qualifier": null,
+        "source": "https://www.iihs.org/ratings/top-safety-picks/2026",
+        "evidence": "Top Safety Pick + 2026-27 Tesla Cybertruck crew cab pickup"
+      }
+    },
+    "tesla-model-y": {
+      "cargoCuFt": {
+        "value": 29.5,
+        "modelYear": 2026,
+        "source": "https://www.tesla.com/ownersmanual/modely/en_us/GUID-1E76B638-7B12-4D9A-8767-94B7F1E92A0E.html",
+        "evidence": "Behind second row, seats not folded 29.5 835",
+        "notes": "Figure for the base Model Y in the U.S. Owner's Manual Dimensions page. Premium (5-seater) and Performance: 29.0; Premium 7-seater: 27.1 with the third row folded. tesla.com/modely only gives totals (74-76 cu ft). The manual page shows no model year, so 2026 is assumed from the vehicle list."
+      },
+      "iihs": {
+        "award": "TSP+",
+        "year": 2026,
+        "modelYears": "2027",
+        "qualifier": "for 2027 models",
+        "source": "https://www.iihs.org/ratings/top-safety-picks/2026",
+        "evidence": "Top Safety Pick + 2027 Tesla Model Y 4-door SUV"
+      }
+    },
+    "tesla-model-y-l": {
+      "cargoCuFt": {
+        "value": 38,
+        "modelYear": 2026,
+        "source": "https://www.tesla.com/ownersmanual/modely/en_us/GUID-1E76B638-7B12-4D9A-8767-94B7F1E92A0E.html",
+        "evidence": "Model Y L (6-Seater) ... Behind second row, third row folded flat 38.0",
+        "notes": "Same U.S. Owner's Manual Dimensions page. Behind third row 14.8; front trunk 4.1. The manual page shows no model year, so 2026 is assumed from the vehicle list."
+      }
+    },
+    "toyota-bz": {
+      "cargoCuFt": {
+        "value": 27.7,
+        "modelYear": 2027,
+        "source": "https://www.toyota.com/bz/2027/features/",
+        "evidence": "Cargo volume behind rear seat (cu. ft.) (with JBL speakers) 27.7 27.7 (25.8)",
+        "notes": "XLE (base grade) column shows 27.7 with no JBL figure. The Limited column shows 27.7, or 25.8 with JBL, so JBL appears to be Limited-only. Took 27.7 for the base. pressroom.toyota.com blocked access behind a bot check, so it was not used."
+      }
+    },
+    "toyota-c-hr": {
+      "cargoCuFt": {
+        "value": 25.3,
+        "modelYear": 2027,
+        "source": "https://www.toyota.com/c-hr/2027/features/",
+        "evidence": "Cargo volume behind rear seat (cu. ft.) (with JBL speakers) 25.3 25.3",
+        "notes": "Specs page for the 2027 C-HR (BEV); 25.3 for both SE and XSE. 59.5 behind the front seat."
+      }
+    },
+    "volkswagen-id-4": {
+      "cargoCuFt": {
+        "value": 30.3,
+        "modelYear": 2026,
+        "source": "https://media.vw.com/press-kits/2026-id4-press-kit",
+        "evidence": "Cargo volume is 30.3 cubic feet behind the second row",
+        "notes": "From the 2026 ID.4 Press Kit on the VW U.S. media site. 64.2 cu ft with seats folded."
+      }
+    },
+    "volvo-ex60": {
+      "cargoCuFt": {
+        "value": 18.5,
+        "modelYear": 2027,
+        "source": "https://www.volvocars.com/us/cars/ex60-electric/specifications/",
+        "evidence": "Cargo capacity - second row up 18.5 cu. ft.",
+        "notes": "The U.S. specs page lists both 'second row up' and '(max) - second row up' as 18.5. Rows folded 64.3; frunk 2.1. The page shows no model year, so 2027 is assumed from the vehicle list (the EX60 is new to the U.S.)."
+      }
+    },
+    "volvo-ex90": {
+      "cargoCuFt": {
+        "value": 37.3,
+        "modelYear": 2026,
+        "source": "https://www.volvocars.com/us/cars/ex90-electric/specifications/",
+        "evidence": "Cargo capacity (max) - second row up 37.3 cu. ft.",
+        "notes": "7-seat storage table on the 2026 U.S. specs page. Volvo publishes two second-row-up figures: 24.6 (to the seatback) and 37.3 ('max', to the roof). Took the to-roof figure, consistent with SAE-style to-roof figures elsewhere. The 6-seat equivalents are 24.4 / 36.9. Third row up 11.4 / 13.6 max; frunk 1.6."
+      },
+      "awards": [
+        {
+          "name": "World Luxury Car",
+          "publisher": "World Car Awards",
+          "year": 2025,
+          "url": "https://www.worldcarawards.com/files/2025_WCA_Winner_Luxury.pdf",
+          "evidence": "The VOLVO EX90 is the 2025 World Luxury Car winner."
+        }
+      ],
+      "iihs": {
+        "award": "TSP+",
+        "year": 2026,
+        "modelYears": "2026",
+        "qualifier": null,
+        "source": "https://www.iihs.org/ratings/top-safety-picks/2026",
+        "evidence": "Top Safety Pick + 2026 Volvo EX90 4-door SUV"
+      }
+    }
+  }
+}

@@ -10,6 +10,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { strFromU8, unzipSync } from 'fflate';
+import { checkResearch } from './research-rules.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const curated = JSON.parse(readFileSync(path.join(ROOT, 'data', 'vehicles-curated.json'), 'utf8'));
@@ -19,10 +20,17 @@ const readJson = (name) => {
   return existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : null;
 };
 const nhtsa = readJson('nhtsa-ratings.json');
-// Human-verified research (cargo space, IIHS awards, other awards), written by the monthly research
-// step and reviewed in a pull request. Optional: fields stay null or empty until it exists.
-const research = readJson('vehicle-research.json');
-const httpsUrl = (u) => typeof u === 'string' && /^https:\/\/[a-z0-9.-]+\//i.test(u);
+// Cargo space, IIHS awards, and other awards: AI-assisted research, human-verified
+// (docs/vehicle-research.md). Published only when the file's status is "reviewed" and every entry
+// passes research-rules.mjs; a draft is ignored, and a reviewed file with problems fails the build.
+const researchFile = readJson('vehicle-research.json');
+const researchCheck = researchFile ? checkResearch(researchFile, curated.vehicles) : null;
+if (researchCheck?.problems.length) {
+  console.error(`ERROR vehicle research: ${researchCheck.problems.join('; ')}`);
+  if (researchFile.status === 'reviewed') process.exit(1);
+}
+if (researchFile && researchFile.status !== 'reviewed') console.warn('NOTE data/vehicle-research.json is a draft: not published until a person reviews it (docs/vehicle-research.md).');
+const research = researchCheck?.publishable ? researchFile : null;
 
 function parseCsv(text) {
   const rows = [];
@@ -75,18 +83,11 @@ function extras(id) {
     stars: r.overallMin, starsMax: r.overallMax, year: r.year,
     ratedVersions: r.rated.length, versions: r.versions, source: r.source,
   } : null;
+  // Already checked as a whole by checkResearch; copy only the fields the page shows.
   const x = research?.vehicles?.[id] || {};
-  const cargo = x.cargoCuFt && Number.isFinite(x.cargoCuFt.value) && x.cargoCuFt.value > 0 && x.cargoCuFt.value < 200 && httpsUrl(x.cargoCuFt.source)
-    ? { value: x.cargoCuFt.value, source: x.cargoCuFt.source, checkedAt: x.cargoCuFt.checkedAt } : null;
-  if (x.cargoCuFt && !cargo) problems.push(`${id} cargo value or source is invalid`);
-  const iihs = x.iihs && ['TSP', 'TSP+'].includes(x.iihs.award) && Number.isInteger(x.iihs.year) && httpsUrl(x.iihs.source)
-    ? { award: x.iihs.award, year: x.iihs.year, source: x.iihs.source } : null;
-  if (x.iihs && !iihs) problems.push(`${id} IIHS award is invalid`);
-  const awards = (x.awards || []).filter((w) => {
-    const ok = w && typeof w.name === 'string' && typeof w.publisher === 'string' && Number.isInteger(w.year) && httpsUrl(w.url);
-    if (!ok) problems.push(`${id} has an invalid award entry`);
-    return ok;
-  }).map((w) => ({ name: w.name, publisher: w.publisher, year: w.year, url: w.url }));
+  const cargo = x.cargoCuFt ? { value: x.cargoCuFt.value, source: x.cargoCuFt.source, modelYear: x.cargoCuFt.modelYear ?? null } : null;
+  const iihs = x.iihs ? { award: x.iihs.award, year: x.iihs.year, source: x.iihs.source, qualifier: x.iihs.qualifier || null } : null;
+  const awards = (x.awards || []).map((w) => ({ name: w.name, publisher: w.publisher, year: w.year, url: w.url }));
   return { nhtsa: nhtsaRating, cargo, iihs, awards };
 }
 const vehicles = curated.vehicles.map((v) => {
@@ -132,6 +133,7 @@ writeFileSync(path.join(ROOT, 'site', 'data', 'vehicles.json'), JSON.stringify({
   rule: curated.rule,
   nhtsaCheckedAt: nhtsa?.checkedAt || null,
   researchCheckedAt: research?.checkedAt || null,
+  researchReviewedAt: research?.reviewedAt || null,
   vehicles,
   minivans: curated.minivans,
   assumptions: curated.assumptions,

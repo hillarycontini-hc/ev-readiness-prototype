@@ -391,7 +391,8 @@ export function createPlanTools(ctx) {
     status.remove();
     box.append(controls, count, note, list,
       el('p', { class: 'tool-note', text: `Fully electric models only, listed neutrally: sorted by your budget unless you choose another order, with ties broken by price. Prices checked ${data.checkedAtLabel}; they change, so confirm with the brand before you buy.` }),
-      nhtsaDate ? el('p', { class: 'tool-note', text: `Safety ratings from NHTSA, checked ${nhtsaDate}. ${UNRATED_NOTE}` }) : null);
+      nhtsaDate ? el('p', { class: 'tool-note', text: `Safety ratings from NHTSA, checked ${nhtsaDate}. ${UNRATED_NOTE}` }) : null,
+      data.researchReviewedAt ? el('p', { class: 'tool-note', text: `Cargo space, IIHS awards, and other awards: AI-assisted research, checked source by source by a person (${new Date(`${data.researchReviewedAt}T12:00:00`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}).` }) : null);
     draw();
   }
 
