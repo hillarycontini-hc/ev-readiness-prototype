@@ -227,7 +227,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
   function altLine(alt, direction) {
     const s = alt.station;
     const where = alt.detourMiles >= 0.5 ? `about ${alt.detourMiles} mi off the route` : 'on the route';
-    return `${num.format(alt.deltaMiles)} mi ${direction} · ${s.name} · ${where} · ${nacsOnly(s) ? 'NACS only' : fastPlugs(s.connectors).join(' and ') || 'plug not listed'}`;
+    return `${num.format(alt.deltaMiles)} mi ${direction} · ${displayName(s.name)} · ${where} · ${nacsOnly(s) ? 'NACS only' : fastPlugs(s.connectors).join(' and ') || 'plug not listed'}`;
   }
 
   function renderTrip(box, trip, { gap = null, onSaveToggle, onPlug = null, onChange = null, overview = null } = {}) {
