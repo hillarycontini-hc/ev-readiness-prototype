@@ -1,0 +1,547 @@
+{
+  "checkedAt": "2026-10-22",
+  "source": "https://api.nhtsa.gov/SafetyRatings",
+  "vehicles": {
+    "audi-q4-e-tron": {
+      "year": 2026,
+      "nhtsaModel": "Q4 E-TRON BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Audi/model/Q4%20E-TRON%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2026 AUDI Q4 E-TRON SUV BEV AWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "audi-q6-e-tron": {
+      "year": 2027,
+      "nhtsaModel": "Q6 E-TRON BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Audi/model/Q6%20E-TRON%20BEV",
+      "versions": 1,
+      "rated": [
+        {
+          "version": "2027 AUDI Q6 E-TRON SUV BEV AWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "audi-sq6-e-tron": {
+      "year": 2027,
+      "nhtsaModel": "SQ6 E-TRON BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Audi/model/SQ6%20E-TRON%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "bmw-ix3": null,
+    "cadillac-lyriq": {
+      "year": 2026,
+      "nhtsaModel": "LYRIQ BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Cadillac/model/LYRIQ%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2026 CADILLAC LYRIQ SUV BEV AWD",
+          "overall": 5
+        },
+        {
+          "version": "2026 CADILLAC LYRIQ SUV BEV RWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "cadillac-optiq": {
+      "year": 2026,
+      "nhtsaModel": "OPTIQ BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Cadillac/model/OPTIQ%20BEV",
+      "versions": 2,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "cadillac-vistiq": {
+      "year": 2027,
+      "nhtsaModel": "VISTIQ BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Cadillac/model/VISTIQ%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "cadillac-escalade-iq": null,
+    "cadillac-escalade-iql": null,
+    "chevrolet-blazer-ev": {
+      "year": 2026,
+      "nhtsaModel": "BLAZER EV BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Chevrolet/model/BLAZER%20EV%20BEV",
+      "versions": 3,
+      "rated": [
+        {
+          "version": "2026 CHEVROLET BLAZER EV SUV BEV AWD",
+          "overall": 5
+        },
+        {
+          "version": "2026 CHEVROLET BLAZER EV SUV BEV RWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "chevrolet-equinox-ev": {
+      "year": 2026,
+      "nhtsaModel": "EQUINOX EV BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Chevrolet/model/EQUINOX%20EV%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2026 CHEVROLET EQUINOX EV SUV BEV AWD",
+          "overall": 5
+        },
+        {
+          "version": "2026 CHEVROLET EQUINOX EV SUV BEV FWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "chevrolet-silverado-ev": {
+      "year": 2026,
+      "nhtsaModel": "SILVERADO EV BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Chevrolet/model/SILVERADO%20EV%20BEV",
+      "versions": 1,
+      "rated": [
+        {
+          "version": "2026 CHEVROLET SILVERADO EV PU/CC BEV AWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "ford-mustang-mach-e": {
+      "year": 2026,
+      "nhtsaModel": "MUSTANG MACH-E BEV BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Ford/model/MUSTANG%20MACH-E%20BEV%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2026 FORD MUSTANG MACH-E BEV SUV BEV AWD",
+          "overall": 5
+        },
+        {
+          "version": "2026 FORD MUSTANG MACH-E BEV SUV BEV RWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "gmc-hummer-ev-suv": {
+      "year": 2025,
+      "nhtsaModel": "HUMMER EV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2025/make/GMC/model/HUMMER%20EV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "gmc-hummer-ev-pickup": {
+      "year": 2025,
+      "nhtsaModel": "HUMMER EV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2025/make/GMC/model/HUMMER%20EV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "gmc-sierra-ev": {
+      "year": 2026,
+      "nhtsaModel": "SIERRA EV BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/GMC/model/SIERRA%20EV%20BEV",
+      "versions": 1,
+      "rated": [
+        {
+          "version": "2026 GMC SIERRA EV PU/CC BEV AWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "genesis-gv60": {
+      "year": 2027,
+      "nhtsaModel": "GV60 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Genesis/model/GV60%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2027 GENESIS GV60 SUV BEV RWD",
+          "overall": 5
+        },
+        {
+          "version": "2027 GENESIS GV60 SUV BEV AWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "genesis-electrified-gv70": {
+      "year": 2027,
+      "nhtsaModel": "ELECTRIFIED GV70 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Genesis/model/ELECTRIFIED%20GV70%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "honda-prologue": {
+      "year": 2026,
+      "nhtsaModel": "PROLOGUE BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Honda/model/PROLOGUE%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2026 HONDA PROLOGUE SUV BEV AWD",
+          "overall": 5
+        },
+        {
+          "version": "2026 HONDA PROLOGUE SUV BEV FWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "hyundai-ioniq-5": {
+      "year": 2027,
+      "nhtsaModel": "IONIQ 5 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Hyundai/model/IONIQ%205%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2027 HYUNDAI IONIQ 5 SUV BEV RWD",
+          "overall": 5
+        },
+        {
+          "version": "2027 HYUNDAI IONIQ 5 SUV BEV AWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "hyundai-ioniq-9": {
+      "year": 2026,
+      "nhtsaModel": "IONIQ 9 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Hyundai/model/IONIQ%209%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2026 HYUNDAI IONIQ 9 SUV BEV AWD",
+          "overall": 5
+        },
+        {
+          "version": "2026 HYUNDAI IONIQ 9 SUV BEV RWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "jeep-recon": null,
+    "jeep-wagoneer-s": {
+      "year": 2026,
+      "nhtsaModel": "WAGONEER S BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Jeep/model/WAGONEER%20S%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "kia-ev3": {
+      "year": 2027,
+      "nhtsaModel": "EV3 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Kia/model/EV3%20BEV",
+      "versions": 2,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "kia-ev6": {
+      "year": 2026,
+      "nhtsaModel": "EV6 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Kia/model/EV6%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2026 KIA EV6 SUV BEV RWD",
+          "overall": 5
+        },
+        {
+          "version": "2026 KIA EV6 SUV BEV AWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "kia-ev9": {
+      "year": 2026,
+      "nhtsaModel": "EV9 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Kia/model/EV9%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2026 KIA EV9 SUV BEV RWD",
+          "overall": 5
+        },
+        {
+          "version": "2026 KIA EV9 SUV BEV AWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "kia-niro-ev": {
+      "year": 2026,
+      "nhtsaModel": "NIRO ELECTRIC BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Kia/model/NIRO%20ELECTRIC%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "lexus-rz": {
+      "year": 2026,
+      "nhtsaModel": "RZ 350E BEV / RZ 450E BEV / RZ 550E BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Lexus/model/RZ%20350E%20BEV",
+      "versions": 3,
+      "rated": [
+        {
+          "version": "2026 LEXUS RZ 450E SUV BEV AWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "lucid-gravity": {
+      "year": 2026,
+      "nhtsaModel": "GRAVITY BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Lucid/model/GRAVITY%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "mini-countryman-se-all4": {
+      "year": 2026,
+      "nhtsaModel": "COUNTRYMAN SE BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/MINI/model/COUNTRYMAN%20SE%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "maserati-grecale-folgore": null,
+    "mercedes-benz-eqe-suv": null,
+    "mercedes-benz-eqs-suv": null,
+    "mercedes-benz-g-580-electric": null,
+    "polestar-polestar-3": {
+      "year": 2025,
+      "nhtsaModel": "POLESTAR 3",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2025/make/Polestar/model/POLESTAR%203",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "polestar-polestar-4": null,
+    "porsche-macan-electric": null,
+    "rivian-r1s": {
+      "year": 2026,
+      "nhtsaModel": "R1S BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Rivian/model/R1S%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "rivian-r1t": {
+      "year": 2026,
+      "nhtsaModel": "R1T BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Rivian/model/R1T%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "rivian-r2": null,
+    "subaru-solterra": {
+      "year": 2027,
+      "nhtsaModel": "SOLTERRA BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Subaru/model/SOLTERRA%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "subaru-trailseeker": {
+      "year": 2027,
+      "nhtsaModel": "TRAILSEEKER BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Subaru/model/TRAILSEEKER%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "subaru-uncharted": {
+      "year": 2027,
+      "nhtsaModel": "UNCHARTED BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Subaru/model/UNCHARTED%20BEV",
+      "versions": 2,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "tesla-cybertruck": {
+      "year": 2026,
+      "nhtsaModel": "CYBERTRUCK BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Tesla/model/CYBERTRUCK%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2026 TESLA CYBERTRUCK PU/CC BEV AWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "tesla-model-y": {
+      "year": 2026,
+      "nhtsaModel": "MODEL Y BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Tesla/model/MODEL%20Y%20BEV",
+      "versions": 4,
+      "rated": [
+        {
+          "version": "2026 TESLA MODEL Y SUV BEV RWD 2ND RELEASE",
+          "overall": 5
+        },
+        {
+          "version": "2026 TESLA MODEL Y SUV BEV AWD 2ND RELEASE",
+          "overall": 5
+        },
+        {
+          "version": "2026 TESLA MODEL Y SUV BEV RWD EARLY RELEASE",
+          "overall": 5
+        },
+        {
+          "version": "2026 TESLA MODEL Y SUV BEV AWD EARLY RELEASE",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "tesla-model-y-l": null,
+    "toyota-c-hr": {
+      "year": 2027,
+      "nhtsaModel": "C-HR BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Toyota/model/C-HR%20BEV",
+      "versions": 2,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "toyota-bz": {
+      "year": 2027,
+      "nhtsaModel": "BZ BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Toyota/model/BZ%20BEV",
+      "versions": 2,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "vinfast-vf-8": {
+      "year": 2026,
+      "nhtsaModel": "VF8 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/VinFast/model/VF8%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "vinfast-vf-9": {
+      "year": 2026,
+      "nhtsaModel": "VF9 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/VinFast/model/VF9%20BEV",
+      "versions": 1,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "volkswagen-id-4": {
+      "year": 2026,
+      "nhtsaModel": "ID.4 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Volkswagen/model/ID.4%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2026 VOLKSWAGEN ID.4 SUV BEV RWD",
+          "overall": 5
+        },
+        {
+          "version": "2026 VOLKSWAGEN ID.4 SUV BEV AWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    },
+    "volvo-ex40": {
+      "year": 2026,
+      "nhtsaModel": "EX40 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Volvo/model/EX40%20BEV",
+      "versions": 2,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "volvo-ex60": {
+      "year": 2027,
+      "nhtsaModel": "EX60 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2027/make/Volvo/model/EX60%20BEV",
+      "versions": 2,
+      "rated": [],
+      "overallMin": null,
+      "overallMax": null
+    },
+    "volvo-ex90": {
+      "year": 2026,
+      "nhtsaModel": "EX90 BEV",
+      "source": "https://api.nhtsa.gov/SafetyRatings/modelyear/2026/make/Volvo/model/EX90%20BEV",
+      "versions": 2,
+      "rated": [
+        {
+          "version": "2026 VOLVO EX90 SUV BEV AWD",
+          "overall": 5
+        }
+      ],
+      "overallMin": 5,
+      "overallMax": 5
+    }
+  }
+}

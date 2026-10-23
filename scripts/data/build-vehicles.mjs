@@ -6,13 +6,23 @@
 // is older than 35 days, and on model-year changeover (August to October) every model should
 // be re-checked. See docs/price-refresh.md.
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { strFromU8, unzipSync } from 'fflate';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const curated = JSON.parse(readFileSync(path.join(ROOT, 'data', 'vehicles-curated.json'), 'utf8'));
+// NHTSA 5-Star ratings, fetched by `npm run data:nhtsa` (scripts/data/fetch-nhtsa.mjs).
+const readJson = (name) => {
+  const p = path.join(ROOT, 'data', name);
+  return existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : null;
+};
+const nhtsa = readJson('nhtsa-ratings.json');
+// Human-verified research (cargo space, IIHS awards, other awards), written by the monthly research
+// step and reviewed in a pull request. Optional: fields stay null or empty until it exists.
+const research = readJson('vehicle-research.json');
+const httpsUrl = (u) => typeof u === 'string' && /^https:\/\/[a-z0-9.-]+\//i.test(u);
 
 function parseCsv(text) {
   const rows = [];
@@ -54,6 +64,31 @@ function epaStats(make, epaModel, modelYear) {
 }
 
 const problems = [];
+
+/**
+ * Safety ratings and research for one car. Absent data is null (or an empty list), never zero:
+ * the page says "Not yet rated" and sorts it last.
+ */
+function extras(id) {
+  const r = nhtsa?.vehicles?.[id];
+  const nhtsaRating = r ? {
+    stars: r.overallMin, starsMax: r.overallMax, year: r.year,
+    ratedVersions: r.rated.length, versions: r.versions, source: r.source,
+  } : null;
+  const x = research?.vehicles?.[id] || {};
+  const cargo = x.cargoCuFt && Number.isFinite(x.cargoCuFt.value) && x.cargoCuFt.value > 0 && x.cargoCuFt.value < 200 && httpsUrl(x.cargoCuFt.source)
+    ? { value: x.cargoCuFt.value, source: x.cargoCuFt.source, checkedAt: x.cargoCuFt.checkedAt } : null;
+  if (x.cargoCuFt && !cargo) problems.push(`${id} cargo value or source is invalid`);
+  const iihs = x.iihs && ['TSP', 'TSP+'].includes(x.iihs.award) && Number.isInteger(x.iihs.year) && httpsUrl(x.iihs.source)
+    ? { award: x.iihs.award, year: x.iihs.year, source: x.iihs.source } : null;
+  if (x.iihs && !iihs) problems.push(`${id} IIHS award is invalid`);
+  const awards = (x.awards || []).filter((w) => {
+    const ok = w && typeof w.name === 'string' && typeof w.publisher === 'string' && Number.isInteger(w.year) && httpsUrl(w.url);
+    if (!ok) problems.push(`${id} has an invalid award entry`);
+    return ok;
+  }).map((w) => ({ name: w.name, publisher: w.publisher, year: w.year, url: w.url }));
+  return { nhtsa: nhtsaRating, cargo, iihs, awards };
+}
 const vehicles = curated.vehicles.map((v) => {
   const epa = epaStats(v.make, v.epa, v.modelYear);
   if (!epa) problems.push(`no EPA range for ${v.make} ${v.model}`);
@@ -63,6 +98,7 @@ const vehicles = curated.vehicles.map((v) => {
     msrp: v.msrp, destination: v.destination, seats: v.seats, thirdRow: v.thirdRow,
     rangeMin: epa?.rangeMin ?? null, rangeMax: epa?.rangeMax ?? null, kwh100: epa?.kwh100 ?? null, epaYear: epa?.epaYear ?? null,
     priceSource: v.source, confidence: v.confidence, notes: v.notes,
+    ...extras(slug(`${v.make} ${v.model}`)),
   };
 }).filter((v) => v.rangeMax != null);
 
@@ -94,10 +130,13 @@ if (linkProblems.length) { console.error(`ERROR brand links: ${linkProblems.join
 writeFileSync(path.join(ROOT, 'site', 'data', 'vehicles.json'), JSON.stringify({
   checkedAt: curated.checkedAt,
   rule: curated.rule,
+  nhtsaCheckedAt: nhtsa?.checkedAt || null,
+  researchCheckedAt: research?.checkedAt || null,
   vehicles,
   minivans: curated.minivans,
   assumptions: curated.assumptions,
   brands: curated.brands,
   notOnSale: curated.notOnSale.map(({ make, model, reason }) => ({ make, model, reason })),
 }));
+if (!nhtsa) console.warn('WARN no data/nhtsa-ratings.json: run npm run data:nhtsa');
 console.log(`vehicles: ${vehicles.length} with prices and EPA range (${vehicles.filter((v) => v.class === 'pickup').length} pickups), prices checked ${curated.checkedAt}`);

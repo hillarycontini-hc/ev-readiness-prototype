@@ -27,6 +27,8 @@ const EVENTS = new Set([
   'trip_planned', 'trip_saved', 'trip_step',
   // Charger map: whether the street map or the drawn fallback was shown. Never a place.
   'map_rendered',
+  // Car explorer: which order the visitor chose (price, range, seats, cargo, safety, awards).
+  'car_sorted',
 ]);
 
 // Property names that must never leave the browser, even by mistake.
