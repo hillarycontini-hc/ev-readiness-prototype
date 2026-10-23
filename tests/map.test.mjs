@@ -4,7 +4,7 @@ import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import worker, { cleanView } from '../worker/index.js';
 import {
-  MAP_H, MAP_W, MAX_MARKERS, MAX_ZOOM, MIN_ZOOM,
+  MAP_H, MAP_W, MAX_MARKERS, MAX_ZOOM, MIN_ZOOM, ZIP_MIN_ZOOM, fitView,
   chooseView, fromWorld, groupSites, placeMarkers, project, snapView, toWorld, validView, viewBounds,
 } from '../site/js/map-view.js';
 
@@ -42,7 +42,7 @@ test('the view box and the marker math agree at the corners', () => {
 
 test('only whole-number views at allowed zooms, inside the world', () => {
   assert.equal(validView({ z: 14, x: 5447.5, y: 15872 }), false);
-  assert.equal(validView({ z: 10, x: 1359, y: 3969 }), false);
+  assert.equal(validView({ z: 3, x: 10, y: 24 }), false);
   assert.equal(validView({ z: 16, x: 1359, y: 3969 }), false);
   assert.equal(validView({ z: 12, x: 0, y: 0 }), false);
   assert.equal(validView(snapView(BOULDER.lat, BOULDER.lon, 12)), true);
@@ -53,6 +53,7 @@ const near = (dLat, dLon, extra = {}) => ({ lat: BOULDER.lat + dLat, lon: BOULDE
 test('the closest zoom that shows six chargers wins, and pins stay inside the map, nearest first', () => {
   const close = Array.from({ length: 10 }, (_, i) => near(0.0004 * (i + 1), 0.0003 * (i % 3)));
   assert.equal(chooseView(BOULDER.lat, BOULDER.lon, close).view.z, MAX_ZOOM);
+  assert.ok(chooseView(BOULDER.lat, BOULDER.lon, Array.from({ length: 6 }, (_, i) => near(0.5 * (i + 1), 0))).view.z >= ZIP_MIN_ZOOM, 'charger maps never zoom out past 11');
   const spread = Array.from({ length: 10 }, (_, i) => near(0.04 * (i + 1), 0.02)).sort((a, b) => a.miles - b.miles);
   const { view, markers } = chooseView(BOULDER.lat, BOULDER.lon, spread);
   assert.ok(view.z < MAX_ZOOM);
@@ -169,4 +170,17 @@ test('the nearest fast charger is always on the map, even when Level 2 sites are
   assert.ok(markers.length <= MAX_MARKERS);
   assert.deepEqual(markers, [...markers].sort((a, b) => a.miles - b.miles), 'still nearest first');
   assert.ok(view.z < MAX_ZOOM, 'zooms out to reach it');
+});
+
+test('a route overview fits the whole route, from a short hop to a long drive', () => {
+  const denverToMoab = [[39.74, -104.99], [39.6, -106.0], [39.06, -108.55], [38.57, -109.55]];
+  const v = fitView(denverToMoab);
+  for (const [lat, lon] of denverToMoab) {
+    const [x, y] = project(v, lat, lon);
+    assert.ok(x > 0 && x < MAP_W && y > 0 && y < MAP_H);
+  }
+  assert.ok(v.z >= MIN_ZOOM && v.z <= 9);
+  const hop = fitView([[40.01, -105.27], [40.03, -105.25]]);
+  assert.ok(hop.z > v.z);
+  assert.ok(validView(v) && validView(hop));
 });

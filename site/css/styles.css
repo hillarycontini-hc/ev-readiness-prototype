@@ -772,6 +772,20 @@ legend h1 { font: 900 clamp(2.25rem, 5vw, 3.25rem) / 0.95 var(--display); text-t
 .map-list li:first-child { border-top: 0; }
 .map-num { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--aqua); color: var(--navy); font-weight: 800; font-size: 0.8125rem; margin-top: 0.05rem; }
 .map-num.is-fast { border-radius: 4px; background: var(--citron); }
+.route-map { margin: 1rem 0 0.75rem; max-width: 40rem; }
+.route-map .map-img { right: auto; bottom: auto; }
+.route-casing { fill: none; stroke: #fff; stroke-linecap: round; stroke-linejoin: round; }
+.route-line { fill: none; stroke: var(--teal); stroke-linecap: round; stroke-linejoin: round; }
+.route-other { fill: var(--citron); stroke: var(--navy); stroke-width: 1.5; }
+.route-dest { fill: var(--poppy); stroke: var(--navy); stroke-width: 4; }
+.route-dest-dot { fill: #fff; }
+.route-key { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; }
+.map-key-item { display: inline-flex; align-items: center; gap: 0.3rem; }
+.map-key { flex: none; overflow: visible; }
+.map-key.is-stop rect { fill: var(--citron); stroke: var(--navy); stroke-width: 2.5; }
+.map-key.is-stop text { fill: var(--navy); font: 800 13px var(--text); text-anchor: middle; }
+.leg-alts ul { margin: 0.2rem 0 0.4rem; padding-left: 1.1rem; color: var(--row-sub); }
+.leg-alts li + li { margin-top: 0.15rem; }
 .map-more { color: var(--row-sub); font-weight: 600; }
 .stop-panel .map-list p { margin: 0; }
 .map-name { font-weight: 700; color: #fff; }

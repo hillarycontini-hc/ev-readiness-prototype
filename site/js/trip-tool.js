@@ -8,7 +8,8 @@ import { SearchUnavailable, chargersNear, connectorNames, fastStationsAlong, fet
 import { ASSUMPTIONS, FLEET_KEY } from './logic.js';
 import { MAX_SAVED_TRIPS } from './plan-store.js';
 import { displayName } from './names.js';
-import { CHARGE_MINUTES, EXTRA_USE, LEG_MAX, LEG_MIN, MAX_TRIP_STOPS, PLUGS, durationText, fixActions, legMilesFromRange, nacsOnly, planStops, sameTrip, stopsBucket, suggestFixes, tripCost } from './trip.js';
+import { CHARGE_MINUTES, EXTRA_USE, LEG_MAX, LEG_MIN, MAX_TRIP_STOPS, PLUGS, durationText, fixActions, legMilesFromRange, nacsOnly, planStops, routeCandidates, sameTrip, stopAlternatives, stopsBucket, suggestFixes, swapStations, tripCost } from './trip.js';
+import { routeMap } from './route-map.js';
 
 const tripId = () => `trip-${Math.random().toString(36).slice(2, 10)}`;
 const fastPlugs = (codes) => connectorNames((codes || '').replace(/[^CND]/g, ''));
@@ -222,7 +223,14 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
         : el('p', { class: 'tool-note', text: 'No setting fixes this route. Try a closer destination, or a town along the way.' }));
   }
 
-  function renderTrip(box, trip, { gap = null, onSaveToggle, onPlug = null, onChange = null } = {}) {
+  // "12 mi earlier · Name · on the route · CCS" for a stop the visitor could use instead.
+  function altLine(alt, direction) {
+    const s = alt.station;
+    const where = alt.detourMiles >= 0.5 ? `about ${alt.detourMiles} mi off the route` : 'on the route';
+    return `${num.format(alt.deltaMiles)} mi ${direction} · ${displayName(s.name)} · ${where} · ${nacsOnly(s) ? 'NACS only' : fastPlugs(s.connectors).join(' and ') || 'plug not listed'}`;
+  }
+
+  function renderTrip(box, trip, { gap = null, onSaveToggle, onPlug = null, onChange = null, overview = null } = {}) {
     const stuck = gap ? gap.plan.stuckAtMile : null;
     const legs = [
       ...trip.stops.map((s, i) => ({ kind: 'stop', s, title: `Stop ${i + 1}: ${displayName(s.name)}`, miles: s.legMiles })),
@@ -270,6 +278,9 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
         el('p', { class: 'leg-key', text: spareText(s ? trip.legMiles - s.legMiles : trip.arriveWithMiles, trip.legMiles) }),
         !s && home ? el('p', { class: 'leg-key trip-home' }, el('strong', { text: 'Getting home: ' }), home) : null,
         s && [s.street, s.city].some(Boolean) ? el('p', { class: 'leg-address', text: [s.street, s.city].filter(Boolean).join(', ') }) : null,
+        s && overview?.alts?.[i] && (overview.alts[i].earlier || overview.alts[i].later) ? el('div', { class: 'leg-alts' },
+          el('p', { class: 'leg-key', text: 'Other stops that keep every leg in range:' }),
+          el('ul', {}, [overview.alts[i].earlier && el('li', { text: altLine(overview.alts[i].earlier, 'earlier') }), overview.alts[i].later && el('li', { text: altLine(overview.alts[i].later, 'later') })].filter(Boolean))) : null,
         s ? el('details', { class: 'leg-more' },
           el('summary', {}, `Plug: ${fastPlugs(s.connectors).join(' and ') || 'not listed'}`, el('span', { class: 'leg-more-hint', text: ' · hours and price' })),
           el('p', { text: plugNote(s) }),
@@ -326,7 +337,8 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       ? [list, stepper, live]
       : [legs.length ? el('details', { class: 'trip-help trip-partial' }, el('summary', { text: `See how far it gets (${plural(legs.length, 'stop')})` }), list) : null];
     // Warnings sit right under the answer, so the drive home and the plug are seen before the legs.
-    box.replaceChildren(...[heading, settings, answer, homeFlag, plugCheck, totals, costNote,
+    const overviewMap = stuck == null && overview ? routeMap({ trip, points: overview.points, others: overview.others, track: ctx.track }) : null;
+    box.replaceChildren(...[heading, settings, answer, homeFlag, plugCheck, totals, costNote, overviewMap,
       gap ? gapView(trip, gap) : null,
       ...legsBlock,
       onSaveToggle ? el('div', { class: 'trip-save-slot' }, saveButton(trip, onSaveToggle)) : null,
@@ -556,7 +568,18 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
         const pick = (ui.plug === 'any' && fits.find((s) => !nacsOnly(s))) || fits[0];
         lastTrip.homeCharger = near ? (pick ? { ...pick } : false) : null;
       }
-      const heading = renderTrip(result, lastTrip, { gap, onSaveToggle: plan.ok ? toggleSave : null, onPlug: () => onFix('plug', 'ccs'), onChange: changeSettings });
+      // The overview map and each stop's alternatives use this route's candidates (not saved with the trip).
+      let overview = null;
+      if (plan.ok) {
+        const candidates = routeCandidates({ route, stations, plug: ui.plug });
+        const args = { candidates, stops: lastTrip.stops, totalMiles: route.miles, legMiles: ui.legMiles };
+        overview = {
+          points: route.points,
+          others: swapStations(args),
+          alts: stopAlternatives({ ...args, plug: ui.plug }),
+        };
+      }
+      const heading = renderTrip(result, lastTrip, { gap, onSaveToggle: plan.ok ? toggleSave : null, onPlug: () => onFix('plug', 'ccs'), onChange: changeSettings, overview });
       // The trip itself now shows what the status said; keep the line for screen readers only.
       status.className = 'tool-status sr-only';
       heading.focus();
@@ -631,7 +654,7 @@ export function createTripTool({ ctx, searchForm, loadVehicles }) {
       fromPanel,
       toFieldset, search, rangeFields,
       el('div', { class: 'tool-row' }, el('button', { type: 'button', class: 'btn btn-go btn-small trip-plan-btn', onclick: () => onPlan() }, 'Find charging stops')),
-      el('p', { class: 'tool-note', text: 'The start and end points go to our routing service to find the road, and are not stored.' }),
+      el('p', { class: 'tool-note', text: 'The start and end points go to our routing service to find the road, and are not stored. The route map is a plain map of the trip’s area fetched the same way; the route and stops are drawn on it in your browser.' }),
       status, result, savedBox);
     drawSaved();
   }

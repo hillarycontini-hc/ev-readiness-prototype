@@ -239,3 +239,48 @@ export function stopsBucket(n) {
   if (n <= 3) return '2-3';
   return '4+';
 }
+
+/**
+ * For each chosen stop, up to one usable fast charger a little earlier and one a little later on
+ * the route (within `window` road miles), picked only when swapping it in keeps the legs on both
+ * sides within `legMiles`. Nearest to the chosen stop wins.
+ * - candidates: routeCandidates() for the same route and plug
+ * - stops: the plan's stops ({ id, atMile, detourMiles })
+ * Returns [{ earlier, later }] in stop order; each is { station, atMile, detourMiles, deltaMiles } or null.
+ */
+// Would candidate c, swapped in for stop i, keep the legs on both sides within legMiles?
+function swapFits(stops, i, c, totalMiles, legMiles) {
+  const prev = i ? { atMile: stops[i - 1].atMile, detour: stops[i - 1].detourMiles } : { atMile: 0, detour: 0 };
+  const next = stops[i + 1] ? { atMile: stops[i + 1].atMile, detour: stops[i + 1].detourMiles } : { atMile: totalMiles, detour: 0 };
+  return c.atMile - prev.atMile + prev.detour + c.detour <= legMiles
+    && next.atMile - c.atMile + c.detour + next.detour <= legMiles;
+}
+
+/**
+ * Fast chargers on the route that could stand in for one of the chosen stops without making any
+ * leg too long: the "other stops in range" the route overview draws. Chosen stops are excluded.
+ */
+export function swapStations({ candidates, stops, totalMiles, legMiles }) {
+  const chosen = new Set(stops.map((s) => s.id));
+  return candidates
+    .filter((c) => !chosen.has(c.station.id) && stops.some((_, i) => swapFits(stops, i, c, totalMiles, legMiles)))
+    .map((c) => c.station);
+}
+
+export function stopAlternatives({ candidates, stops, totalMiles, legMiles, window = 60, plug = 'any' }) {
+  const chosen = new Set(stops.map((s) => s.id));
+  return stops.map((stop, i) => {
+    const near = candidates.filter((c) => !chosen.has(c.station.id) && Math.abs(c.atMile - stop.atMile) <= window && swapFits(stops, i, c, totalMiles, legMiles));
+    // With "Either plug", like the planner, a charger most cars can use without an adapter comes
+    // first; a NACS-only one is offered only when nothing else fits on that side.
+    const nacsLast = (c) => (plug === 'any' && nacsOnly(c.station) ? 1 : 0);
+    const pick = (list) => {
+      const c = list.sort((a, b) => (nacsLast(a) - nacsLast(b)) || (Math.abs(a.atMile - stop.atMile) - Math.abs(b.atMile - stop.atMile)))[0];
+      return c ? { station: c.station, atMile: Math.round(c.atMile), detourMiles: Math.round(c.detour * 10) / 10, deltaMiles: Math.round(Math.abs(c.atMile - stop.atMile)) } : null;
+    };
+    return {
+      earlier: pick(near.filter((c) => c.atMile < stop.atMile - 0.5)),
+      later: pick(near.filter((c) => c.atMile > stop.atMile + 0.5)),
+    };
+  });
+}

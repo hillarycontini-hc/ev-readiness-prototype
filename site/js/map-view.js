@@ -15,7 +15,11 @@ export const MAP_W = 640;
 export const MAP_H = 400;
 export const STEP_X = MAP_W / 4;
 export const STEP_Y = MAP_H / 4;
-export const MIN_ZOOM = 11;
+// Charger maps run from street level (15) out to about 20 miles across (11). Route overviews can
+// zoom out to a few states across (4). The Worker draws any view in MIN_ZOOM..MAX_ZOOM.
+export const MIN_ZOOM = 4;
+export const ZIP_MIN_ZOOM = 11;
+export const ROUTE_MAX_ZOOM = 13;
 export const MAX_ZOOM = 15;
 export const MAX_MARKERS = 8;
 const MARGIN = 18; // keep numbered markers clear of the image edge
@@ -89,8 +93,8 @@ const inside = (v, s) => {
  */
 export function chooseView(lat, lon, sites, { must = [] } = {}) {
   const want = Math.min(6, sites.length);
-  let view = snapView(lat, lon, MIN_ZOOM);
-  for (let z = MAX_ZOOM; z >= MIN_ZOOM; z--) {
+  let view = snapView(lat, lon, ZIP_MIN_ZOOM);
+  for (let z = MAX_ZOOM; z >= ZIP_MIN_ZOOM; z--) {
     const v = snapView(lat, lon, z);
     if (must.every((m) => inside(v, m)) && sites.filter((s) => inside(v, s)).length >= want) { view = v; break; }
   }
@@ -149,4 +153,59 @@ export function groupSites(stations, sameMiles = 0.03) {
     else sites.push({ lat: s.lat, lon: s.lon, miles: s.miles, stations: [s] });
   }
   return sites;
+}
+
+/**
+ * The closest view that shows every point (a route's line, its start and end) with a margin, for
+ * the route overview. At each zoom it tries the four grid positions around the points' middle, so
+ * staying on the grid costs as little zoom as possible.
+ */
+const ROUTE_MARGIN = 12; // a stop pin's half-width, so none is cut off
+
+export function fitView(points) {
+  const lats = points.map((p) => p[0]);
+  const lons = points.map((p) => p[1]);
+  const mid = { lat: (Math.min(...lats) + Math.max(...lats)) / 2, lon: (Math.min(...lons) + Math.max(...lons)) / 2 };
+  const fits = (v) => validView(v) && points.every(([lat, lon]) => {
+    const [x, y] = project(v, lat, lon);
+    return x >= ROUTE_MARGIN && x <= MAP_W - ROUTE_MARGIN && y >= ROUTE_MARGIN && y <= MAP_H - ROUTE_MARGIN;
+  });
+  for (let z = ROUTE_MAX_ZOOM; z > MIN_ZOOM; z--) {
+    const [px, py] = toWorld(mid.lat, mid.lon, z);
+    // Of the grid positions that fit, the one that puts the route most nearly in the middle.
+    const options = [];
+    for (const x of [Math.floor(px / STEP_X), Math.ceil(px / STEP_X)]) {
+      for (const y of [Math.floor(py / STEP_Y), Math.ceil(py / STEP_Y)]) {
+        const v = { z, x, y };
+        if (fits(v)) options.push({ v, off: Math.hypot(x * STEP_X - px, y * STEP_Y - py) });
+      }
+    }
+    if (options.length) return options.sort((a, b) => a.off - b.off)[0].v;
+  }
+  return snapView(mid.lat, mid.lon, MIN_ZOOM);
+}
+
+/**
+ * The part of the image worth showing for a route: the points' box plus a margin, widened to an
+ * aspect between 4:5 and 16:10, inside the image. In image pixels: { x, y, w, h }.
+ */
+export function cropBox(v, points, margin = 28) {
+  const xy = points.map(([lat, lon]) => project(v, lat, lon));
+  let x0 = Math.min(...xy.map((p) => p[0])) - margin;
+  let x1 = Math.max(...xy.map((p) => p[0])) + margin;
+  let y0 = Math.min(...xy.map((p) => p[1])) - margin;
+  let y1 = Math.max(...xy.map((p) => p[1])) + margin;
+  const grow = (lo, hi, want, max) => {
+    const add = Math.max(0, want - (hi - lo)) / 2;
+    let a = lo - add;
+    let b = hi + add;
+    if (a < 0) { b -= a; a = 0; }
+    if (b > max) { a -= b - max; b = max; }
+    return [Math.max(0, a), Math.min(max, b)];
+  };
+  // Not too tall (at least 4:5 wide) and not too wide (at most 16:10).
+  [x0, x1] = grow(x0, x1, (y1 - y0) * 0.8, MAP_W);
+  [y0, y1] = grow(y0, y1, (x1 - x0) / 1.6, MAP_H);
+  [x0, x1] = grow(Math.max(0, x0), Math.min(MAP_W, x1), (y1 - y0) * 0.8, MAP_W);
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
