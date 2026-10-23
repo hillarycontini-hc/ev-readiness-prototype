@@ -18,7 +18,8 @@
     "test:a11y": "node tests/a11y/run-axe.mjs",
     "test:e2e": "node --test tests/e2e/*.e2e.mjs",
     "data:vehicles": "node scripts/data/build-vehicles.mjs",
-    "data:nhtsa": "node scripts/data/fetch-nhtsa.mjs"
+    "data:nhtsa": "node scripts/data/fetch-nhtsa.mjs",
+    "data:research:check": "node scripts/data/check-research.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",

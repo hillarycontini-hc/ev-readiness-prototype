@@ -209,6 +209,7 @@ All free and public, downloaded and precomputed by `npm run data`:
 | National Park Service API (116 outdoor park units) | Outdoor destinations |
 | Each automaker's U.S. site, checked monthly (52 models) | Starting prices, seats, test-drive and dealer links ([process](docs/price-refresh.md)) |
 | NHTSA 5-Star Safety Ratings API (free, no key), checked monthly | Overall crash-test rating per car and model year |
+| AI-assisted research, human-verified ([process](docs/vehicle-research.md)) | Cargo space (maker specs), IIHS Top Safety Picks (iihs.org), award wins (the publishers' own pages), each with a source and a short quote |
 | Experian *State of the Automotive Finance Market* | Starting loan APR for payment estimates |
 | Geoapify (live, through the proxy) | Address search in the plan tools |
 

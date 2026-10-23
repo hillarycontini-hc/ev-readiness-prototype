@@ -229,3 +229,16 @@ Numbered after parts 3 and 4 (124-141), which ship in their own pull requests.
 | 147 | The overview and alternatives are shown for a freshly planned trip, not saved ones | They need the route line and the station data, which saved trips don't keep (saved and shared plans stay small). |
 | 148 | Other stops are small citron squares under the route; the destination is a poppy station disc with a white center, not a diamond | From the design review: aqua means Level 2 on the charger map, and the poppy diamond is the site's warning mark. All chargers here are fast, so citron; shape and size tell chosen from possible. |
 | 149 | Map credit lines name OpenMapTiles as well as OpenStreetMap and Geoapify | The live street map (osm-bright) is built on OpenMapTiles and prints that credit, but the route overview crops the image, so the page must carry the full credit itself. Found when checking the live maps. |
+
+## Vehicle research: cargo, IIHS, awards (October 2026)
+
+| # | Decision | Why |
+|---|---|---|
+| 134 | Cargo space, IIHS Top Safety Picks, and award wins come from a build-time research step: AI-assisted research, human-verified ([`docs/vehicle-research.md`](docs/vehicle-research.md)) | Hillary's plan, part 4. No public API covers them; a person checking each fact keeps claims accurate. |
+| 135 | No live agent on the site | Award claims must be checkable; a per-visitor agent has unbounded cost and can be abused; and the browser should talk only to our own server. Hillary agreed. |
+| 136 | Every fact carries a source on an allowed site and a quote of at most 15 words; the allowed sites are listed in `data/research-sources.json` (iihs.org, five award publishers, and each maker's own U.S. and press sites) | Found in the security review of part 3: an AI-written link must not quietly point anywhere. The quote lets a reviewer find the claim fast. |
+| 137 | The research file publishes only when its status is "reviewed" with `reviewedBy` and `reviewedAt`; a draft is ignored, and a reviewed file with any rule problem fails the build | Makes "a person reviewed it" a recorded fact, not a hope. |
+| 138 | Award wins only (not finalists or nominees) from the last three award years, from MotorTrend, Car and Driver, Edmunds, NACTOY, and World Car Awards; any brand, no highlighting | Hillary's list. Wins only keeps the count meaningful. |
+| 139 | Wins that couldn't be confirmed on the publisher's own page are left out and listed in the pull request | MotorTrend and Car and Driver block automated reading, so their wins need a person to confirm before they count. |
+| 140 | Cargo is the maker's figure behind the second row (second row up; three-row SUVs with the third row folded) for the trim whose price the explorer shows; figures without a stated seat position are left out | Comparable numbers or none. Left out (2026-10-22): Lexus RZ, and the three Mercedes EQ SUVs. Pickups have none (bed, not cargo volume). |
+| 141 | Research refreshes monthly with prices, and after each award program's announcement | Awards arrive on fixed calendars; cargo changes with model years. |

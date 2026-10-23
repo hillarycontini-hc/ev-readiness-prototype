@@ -68,5 +68,5 @@ export function safetyText(v) {
   return `NHTSA: ${stars}${notes.length ? ` (${notes.join('; ')})` : ''}`;
 }
 
-export const iihsText = (v) => (v.iihs ? `IIHS ${v.iihs.award === 'TSP+' ? 'Top Safety Pick+' : 'Top Safety Pick'} ${v.iihs.year}` : null);
+export const iihsText = (v) => (v.iihs ? `IIHS ${v.iihs.award === 'TSP+' ? 'Top Safety Pick+' : 'Top Safety Pick'} ${v.iihs.year}${v.iihs.qualifier ? ` (${v.iihs.qualifier})` : ''}` : null);
 export const cargoText = (v) => (v.cargo ? `${v.cargo.value} cu ft behind the 2nd row` : null);
