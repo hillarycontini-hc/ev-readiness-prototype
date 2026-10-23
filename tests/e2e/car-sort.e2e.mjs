@@ -87,3 +87,30 @@ test('analytics hears only which sort was chosen', async () => {
   assert.equal(sorted[0].properties.mode, 'safety');
   await context.close();
 });
+
+test('reviewed research adds cargo and awards sorts, the IIHS filter, and linked awards', async () => {
+  const context = await browser.newContext();
+  await context.route('**/data/vehicles.json', async (route) => {
+    const res = await route.fetch();
+    const data = await res.json();
+    const [a, b] = data.vehicles.filter((v) => v.class === 'suv');
+    a.cargo = { value: 30, source: 'https://www.example-maker.com/specs', modelYear: a.modelYear };
+    b.cargo = { value: 40, source: 'https://www.example-maker.com/specs', modelYear: b.modelYear };
+    b.iihs = { award: 'TSP+', year: 2026, source: 'https://www.iihs.org/ratings', qualifier: 'built after March 2026' };
+    b.awards = [{ name: 'World Car of the Year', publisher: 'World Car Awards', year: b.modelYear, url: 'https://www.worldcarawards.com/x' }];
+    data.researchReviewedAt = '2026-10-23';
+    await route.fulfill({ response: res, json: data });
+  });
+  const page = await openExplorer(context);
+  const options = await page.$$eval('#car-sort option', (os) => os.map((o) => o.value));
+  assert.ok(options.includes('cargo') && options.includes('awards'));
+  await page.selectOption('#car-sort', 'cargo');
+  const first = await page.locator('.car-item').first().innerText();
+  assert.match(first, /40 cu ft behind the 2nd row/);
+  assert.match(first, /IIHS Top Safety Pick\+ 2026 \(built after March 2026\)/);
+  assert.equal(await page.locator('.car-item').first().locator('.car-awards a').getAttribute('href'), 'https://www.worldcarawards.com/x');
+  await page.check('#car-tsp');
+  assert.equal(await page.locator('.car-item').count(), 1);
+  assert.match(await page.locator('#tool-plan-range, #tool-plan-range-any').first().innerText(), /AI-assisted research, checked source by source by a person/);
+  await context.close();
+});
