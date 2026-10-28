@@ -93,6 +93,8 @@ test('reviewed research adds cargo and awards sorts, the IIHS filter, and linked
   await context.route('**/data/vehicles.json', async (route) => {
     const res = await route.fetch();
     const data = await res.json();
+    // Start from no research at all, so only the values below decide the order and the filter.
+    for (const v of data.vehicles) Object.assign(v, { cargo: null, iihs: null, awards: [] });
     const [a, b] = data.vehicles.filter((v) => v.class === 'suv');
     a.cargo = { value: 30, source: 'https://www.example-maker.com/specs', modelYear: a.modelYear };
     b.cargo = { value: 40, source: 'https://www.example-maker.com/specs', modelYear: b.modelYear };

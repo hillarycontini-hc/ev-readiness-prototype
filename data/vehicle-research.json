@@ -1,9 +1,9 @@
 {
   "checkedAt": "2026-10-22",
   "method": "AI-assisted research, human-verified",
-  "status": "draft",
-  "reviewedBy": null,
-  "reviewedAt": null,
+  "status": "reviewed",
+  "reviewedBy": "Hillary Contini",
+  "reviewedAt": "2026-10-28",
   "vehicles": {
     "audi-q4-e-tron": {
       "cargoCuFt": {
@@ -133,7 +133,7 @@
         "modelYear": 2027,
         "source": "https://www.genesis.com/us/en/electrified-gv70",
         "evidence": "\"innerCargo\":\"56.5/28.7 cu ft\"",
-        "notes": "From the vehicle data embedded in Genesis USA's 2027 Electrified GV70 page; visible spec tab did not render. Folded 56.5. SAE not stated."
+        "notes": "From the vehicle data embedded in Genesis USA's 2027 Electrified GV70 page; visible spec tab did not render. Folded 56.5. SAE not stated. Not in the page's visible text; the reviewer confirmed the figure by search on 2026-10-28."
       },
       "iihs": {
         "award": "TSP+",
@@ -150,7 +150,7 @@
         "modelYear": 2027,
         "source": "https://www.genesis.com/us/en/gv60",
         "evidence": "\"innerCargo\":\"54.7/24 cu ft\"",
-        "notes": "From the vehicle data embedded in Genesis USA's 2027 GV60 page (same for all trims listed); visible spec tab did not render. Folded 54.7. SAE not stated."
+        "notes": "From the vehicle data embedded in Genesis USA's 2027 GV60 page (same for all trims listed); visible spec tab did not render. Folded 54.7. SAE not stated. Not in the page's visible text; the reviewer confirmed the figure by search on 2026-10-28."
       },
       "iihs": {
         "award": "TSP+",
@@ -163,11 +163,11 @@
     },
     "gmc-hummer-ev-suv": {
       "cargoCuFt": {
-        "value": 35.9,
+        "value": 36.3,
         "modelYear": 2026,
         "source": "https://www.gmc.com/electric/hummer-ev/suv",
-        "evidence": "\"cargoVolume\":\"35.9 cu ft, 81.8 cu ft with seat area\"",
-        "notes": "Taken from the schema.org Vehicle structured data embedded in GMC's 2026 HUMMER EV SUV page (not in visible copy). Matches GMC's 2024 Features/Specs brochure (35.9 behind rear seats). eTrunk up to 11.3 cu ft."
+        "evidence": "Cargo volume behind second row seats 36.3",
+        "notes": "Reviewer read GMC's labeled figure (behind second row seats, 36.3; behind front seats with the rear seat folded, 81.3), replacing 35.9 from unlabeled page data. eTrunk up to 11.3 cu ft."
       }
     },
     "honda-prologue": {
@@ -176,7 +176,7 @@
         "modelYear": 2026,
         "source": "https://hondanews.com/en-US/honda-automobiles/releases/release-e5d30c25af38c0c6604e43e79c015883-2026-honda-prologue-specifications-features",
         "evidence": "Rear Cargo Volume (cu ft.) (Seat Up / Seat Down) 25.2 / 57.7",
-        "notes": "the explorer prices the EX; Honda lists EX 25.2 (Touring and Elite 23.7). SAE J1100. Varies by trim: EX (FWD/AWD) 25.2; Touring and Elite 23.7. Took the smallest (23.7); if the curated base trim is EX, use 25.2."
+        "notes": "SAE J1100. EX (the trim the explorer prices) 25.2; Touring and Elite 23.7."
       }
     },
     "hyundai-ioniq-5": {
@@ -396,8 +396,8 @@
         "value": 18,
         "modelYear": 2027,
         "source": "https://www.porsche.com/usa/models/macan/macan-electric-models/macan-electric/",
-        "evidence": null,
-        "notes": "standard audio on the base Macan Electric is 18.0 (16.7 is with the optional Burmester system); quote not captured for 18.0, so check it on the tech data. Base Macan Electric tech data gives 18.0 ft³ standard (labeled Performance Battery Plus), 17.0 with Bose and 16.7 with Burmester. Took the smallest, per the rule. Frunk 2.9 ft³. Seats folded 46.5 / 45.5 / 45.2. The page shows no model year, so 2027 is assumed from the vehicle list."
+        "evidence": "Rear luggage compartment volume (Performance Battery Plus) 18.0 ft³",
+        "notes": "Base Macan Electric, standard audio: 18.0 ft³ (labeled Performance Battery Plus). With Bose 17.0 and Burmester 16.7. Frunk 2.9 ft³. The page shows no model year, so 2027 is assumed from the vehicle list."
       }
     },
     "rivian-r1s": {

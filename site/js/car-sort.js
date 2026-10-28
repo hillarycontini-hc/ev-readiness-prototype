@@ -10,7 +10,7 @@ export const SORTS = {
   seats: 'Most seats',
   cargo: 'Most cargo space',
   safety: 'Highest NHTSA rating',
-  awards: 'Most awards (last 3 model years)',
+  awards: 'Most awards (last 3 years)',
 };
 
 /** Awards won in the car's last three model years (this one and the two before). */
