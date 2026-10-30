@@ -1,0 +1,38 @@
+{
+  "about": "Sites the vehicle research may cite. A source on any other host fails the build (scripts/data/build-vehicles.mjs) and the research check (npm run data:research:check). Add a host only in a reviewed pull request. A listed root also allows its subdomains (kia.com allows www.kia.com).",
+  "iihs": ["iihs.org"],
+  "awards": {
+    "MotorTrend": ["motortrend.com"],
+    "Car and Driver": ["caranddriver.com"],
+    "Edmunds": ["edmunds.com"],
+    "NACTOY": ["northamericancaroftheyear.org"],
+    "World Car Awards": ["worldcarawards.com"]
+  },
+  "manufacturers": {
+    "Audi": ["audiusa.com", "media.audiusa.com"],
+    "BMW": ["bmwusa.com", "press.bmwgroup.com"],
+    "Cadillac": ["cadillac.com", "news.gm.com", "gm.com"],
+    "Chevrolet": ["chevrolet.com", "news.gm.com", "gm.com"],
+    "Ford": ["ford.com", "media.ford.com"],
+    "GMC": ["gmc.com", "news.gm.com", "gm.com"],
+    "Genesis": ["genesis.com", "genesisnewsusa.com"],
+    "Honda": ["honda.com", "hondanews.com"],
+    "Hyundai": ["hyundaiusa.com", "hyundainews.com"],
+    "Jeep": ["jeep.com", "stellantisnorthamerica.com", "media.stellantisnorthamerica.com"],
+    "Kia": ["kia.com", "kiamedia.com"],
+    "Lexus": ["lexus.com", "pressroom.lexus.com"],
+    "Lucid": ["lucidmotors.com"],
+    "MINI": ["miniusa.com", "press.bmwgroup.com"],
+    "Maserati": ["maserati.com"],
+    "Mercedes-Benz": ["mbusa.com", "media.mbusa.com"],
+    "Polestar": ["polestar.com"],
+    "Porsche": ["porsche.com", "newsroom.porsche.com", "press.porsche.com"],
+    "Rivian": ["rivian.com"],
+    "Subaru": ["subaru.com", "media.subaru.com"],
+    "Tesla": ["tesla.com"],
+    "Toyota": ["toyota.com", "pressroom.toyota.com"],
+    "VinFast": ["vinfastauto.us"],
+    "Volkswagen": ["vw.com", "media.vw.com"],
+    "Volvo": ["volvocars.com", "media.volvocars.com"]
+  }
+}

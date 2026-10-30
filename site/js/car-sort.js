@@ -10,7 +10,7 @@ export const SORTS = {
   seats: 'Most seats',
   cargo: 'Most cargo space',
   safety: 'Highest NHTSA rating',
-  awards: 'Most awards (last 3 model years)',
+  awards: 'Most awards (last 3 years)',
 };
 
 /** Awards won in the car's last three model years (this one and the two before). */
@@ -68,5 +68,5 @@ export function safetyText(v) {
   return `NHTSA: ${stars}${notes.length ? ` (${notes.join('; ')})` : ''}`;
 }
 
-export const iihsText = (v) => (v.iihs ? `IIHS ${v.iihs.award === 'TSP+' ? 'Top Safety Pick+' : 'Top Safety Pick'} ${v.iihs.year}` : null);
+export const iihsText = (v) => (v.iihs ? `IIHS ${v.iihs.award === 'TSP+' ? 'Top Safety Pick+' : 'Top Safety Pick'} ${v.iihs.year}${v.iihs.qualifier ? ` (${v.iihs.qualifier})` : ''}` : null);
 export const cargoText = (v) => (v.cargo ? `${v.cargo.value} cu ft behind the 2nd row` : null);
